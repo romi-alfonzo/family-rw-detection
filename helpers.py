@@ -6,12 +6,58 @@ from collections import Counter
 
 
 def calculate_entropy(data):
+    # byte_counts = Counter(data[:100])
     byte_counts = Counter(data)
     entropy = 0
     for count in byte_counts.values():
         p_x = count / len(data)
         entropy += - p_x * math.log2(p_x)
     return entropy
+
+def calculate_chi_square(data):
+    # Count the frequency of each character
+    char_counts = Counter(data)
+    total_chars = sum(char_counts.values())
+
+    # Calculate the expected frequency assuming uniform distribution
+    expected_frequency = total_chars / len(char_counts)
+
+    # Create observed and expected frequency arrays
+    observed = np.array(list(char_counts.values()))
+    expected = np.full(len(char_counts), expected_frequency)
+
+    # Calculate the chi-square statistic
+    chi_square_statistic = ((observed - expected) ** 2 / expected).sum()
+
+    return chi_square_statistic
+
+def calculate_monte_carlo_pi(data):
+    # Interpret the data as a sequence of random points
+    points = [(data[i], data[i+1]) for i in range(0, len(data) - 1, 2)]
+
+    # Count the number of points inside the unit circle
+    inside_circle = sum(1 for x, y in points if (x / 255.0) ** 2 + (y / 255.0) ** 2 <= 1.0)
+
+    # Estimate pi
+    pi_estimate = (inside_circle / len(points)) * 4
+
+    return pi_estimate
+
+def calculate_sbcc(data):
+    # Calculate the mean of the data
+    mean = calculate_mean(data)
+
+    # Calculate the numerator and denominator for the correlation coefficient
+    numerator = sum((data[i] - mean) * (data[i+1] - mean) for i in range(len(data) - 1))
+    denominator = sum((data[i] - mean) ** 2 for i in range(len(data) - 1))
+
+    # Calculate the serial byte correlation coefficient
+    sbcc = numerator / denominator if denominator != 0 else 0
+
+    return sbcc
+
+def calculate_mean(data):
+    return sum(data) / len(data)
 
 
 def process_files_in_directory(directory):
