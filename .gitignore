@@ -1,0 +1,17 @@
+# Datos: notas de rescate y archivos cifrados AUTÉNTICOS (malware real).
+# No deben publicarse: infringe los términos de uso de GitHub.
+ransom_notes_corpus/
+corpus_v2/
+Pruebas/
+Pruebas2/
+*-tiny/
+*-small/
+*.hta
+
+# Salidas voluminosas o regenerables
+advanced_features.csv
+features/
+slurm-*.out
+
+__pycache__/
+*.py[cod]
