@@ -1,0 +1,25 @@
+\section{Conclusiones Parciales}
+
+Los resultados preliminares obtenidos hasta el momento permiten establecer las siguientes conclusiones parciales:
+
+La detección binaria de archivos cifrados por ransomware mediante métricas estadísticas es viable, alcanzando hasta 100\% de accuracy con modelos basados en árboles de decisión. Esto confirma la efectividad de métricas como la entropía de Shannon, Chi-Cuadrado, estimación Monte Carlo y el coeficiente de correlación serial de bytes para la tarea de identificar si un archivo ha sido encriptado. No obstante, como señalan Lee et al.~\cite{lee2022}, la entropía de Shannon por sí sola no es la métrica óptima y debe combinarse con métricas complementarias para reducir falsos positivos.
+
+La clasificación multiclase de familias de ransomware basada exclusivamente en propiedades estadísticas de archivos cifrados no es viable, alcanzando un máximo del 15,4\% de accuracy sobre 31 clases. Este resultado se explica por la convergencia estadística inherente a los algoritmos criptográficos modernos, que producen salidas indistinguibles entre familias~\cite{paper_4_comparison_of_entropy}.
+
+La evaluación de herramientas existentes revela que las notas de rescate son más discriminativas que los archivos cifrados: ID Ransomware~\cite{idransomware} identifica el 71,93\% de las familias con notas versus el 66,67\% con archivos. Esto motiva el siguiente paso de la investigación.
+
+\section{Trabajo Pendiente}
+
+El trabajo pendiente comprende:
+
+\begin{enumerate}
+    \item \textbf{Construcción del corpus de notas:} Recopilar notas de rescate para las 30 familias de NapierOne desde los repositorios ThreatLabz~\cite{threatlabz}, Lemmou~\cite{paper_5_dataset} y fuentes de seguridad públicas, asegurando un mínimo de 2 notas por familia.
+
+    \item \textbf{Clasificación NLP:} Implementar y evaluar el clasificador basado en TF-IDF con n-gramas de palabras y caracteres, comparando LinearSVC, Regresión Logística, Random Forest y KNN.
+
+    \item \textbf{Ejecución en NapierOne-Small:} Repetir los experimentos de clasificación binaria y multiclase sobre el dataset NapierOne-Small (1.000 archivos por familia) para obtener resultados más robustos con las 6 métricas estadísticas completas.
+
+    \item \textbf{Análisis comparativo:} Comparar cuantitativamente la efectividad de ambos enfoques (archivos cifrados vs. notas de rescate) para la identificación de familias.
+
+    \item \textbf{Redacción final:} Completar el capítulo de resultados con los datos experimentales definitivos y las conclusiones finales del trabajo.
+\end{enumerate}

@@ -1,17 +1,79 @@
-# Datos: notas de rescate y archivos cifrados AUTÉNTICOS (malware real).
-# No deben publicarse: infringe los términos de uso de GitHub.
-ransom_notes_corpus/
+# ===========================================================================
+#  .gitignore de la tesis
+#  Detección de familias de ransomware — Romina Alfonzo, Carlos Urdapilleta
+#
+#  REGLA PRINCIPAL: al repositorio va el CÓDIGO y el DOCUMENTO. Nunca los datos.
+#  El corpus contiene notas de rescate y archivos cifrados AUTÉNTICOS (malware real);
+#  publicarlos infringiría los términos de uso de GitHub y podría derivar en la
+#  suspensión de la cuenta. Además, los PDF de los papers están sujetos a derechos
+#  de autor y tampoco deben republicarse.
+# ===========================================================================
+
+# --- Datos: corpus de notas y archivos cifrados (MALWARE REAL - NO SUBIR) ---
+3_datos/
 corpus_v2/
+ransom_notes_corpus/
+RansomNoteFiles/
+ransomware_notes/
+notas_pcrisk/
+imagenes_notas/
 Pruebas/
 Pruebas2/
 *-tiny/
 *-small/
 *.hta
+*.wncry
+*.avos2
+*.locked
+*.encrypted
 
-# Salidas voluminosas o regenerables
+# --- Bibliografía: PDF con derechos de autor ---
+5_bibliografia/
+*.pdf
+!1_documento/**/images/*.pdf
+
+# --- Espacio compartido y material archivado ---
+7_compartido_carlos/
+_archivo/
+backup_pre_cap4/
+PARA_SUBIR_AL_CLUSTER/
+wheels_cluster/
+
+# --- Resultados voluminosos o regenerables ---
+# advanced_features.csv pesa 160 MB (supera el límite de GitHub) y se regenera
 advanced_features.csv
-features/
+4_resultados/**/*.png
+resultados_*/
 slurm-*.out
+*.log
 
+# --- Artefactos de compilación de LaTeX (se regeneran) ---
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.idx
+*.ilg
+*.ind
+*.lof
+*.lot
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+*.fls
+*.fdb_latexmk
+
+# --- Python ---
 __pycache__/
 *.py[cod]
+.venv/
+venv/
+
+# --- Sistema operativo y editores ---
+Thumbs.db
+desktop.ini
+.DS_Store
+~$*
+*.tmp
+.claude/

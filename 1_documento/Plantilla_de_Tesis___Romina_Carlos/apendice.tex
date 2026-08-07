@@ -1,0 +1,40 @@
+%------------------------------------------------------
+%------------------------------------------------------
+
+\section{Detección binaria por familia}
+\label{apx:binaria_familia}
+
+La Tabla~\ref{tab:apx_binaria_familia} detalla la exactitud de detección binaria (cifrado vs.\ seguro) por familia obtenida con Random Forest en el Experimento~1, referida en la Sección~\ref{sec:exp1}.
+
+\begin{table}[ht]
+\centering
+\caption{Exactitud de detección binaria por familia (Random Forest)}
+\label{tab:apx_binaria_familia}
+\begin{tabular}{|l|c||l|c|}
+\hline
+\textbf{Familia} & \textbf{Exactitud (\%)} & \textbf{Familia} & \textbf{Exactitud (\%)} \\ \hline
+WANNACRY & 97,3 & CERBER & 88,7 \\ \hline
+CHIMERA & 96,7 & NOTPETYA & 88,7 \\ \hline
+MAZE & 96,7 & CLOP & 88,0 \\ \hline
+PHOBOS & 96,7 & AVOSLOCKER & 82,7 \\ \hline
+BLACKMATTER & 95,3 & CONTI & 82,7 \\ \hline
+DARKSIDE & 95,3 & LOCKBIT & 80,7 \\ \hline
+BADRABBIT & 94,7 & BLACKBASTA & 78,0 \\ \hline
+DHARMA & 94,7 & CUBA & 78,0 \\ \hline
+SODINOKIBI & 94,7 & HELLOKITTY & 76,7 \\ \hline
+WASTEDLOCKER & 94,7 & SUNCRYPT & 75,3 \\ \hline
+CRYPTOLOCKER & 94,0 & NETWALKER & 74,0 \\ \hline
+MEDUZALOCKER & 94,0 & RANSOMEXX & 69,3 \\ \hline
+RYUK & 93,3 & & \\ \hline
+TESLACRYPT & 93,3 & & \\ \hline
+BLACKCAT & 92,0 & & \\ \hline
+GANDCRAB & 90,7 & & \\ \hline
+LORENZ & 91,3 & & \\ \hline
+JIGSAW & 90,7 & & \\ \hline
+\end{tabular}
+\end{table}
+
+\section{Reproducibilidad}
+\label{apx:reproducibilidad}
+
+Todas las cifras reportadas en el Capítulo~4 se regeneran a partir de archivos de resultados versionados junto con el código del proyecto: los experimentos 1 y 2 desde \texttt{resultados\_experimentos/}, el experimento 3 desde \texttt{resultados\_canonicos/} (generado por \texttt{clasificador\_notas\_v2.py}, que registra en un manifiesto los parámetros, versiones de librerías y semillas utilizadas), y la evaluación de herramientas desde la planilla de pruebas del proyecto. El corpus de notas cuenta con un manifiesto de trazabilidad que documenta la fuente, el tipo de procedencia y la extensión original de cada nota.

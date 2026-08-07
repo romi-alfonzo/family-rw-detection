@@ -1,0 +1,109 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noquoting]{babel}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{parskip}
+\usepackage{amsmath}
+\setlist{nosep,leftmargin=1.4em}
+\pagestyle{empty}
+\renewcommand{\arraystretch}{1.15}
+
+\begin{document}
+
+{\large\textbf{Informe de avance --- Tesis de grado}}\\[2pt]
+\textbf{Detección de familias de ransomware en base a archivos encriptados y notas de rescate}\\[2pt]
+Romina Alfonzo, Carlos Urdapilleta \quad$\vert$\quad Tutor: Prof. Cristian Cappo \quad$\vert$\quad 4 de agosto de 2026
+
+\hrulefill
+
+\textbf{1. Situación general.} Se consolidó el capítulo de Resultados, que integra los tres
+experimentos y la evaluación de herramientas existentes. Se reconstruyó el protocolo de
+evaluación del clasificador de notas para corregir sesgos detectados en las mediciones previas,
+y se documentó la trazabilidad de todas las cifras: cada tabla del capítulo se regenera desde
+archivos de resultados versionados, sin valores transcritos manualmente.
+
+\textbf{2. Corrección metodológica de las métricas.} La medición anterior (87{,}58\,\%) se
+apoyaba en promedios \emph{ponderados}, dominados por las dos familias más numerosas (DHARMA y
+CERBER concentran el 25\,\% del corpus). Se adoptó el \textbf{macro-F1} y la \emph{balanced
+accuracy} como métricas principales, apropiadas para clasificación multiclase desbalanceada, y
+se incorporaron el reporte por familia y la matriz de confusión. Se corrigieron además tres
+inconsistencias: la eliminación de duplicados entre entrenamiento y prueba, el ajuste del
+vectorizador TF-IDF exclusivamente sobre el conjunto de entrenamiento, y la repetición de la
+validación cruzada con diez particiones distintas en lugar de una.
+
+\textbf{3. Hallazgo principal: las notas de rescate son plantillas.} El análisis de similitud
+del corpus muestra que las \textbf{146 notas corresponden a solo 95 contenidos distintos}: cada
+familia reutiliza un repertorio reducido de plantillas modificando únicamente datos de contacto
+o identificadores de víctima (DHARMA: 19 notas $\rightarrow$ 6 plantillas; WASTEDLOCKER: 4 notas
+$\rightarrow$ 1 plantilla). Este resultado responde cuantitativamente a la consulta sobre la
+variabilidad de las notas planteada en la reunión del 02/05/2024, y motivó evaluar el
+clasificador bajo \textbf{dos protocolos complementarios}:
+
+\begin{itemize}
+\item \textbf{P1 --- plantilla conocida:} identificar la familia de una nueva instancia de una
+plantilla ya catalogada. Es el escenario operativo de las herramientas existentes.
+\item \textbf{P2 --- variante nunca vista:} las plantillas casi idénticas nunca se reparten
+entre entrenamiento y prueba, de modo que se mide la generalización a contenido nuevo.
+\end{itemize}
+
+\textbf{4. Resultados consolidados.}
+
+\begin{center}
+\small
+\begin{tabular}{@{}llcc@{}}
+\toprule
+\textbf{Experimento} & \textbf{Mejor método} & \textbf{Clases} & \textbf{Resultado} \\
+\midrule
+1. Detección binaria (archivos) & Random Forest & 2 & 88{,}6\,\% exactitud \\
+2. Multiclase por archivos & Gradient Boosting & 31 & 9{,}9\,\% exactitud (azar: 3{,}2\,\%) \\
+3. Notas, P1 plantilla conocida & LinearSVC, car. (3-5) & 30 & macro-F1 0{,}760; exact. 81{,}8\,\% \\
+3. Notas, P2 variante nueva & LinearSVC, combinado & 30 & macro-F1 0{,}435; exact. 55{,}1\,\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+La caída de P1 a P2 cuantifica cuánto del rendimiento proviene de reconocer plantillas ya
+vistas. El desempeño por familia se correlaciona con la diversidad de plantillas disponible:
+las familias con varias plantillas se clasifican correctamente incluso ante variantes nuevas
+(AVOSLOCKER 0{,}86; CERBER y GANDCRAB 0{,}83), mientras que las de plantilla única no logran
+generalizarse. Esto fundamenta empíricamente la ampliación del corpus \emph{en profundidad}
+(más plantillas por familia) antes que en cantidad de familias.
+
+\textbf{5. Evaluación de herramientas existentes (experimento propio).} Se documentó
+formalmente la metodología de las pruebas realizadas sobre CryptoSheriff e ID Ransomware,
+conforme a lo solicitado en la reunión del 08/05/2024: CryptoSheriff identifica 5/30 familias
+(16{,}67\,\%) a partir de archivos cifrados; ID Ransomware, 20/30 (66{,}67\,\%) con archivos y
+41/57 notas (71{,}93\,\%) con notas de rescate. De las 20 familias que ID Ransomware identifica
+por archivo, \textbf{9 mantienen la identificación al renombrar el archivo}, lo que indica el
+uso de firmas de bytes insertadas deliberadamente por el ransomware. En el escenario comparable
+(P1), el clasificador propuesto alcanza 81{,}8\,\% frente al 71{,}93\,\% de ID Ransomware, con
+la ventaja de ser un método automático y reproducible frente a reglas de mantenimiento manual.
+
+\textbf{6. En curso.} Se obtuvo acceso al clúster del NIDTEC, donde se están ejecutando:
+(i) la extracción de 275 características estadísticas de los archivos cifrados, para verificar
+si la indistinguibilidad multiclase persiste con un espacio de características más rico;
+(ii) el \textbf{Experimento 2b}, que descubre automáticamente las marcas estructurales
+(\emph{magic bytes}, metadatos, extensiones) de cada familia --- atendiendo la sugerencia del
+11/01/2025 sobre los metadatos de los archivos cifrados; y (iii) la optimización de
+hiperparámetros del clasificador de notas.
+
+\textbf{7. Consultas para la reunión.}
+
+\begin{enumerate}[label=\alph*)]
+\item \textbf{Procedencia de las notas:} seis familias (BadRabbit, Chimera, Jigsaw, NotPetya,
+WannaCry, CryptoLocker) no tienen archivo bruto público disponible y se cubrieron con
+transcripciones documentadas de portales de seguridad. ¿Se consideran fuentes admisibles,
+declarándolo como limitación?
+\item \textbf{Estructura del documento:} ¿conviene reorganizar los capítulos de modo que cada
+objetivo específico se corresponda con una sección, según lo sugerido el 08/05/2024?
+\item \textbf{Alcance:} el clúster dispone de GPU. ¿Corresponde incluir una comparación con
+modelos basados en \emph{transformers} como sección adicional, o dejarla como trabajo futuro
+dado el tamaño del corpus (146 documentos)?
+\item \textbf{Criterio de ampliación del corpus:} se propone como objetivo mínimo tres
+plantillas distintas por familia, en lugar de un número fijo de notas. ¿Se considera adecuado?
+\end{enumerate}
+
+\end{document}

@@ -1,0 +1,140 @@
+\documentclass[12pt, oneside]{book}
+\input{preambulo.tex}
+
+\setcounter{secnumdepth}{5}
+
+\begin{document}
+
+\frontmatter
+
+% -- Portada --
+\input{portada.tex}
+
+% -- Página de cortesía --
+\newpage
+\thispagestyle{empty}
+\null
+\clearpage 
+	
+% -- Carátula --
+\newpage
+\setcounter{page}{1}
+\input{caratula.tex}
+
+% -- Título --
+\newpage
+\input{caratula2.tex}
+
+
+
+% -- Hoja de aprobación --
+%\newpage
+%\input{aprobacion.tex}
+
+% -- Dedicatoria --
+\newpage
+\input{dedicatoria.tex}
+
+% -- Agradecimientos --
+\newpage
+\input{agradecimientos.tex}
+
+% -- Resumen --
+\newpage
+\input{resumen_es.tex}
+
+% -- Summary --
+\newpage
+\input{resumen_en.tex}
+
+
+% -- Índice --
+%(Indice o Contenido (?) )
+\newpage
+\tableofcontents
+
+% -- Lista de figuras --
+\newpage
+\listoffigures
+ 
+% -- Lista de tablas --
+\newpage
+\listoftables
+
+% -- Lista de símbolos --
+\newpage
+\input{lista_simbolos.tex}
+
+% ----------------------------------------------
+% ----------------------------------------------
+% ----------------------------------------------
+
+\mainmatter
+\chapterformatdefault
+
+% ------------------
+% -- INTRODUCCIÓN --
+% ------------------
+\chapter{INTRODUCCIÓN}
+\thispagestyle{empty}
+\input{introduccion.tex}
+% -------------------
+% -- MARCO TEÓRICO --
+% -------------------
+\chapter{MARCO TEÓRICO}
+\thispagestyle{empty}
+\input{marco_teorico.tex}
+
+% -------------------
+% -- METODOLOGÍA --
+% -------------------
+\chapter{METODOLOGÍA}
+\thispagestyle{empty}
+\input{metodologia.tex}
+
+% ----------------
+% -- RESULTADOS --
+% ----------------
+\chapter{RESULTADOS Y DISCUSIÓN}
+\thispagestyle{empty}
+\input{resultados.tex}
+
+% ----------------
+% -- CONCLUSIÓN --
+% ----------------
+\chapter{CONCLUSIÓN} \label{chp:conclusion}
+\thispagestyle{empty}
+\input{conclusion.tex}
+
+
+% ----------------
+% -- REFERENCIAS --
+% ----------------
+\chapterformattitleonly
+
+\emergencystretch = 1em
+\chapter*{REFERENCIAS}
+\addcontentsline{toc}{chapter}{REFERENCIAS}
+\printbibliography[heading=none]
+
+% --------------
+% -- APÉNDICE --
+% --------------
+\appendix
+\chapter*{APÉNDICE}
+\addcontentsline{toc}{chapter}{APÉNDICE}
+\renewcommand{\thechapter}{A}
+\input{apendice.tex}
+
+% -----------------------
+% -- ÍNDICE ALFABÉTICO --
+% -----------------------
+\printindex
+
+% -- Ficha Catalográfica --
+%\newpage
+%\singlespace
+%\input{catalografica.tex}
+%\onehalfspace
+
+\end{document}

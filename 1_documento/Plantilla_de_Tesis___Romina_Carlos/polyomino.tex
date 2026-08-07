@@ -1,0 +1,72 @@
+En este capítulo, se definirán los conceptos básicos de los poliominós y luego se explicarán brevemente algunos resultados del problema de empaquetamiento conocidos hasta el momento.
+
+\section{Definiciones Básicas}
+
+Algunas definiciones fueron adaptados del libro de C. Toth \textit{et al.} \cite{handbookDiscreteCsaba} y del artículo de J. Conway y J. Lagarias \cite{conwayLagariasGroupTheory}.
+
+\begin{definition} 
+Una \textbf{celda cuadrada} o simplemente \textbf{celda}\index{celda}, denotada como $c_{(a, b)}$, es un cuadrado $[a,a+1]\times[b,b+1] \subsetneq \mathbb{R}^2$ donde $a,b \in \mathbb{Z}$.
+\end{definition}
+
+En otras palabras, una celda es cualquier cuadrado unitario ubicado en alguna parte del plano cartesiano de tal manera que sus cuatro esquinas tengan coordenadas enteras. Una celda se identifica por un par ordenado entero $(a,b) \in \mathbb{Z}^2$ y que será la coordenada de la esquina inferior izquierda del cuadrado.
+
+\begin{definition}
+Una celda es \textbf{adyacente}\index{adyacencia de celdas} a otra celda si la distancia Manhattan (distancia $L_1$) de las coordenadas es 1.
+\end{definition}
+
+Nótese que, para que dos celdas sean adyacentes, deben compartir un lado del cuadrado. Entonces, dos celdas pueden ser adyacentes horizontalmente y verticalmente y no se consideran adyacentes cuando están ubicadas en diagonal.
+
+\begin{definition}
+Una celda \textbf{solapa}\index{solapamiento de celdas} a otra celda cuando ambas celdas tienen las mismas coordenadas.
+\end{definition}
+
+\begin{definition}
+Dado un conjunto de celdas $S$, el \textbf{grafo dual interior}\footnote{No existe un consenso para este término. A veces se denomina \textit{projective dual} \cite{polyominoesGolomb}, \textit{inner dual graph} \cite{zhangPolyominoGraph}, \textit{interior dual graph} \cite{kenyonInvariance}  o \textit{planar dual graph} \cite{manjilDominoEnumeration}.}, o simplemente \textbf{grafo dual}\index{grafo dual}, de $S$ es un grafo $G_S$ en donde cada celda de $S$ corresponde a cada vértice de $G_S$ y entre cualquier par de celdas adyacentes de $S$ existe una arista entre los correspondientes vértices en $G_S$.
+\end{definition}
+
+Denotaremos $v_{(x, y)}$ como el vértice correspondiente a la celda $c_{(x, y)}$.
+
+\begin{definition}
+Un \textbf{poliominó}\index{poliominó} es un conjunto finito de celdas cuyo grafo dual es conexo.
+\end{definition}
+El poliominó es una figura geométrica plana que se forma con las uniones por arista de uno o más cuadrados del mismo tamaño.
+
+\begin{definition}
+El \textbf{orden}\index{orden (poliominó)} de un poliominó $P$, denotado como $|P|$, es la cantidad de celdas que contiene $P$.
+\end{definition}
+
+\begin{definition}
+Un poliominó $t$ \textbf{trasladado a $(a, b)$}\index{traslación de poliominó}, denotado como $t_{(a, b)}$, es un poliominó que resulta al aplicar una traslación $x' = x + a$ e $y' = y + b$ sobre cada una de las celdas de $t$, en donde $(x, y)$ es la coordenada inicial de una celda y $(x', y')$ es la coordenada final de la celda. Además, se dice que $t_{(a, b)}$ es una \textbf{traslación} de $t$.
+\end{definition}
+
+El término poliominó fue acuñado por el matemático e ingeniero estadounidense Solomon W. Golomb que en 1965 publicó el libro del mismo nombre \cite{polyominoesGolomb}.
+
+Se denomina monominó al poliominó de una celda, dominó al de dos celdas, trominó al de tres celdas, tetrominó al de cuatro celdas, pentominó al de cinco celdas y así sucesivamente, como se observa en la Figura \ref{fig:Polyominoes_enumeration}.
+En general, el nombre está compuesto por el número de celdas en prefijo cardinal griego y el sufijo ``-ominós'', siendo la única excepción el dominó \cite{polyominoesGolomb}.
+\begin{figure}[!ht]
+	\centering
+    \begin{subfigure}[t]{0.24\textwidth}
+    	\centering
+		\raisebox{1cm}{\import{images/}{polyominoes_monomino.pdf_tex}}
+		\caption{Monominó}
+	\end{subfigure}
+    \begin{subfigure}[t]{0.24\textwidth}
+    	\centering
+		\raisebox{1cm}{\import{images/}{polyominoes_domino.pdf_tex}}
+		\caption{Dominó}
+	\end{subfigure}
+    \begin{subfigure}[t]{0.24\textwidth}
+    	\centering
+		\raisebox{.5cm}{\import{images/}{polyominoes_tromino.pdf_tex}}
+		\caption{Trominós}
+	\end{subfigure}
+    \begin{subfigure}[t]{0.24\textwidth}
+    	\centering
+		\import{images/}{polyominoes_tetromino.pdf_tex}
+		\caption{Tetrominós}
+	\end{subfigure}
+	\caption{Los poliominós según la cantidad de celdas.}
+	\label{fig:Polyominoes_enumeration}
+\end{figure}
+
+En la enumeración de los poliominós generalmente se consideran iguales a los poliominós que pueden ser obtenidos por rotación o reflexión. Así existen 1 monominó, 1 dominó, 2 trominós, 5 tetrominós y 12 pentominós diferentes \cite{OEIS_A000105} y estos números pueden ser computados utilizando algoritmos de búsqueda exhaustiva que prueban todas las combinaciones posibles; sin embargo, aún no se conoce una fórmula exacta que calcula el número de poliominós diferentes de $n$ celdas.

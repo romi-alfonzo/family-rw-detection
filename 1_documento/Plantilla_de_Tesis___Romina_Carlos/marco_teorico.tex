@@ -1,0 +1,193 @@
+\section{Ransomware: Definición y Taxonomía}
+
+El ransomware es un tipo de software malicioso que restringe el acceso a los datos o sistemas de la víctima y demanda un pago para restablecer dicho acceso. Se distinguen dos categorías principales: el \textit{crypto-ransomware}, que cifra archivos individuales utilizando algoritmos criptográficos, y el \textit{locker-ransomware}, que bloquea el acceso al sistema operativo sin necesariamente cifrar archivos~\cite{europol2023}.
+
+El presente trabajo se enfoca en el \textit{crypto-ransomware}, dado que constituye la variante predominante en ataques modernos y genera los artefactos de interés: archivos encriptados y notas de rescate. Las 30 familias analizadas en este estudio, provenientes del dataset NapierOne~\cite{paper_7_napierone}, abarcan un amplio espectro temporal y técnico, desde CryptoLocker (2013) hasta BlackBasta (2022), e incluyen tanto operaciones de Ransomware-as-a-Service (RaaS) como grupos independientes.
+
+\section{Dataset NapierOne}
+
+El dataset NapierOne, desarrollado por Davies et al.~\cite{paper_7_napierone}, constituye el conjunto de datos de referencia utilizado en este trabajo para la evaluación de técnicas de detección y clasificación de ransomware. A diferencia de datasets anteriores basados en muestras ejecutables recopiladas de repositorios como VirusTotal~\cite{VirusTotal} o VirusShare~\cite{VirusShare}, NapierOne se enfoca en los \textit{archivos resultantes} de la encriptación, proporcionando un escenario realista de análisis post-ataque.
+
+El dataset se estructura en tres niveles de escala:
+
+\begin{itemize}
+    \item \textbf{Extra-Small (Tiny):} 100 archivos encriptados por cada una de las 30 familias de ransomware, más 100 archivos seguros por cada uno de los 44 tipos de archivo comunes. Total aproximado: 7.400 archivos.
+    \item \textbf{Small:} 1.000 archivos por familia y tipo. Total aproximado: 74.000 archivos.
+    \item \textbf{Total:} 5.000 archivos por familia y tipo. Total aproximado: 370.000 archivos.
+\end{itemize}
+
+Las 30 familias de ransomware incluidas son: Avoslocker, BadRabbit, BlackBasta, BlackCat (ALPHV), BlackMatter, Cerber, Chimera, Clop, Conti, CryptoLocker, Cuba, DarkSide, Dharma, GandCrab, HelloKitty, Jigsaw, LockBit, Lorenz, Maze, MedusaLocker, Netwalker, NotPetya, Phobos, RansomEXX, Ryuk, Sodinokibi (REvil), SunCrypt, TeslaCrypt, WannaCry y WastedLocker.
+
+Los archivos seguros cubren 44 formatos, agrupados en categorías como documentos de oficina, imágenes, audio, video, archivos comprimidos, ejecutables y bases de datos, representando los tipos de archivo más comúnmente encontrados en entornos corporativos y personales.
+
+\section{Métricas Estadísticas para el Análisis de Archivos}
+
+El análisis de las propiedades estadísticas de los archivos constituye el primer enfoque evaluado en este trabajo. Esta sección describe las métricas empleadas, fundamentando teóricamente su relevancia para la detección de encriptación.
+
+\subsection{Entropía de Shannon}
+
+La entropía de Shannon~\cite{shannon1948}, concepto seminal de la teoría de la información, cuantifica la incertidumbre inherente a una distribución de datos. Para un archivo considerado como secuencia de bytes, la entropía se calcula mediante:
+
+\begin{equation}
+    H(X) = -\sum_{i=0}^{255} P(x_i) \log_2 P(x_i)
+\end{equation}
+
+donde $P(x_i)$ representa la probabilidad empírica de ocurrencia del byte $x_i$. Los valores resultantes se encuentran en el rango $[0, 8]$, donde valores cercanos a 0 indican datos altamente predecibles y valores próximos a 8 sugieren máxima aleatoriedad.
+
+Si bien la entropía de Shannon es ampliamente utilizada en la detección de ransomware, trabajos recientes han identificado limitaciones importantes. Lee et al.~\cite{lee2022} demostraron que la entropía de Shannon por sí sola no es la métrica óptima para todos los escenarios, presentando falsos positivos significativos con archivos comprimidos (ZIP, GZIP, MP4) que también exhiben valores de entropía cercanos a 8. Davies et al.~\cite{paper_4_comparison_of_entropy} confirmaron que, si bien la combinación de entropía alta con valores de $\chi^2$ que no rechazan uniformidad constituye un indicador fuerte de encriptación, la entropía por sí sola resulta insuficiente para distinguir entre archivos cifrados y archivos comprimidos nativamente.
+
+\subsection{Prueba Chi-Cuadrado}
+
+La prueba $\chi^2$ ofrece un marco estadístico formal para evaluar si la distribución observada de bytes se desvía significativamente de la uniformidad esperada en archivos encriptados. El estadístico se calcula como:
+
+\begin{equation}
+    \chi^2 = \sum_{i=0}^{255} \frac{(F_i - f_i)^2}{f_i}
+\end{equation}
+
+donde $F_i$ denota la frecuencia observada del byte $i$ y $f_i = \frac{N}{256}$ representa la frecuencia esperada bajo la hipótesis de uniformidad, siendo $N$ el número total de bytes. La interpretación requiere comparar el valor calculado con los valores críticos de la distribución $\chi^2$ con 255 grados de libertad.
+
+Como señalan Davies et al.~\cite{paper_4_comparison_of_entropy}, la combinación de entropía alta con valores bajos de $\chi^2$ proporciona un indicador más robusto de encriptación que cualquiera de las métricas individualmente, ya que archivos comprimidos típicamente exhiben valores de $\chi^2$ que rechazan la hipótesis de uniformidad a pesar de tener entropía alta.
+
+\subsection{Estimación Monte Carlo de \texorpdfstring{$\pi$}{pi}}
+
+Esta métrica, derivada de la suite de pruebas estadísticas propuesta por Davies et al.~\cite{paper_4_comparison_of_entropy}, utiliza pares consecutivos de bytes del archivo como coordenadas $(x, y)$ en un espacio unitario para estimar el valor de $\pi$. El principio subyacente es que datos verdaderamente aleatorios producirán estimaciones que convergen al valor real de $\pi$:
+
+\begin{equation}
+    \hat{\pi} = 4 \cdot \frac{\text{puntos dentro del círculo unitario}}{\text{total de puntos}}
+\end{equation}
+
+Desviaciones significativas del valor esperado de $\pi$ sugieren patrones estructurales en los datos que son inconsistentes con la aleatoriedad pura generada por algoritmos criptográficos robustos.
+
+\subsection{Coeficiente de Correlación Serial de Bytes (SBCC)}
+
+El coeficiente de correlación serial evalúa la dependencia estadística entre bytes consecutivos en un archivo:
+
+\begin{equation}
+    r = \frac{n\sum_{i=1}^{n-1} x_i x_{i+1} - \left(\sum_{i=1}^{n} x_i\right)^2}{n\sum_{i=1}^{n} x_i^2 - \left(\sum_{i=1}^{n} x_i\right)^2}
+\end{equation}
+
+donde $x_i$ representa el valor del $i$-ésimo byte y $n$ la longitud del archivo. Para datos verdaderamente aleatorios, el coeficiente tiende a 0, indicando ausencia de correlación. Valores significativamente distintos de 0 sugieren patrones secuenciales que pueden revelar la presencia de estructuras de archivo no aleatorias~\cite{lee2022}.
+
+Davies et al.~\cite{paper_4_comparison_of_entropy} encontraron que este coeficiente es particularmente útil como complemento de la entropía de Shannon, ya que permite distinguir archivos comprimidos (que exhiben cierta correlación serial) de archivos genuinamente cifrados (que presentan correlación cercana a cero).
+
+\section{Algoritmos de Aprendizaje Automático}
+
+En el presente estudio se evaluaron diversos algoritmos de aprendizaje automático para abordar tanto el problema de clasificación binaria (cifrado vs. seguro) como el de clasificación multiclase (identificación de familias). La selección de algoritmos busca cubrir un espectro amplio de enfoques: modelos lineales, métodos basados en instancias, y métodos de ensamblaje.
+
+\subsection{Regresión Logística}
+
+La regresión logística estima la probabilidad de pertenencia a una clase mediante la función logística:
+
+\begin{equation}
+    P(y = 1|\mathbf{x}) = \frac{1}{1 + e^{-(\beta_0 + \boldsymbol{\beta}^T \mathbf{x})}}
+\end{equation}
+
+donde $\beta_0$ es el intercepto y $\boldsymbol{\beta}$ el vector de coeficientes. Su interpretabilidad directa y eficiencia computacional la hacen adecuada como modelo base de comparación~\cite{hastie2009}.
+
+\subsection{Máquinas de Soporte Vectorial (SVM)}
+
+Las SVM formulan la clasificación como la optimización del margen entre clases:
+
+\begin{equation}
+    \min_{\mathbf{w},b} \frac{1}{2}\|\mathbf{w}\|^2 \quad \text{sujeto a} \quad y_i(\mathbf{w}^T\mathbf{x}_i + b) \geq 1 \quad \forall i
+\end{equation}
+
+Para el análisis de notas de rescate, se emplea la variante LinearSVC, particularmente efectiva en espacios de alta dimensionalidad como los generados por TF-IDF, donde el número de características supera ampliamente el número de muestras~\cite{joachims1998}.
+
+\subsection{K-Nearest Neighbors (KNN)}
+
+El algoritmo KNN realiza predicciones por votación mayoritaria entre los $k$ vecinos más cercanos:
+
+\begin{equation}
+    \hat{y} = \text{mode}(\{y_i | \mathbf{x}_i \in N_k(\mathbf{x}_q)\})
+\end{equation}
+
+Su naturaleza no paramétrica lo hace flexible ante distribuciones arbitrarias de datos, aunque su rendimiento depende críticamente de la normalización de características y la elección de la métrica de distancia~\cite{hastie2009}.
+
+\subsection{Árboles de Decisión}
+
+Los árboles de decisión particionan recursivamente el espacio de características maximizando la ganancia de información:
+
+\begin{equation}
+    IG(D_p, f) = I(D_p) - \sum_{j=1}^{m} \frac{N_j}{N_p} I(D_j)
+\end{equation}
+
+donde $I(\cdot)$ puede ser la impureza de Gini o la entropía informacional. Su principal ventaja es la interpretabilidad visual directa de las reglas de decisión aprendidas~\cite{breiman1984}.
+
+\subsection{Random Forest}
+
+Random Forest combina $B$ árboles de decisión entrenados mediante bagging y selección aleatoria de características:
+
+\begin{equation}
+    \hat{f}(\mathbf{x}) = \frac{1}{B} \sum_{b=1}^{B} T_b(\mathbf{x})
+\end{equation}
+
+La diversificación mediante muestreo bootstrap y selección aleatoria de subconjuntos de features reduce la varianza del modelo sin incrementar significativamente el sesgo, haciéndolo robusto frente a ruido y valores atípicos~\cite{breiman2001}.
+
+\subsection{Multilayer Perceptron (MLP)}
+
+El MLP es una red neuronal artificial feedforward donde la transformación de cada capa $l$ se expresa como:
+
+\begin{equation}
+    \mathbf{h}^{(l)} = \sigma(\mathbf{W}^{(l)}\mathbf{h}^{(l-1)} + \mathbf{b}^{(l)})
+\end{equation}
+
+donde $\sigma(\cdot)$ es la función de activación (típicamente ReLU), $\mathbf{W}^{(l)}$ la matriz de pesos y $\mathbf{b}^{(l)}$ el vector de sesgos. Su capacidad de aproximación universal (teorema de Cybenko) lo hace teóricamente capaz de modelar cualquier función continua~\cite{cybenko1989}.
+
+\section{Procesamiento de Lenguaje Natural para Clasificación de Texto}
+
+El segundo enfoque evaluado en este trabajo emplea técnicas de procesamiento de lenguaje natural (NLP) para clasificar familias de ransomware a partir del contenido textual de las notas de rescate.
+
+\subsection{TF-IDF (Term Frequency -- Inverse Document Frequency)}
+
+TF-IDF es un esquema de ponderación que asigna mayor peso a los términos que son frecuentes en un documento pero raros en el corpus general. Para un término $t$ en un documento $d$ dentro de un corpus $D$:
+
+\begin{equation}
+    \text{TF-IDF}(t, d, D) = \text{TF}(t, d) \times \text{IDF}(t, D)
+\end{equation}
+
+donde:
+
+\begin{equation}
+    \text{TF}(t, d) = 1 + \log(f_{t,d}) \quad ; \quad \text{IDF}(t, D) = \log\frac{|D|}{|\{d \in D : t \in d\}|}
+\end{equation}
+
+En el contexto de notas de rescate, TF-IDF captura automáticamente los términos discriminativos de cada familia: direcciones de correo electrónico, nombres de servicios onion, montos de rescate específicos, y vocabulario característico de cada grupo~\cite{paper_5_note_files}.
+
+\subsection{N-gramas de Palabras y Caracteres}
+
+Los n-gramas permiten capturar patrones de co-ocurrencia a diferentes niveles de granularidad. Los n-gramas de palabras (bigramas como ``decrypt files'' o ``bitcoin address'') capturan frases recurrentes, mientras que los n-gramas de caracteres (trigramas a 5-gramas) capturan patrones morfológicos y son robustos ante errores ortográficos comunes en notas de rescate~\cite{paper_5_note_files}.
+
+En este trabajo se emplea una combinación de n-gramas de palabras (1-2) y n-gramas de caracteres (3-5), concatenando ambas representaciones TF-IDF para obtener un espacio de características de alta dimensionalidad que es procesado por los clasificadores.
+
+\section{Trabajos Relacionados}
+
+La literatura existente sobre detección y clasificación de ransomware puede organizarse en tres líneas principales de investigación: análisis de ejecutables, análisis de archivos cifrados, y análisis de notas de rescate.
+
+\subsection{Análisis de Ejecutables de Ransomware}
+
+Subedi et al.~\cite{paper_1_forensic} realizaron un análisis forense de familias de ransomware mediante técnicas estáticas y dinámicas, examinando componentes de código y las técnicas criptográficas empleadas por cada familia (RSA, DES, ROT-13). El sistema propuesto, CRSTATIC, logra detectar ejecutables de ransomware con una precisión del 70\%. Sin embargo, este enfoque requiere acceso al binario malicioso, que frecuentemente es eliminado tras la ejecución del ataque.
+
+\subsection{Análisis de Archivos Cifrados}
+
+La detección de archivos cifrados por ransomware mediante métricas estadísticas ha sido abordada por múltiples trabajos. Hsu et al.~\cite{paper_3_enhancing_file_entropy} emplearon técnicas de entropía mejorada con SVM lineal y SVM con núcleo utilizando features de entropía sobre archivos generados por WannaCry, Phobos, GandCrab y GlobeImposter, alcanzando una precisión del 85\% en la detección binaria (cifrado vs. seguro).
+
+Davies et al.~\cite{paper_4_comparison_of_entropy} realizaron la evaluación más exhaustiva hasta la fecha, comparando 53 pruebas estadísticas sobre más de 270.000 archivos del dataset NapierOne. Los autores demostraron que la combinación de una técnica matemática pura (Shannon, Chi-Cuadrado o Monte Carlo) con el coeficiente de correlación serial de bytes proporciona los mejores resultados en detección binaria. Sin embargo, los autores no abordaron la clasificación multiclase entre familias.
+
+Lee et al.~\cite{paper_9_backups} utilizaron métricas de entropía como features para clasificación con múltiples modelos de aprendizaje automático, obteniendo precisiones cercanas al 100\% en la tarea de detección binaria en sistemas de respaldo. Posteriormente, Lee et al.~\cite{lee2022} demostraron que la entropía de Shannon por sí sola no es la métrica óptima y que la combinación de múltiples técnicas mejora significativamente la detección.
+
+Davies et al.~\cite{paper_6_majority} propusieron un sistema de votación mayoritaria que combina 23 tests estadísticos para la detección de ransomware sobre el dataset NapierOne, alcanzando una precisión del 99,8\%.
+
+\subsection{Análisis de Notas de Rescate}
+
+Lemmou et al.~\cite{paper_5_note_files} presentaron una estrategia para clasificar notas de rescate por familia de ransomware, utilizando marcadores como direcciones de correo electrónico, direcciones Bitcoin, y Análisis Semántico Latente (LSA) sobre el contenido textual. El estudio logró identificar correctamente el 99,45\% de los archivos analizados sobre la colección Lemmou~\cite{paper_5_dataset}. Trujillo~\cite{paper_8_supervised} posteriormente abordó la detección de si un archivo constituye una nota de ransomware (clasificación binaria nota vs. no-nota), utilizando Decision Tree y SVM con aproximadamente 90\% de precisión.
+
+\subsection{Herramientas de Identificación Existentes}
+
+Filiz et al.~\cite{paper_2_on_efectiveness} evaluaron la efectividad de herramientas de descifrado y clasificación, encontrando que casi la mitad no logran recuperar datos satisfactoriamente. En relación a la identificación de familias, CryptoSheriff clasificó correctamente solo el 16,67\% de las familias, identificando parcialmente un 43\% adicional. ID Ransomware alcanzó el 66,67\% con archivos cifrados y el 72\% utilizando notas de rescate, evidenciando la superioridad del análisis textual sobre el análisis de archivos para la tarea de identificación de familias. Cabe destacar que ID Ransomware emplea un enfoque basado en firmas de bytes (\textit{byte patterns}) y reglas manuales, no aprendizaje automático.
+
+\subsection{Síntesis y Brecha de Investigación}
+
+La revisión de la literatura revela que: (a) la detección binaria de archivos cifrados está esencialmente resuelta, con múltiples trabajos reportando precisiones superiores al 95\%; (b) la clasificación multiclase de familias basada exclusivamente en propiedades estadísticas de archivos cifrados no ha sido demostrada exitosamente; y (c) el análisis NLP de notas de rescate muestra resultados prometedores pero ha sido evaluado sobre corpus limitados que no incluyen las familias modernas más relevantes.
+
+El presente trabajo busca cerrar esta brecha evaluando sistemáticamente ambos enfoques sobre las mismas 30 familias del dataset NapierOne, proporcionando una comparación directa y cuantitativa de sus capacidades discriminativas.

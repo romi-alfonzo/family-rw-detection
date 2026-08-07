@@ -1,0 +1,288 @@
+% -------------------
+% --- usepackages ---
+% -------------------
+% \usepackage[utf8]{inputenc} % No necesario en LaTeX moderno (TeX Live 2018+)
+\usepackage{amsfonts}
+\usepackage{csquotes} % For "csquotes missing" warning and babel-biblatex compatibility
+\usepackage[
+	spanish
+]{babel} % Bibliography
+\usepackage[
+	backend=biber,
+	style=numeric,
+	sorting=none,
+	maxbibnames=99
+]{biblatex} % Bibliography
+\usepackage{amsmath} % For equations.
+\usepackage{amsthm} % For theorem, definition, lemma and proofs.
+\usepackage{siunitx} % To write degree symbol for angles.
+\usepackage{graphicx} % To add images
+\usepackage{xcolor} % To add pdf_tex images
+\usepackage{import} % To add pdf_tex images
+\usepackage{changepage} % To adjustwidth
+\usepackage{multirow} % To merge cells in table
+\usepackage[
+	Algoritmo
+]{algorithm} % To write Algorithms
+\usepackage[
+	noend
+]{algpseudocode} % To write Algorithms
+\usepackage{caption} % To add subfigures
+\usepackage[
+	list=true
+]{subcaption} % To add subfigures
+\usepackage{booktabs} % To change weight of table lines
+\usepackage{imakeidx} % To make index
+\usepackage{geometry} % To set margin and page size
+\usepackage{setspace} % To set interline spacing
+\usepackage{chngcntr} % To enumerate captions by chapter
+\usepackage{hyperref} % To autogenerate hyperlinks
+\usepackage{amssymb} % For \boxplus.
+\usepackage{environ} % To define appendix command
+\usepackage{mathrsfs} % To cursive font
+\usepackage{titlesec} % For custom chapter heading style
+\usepackage{enumitem} % To define new type of list
+\usepackage{multicol} % For multiple column in one page
+\usepackage{cleveref} % For footnotes in multiple sentences
+
+% -------------------------
+% --- makeindex options ---
+% -------------------------
+%     title:        header title
+%     options= -s:  .ist file
+%     intoc:        add to table of content
+\makeindex[title=ÍNDICE ALFABÉTICO, options= -s index.ist, intoc]
+
+% -------------------------
+% --- bibliography file ---
+% -------------------------
+\addbibresource{bibliography.bib}
+
+% ----------------------------
+% --- document information ---
+% ----------------------------
+\title{Complejidad Computacional de Problemas de Empaquetamiento con Trominós}
+\author{Javier Tadashi Akagi Fukushima}
+\date{September 2019}
+
+% -----------------------------
+% --- page size and margins ---
+% -----------------------------
+\geometry{
+	a4paper, 
+	tmargin = 2.5cm,
+	bmargin = 2cm,
+	rmargin = 1.5cm,
+	lmargin = 2.5cm
+}
+
+% ---------------------------------
+% --- page format and numbering ---
+% ---------------------------------
+\pagestyle{plain}
+
+% -----------------------
+% --- interline space ---
+% -----------------------
+\onehalfspacing
+%\spacing{1.5}
+%\doublespacing
+
+% --------------------------------
+% --- font style               ---
+% ---  of definition, theorems ---
+% --------------------------------
+%     definition style: roman
+\theoremstyle{definition}
+
+% -------------------------
+% --- caption numbering ---
+% -------------------------
+%     numbering by chapter:
+%     <number of chapter>.<number of figure>
+\counterwithin{figure}{chapter}
+\counterwithin{equation}{chapter}
+\counterwithin{table}{chapter}
+\counterwithin{algorithm}{chapter}
+
+% ----------------------------
+% --- caption label format ---
+% ----------------------------
+%     subfigure caption format:
+%     (<subfigure enumeration>) <description>
+%\DeclareCaptionLabelFormat{subfigure}{Figura#1~\thefigure(#2):}
+\DeclareCaptionLabelFormat{subfigureComment}{(#2):}
+\DeclareCaptionLabelFormat{subfigureOnlyNumber}{(#2)}
+%\DeclareCaptionLabelFormat{noCaption}{}
+%\captionsetup[sub]{labelformat=subfigure}
+\captionsetup[sub]{labelformat=subfigureOnlyNumber}
+
+% ----------------------------------------
+% --- table of content, list of figure ---
+% ---  and list of table reedefinition ---
+% ----------------------------------------
+%     <title>                         Page
+%     1. <chapter title> .... <page number>
+
+\makeatletter
+\renewcommand\tableofcontents{%
+	\noindent
+	\textbf{\large ÍNDICE} \hspace*{\fill} Página
+	
+	\@starttoc{toc}%
+}
+\makeatother
+
+\makeatletter
+\renewcommand\listoffigures{%
+	\noindent
+	\textbf{\large LISTA DE FIGURAS} \hspace*{\fill} Página
+
+    \@starttoc{lof}%
+}
+\makeatother
+
+\makeatletter
+\renewcommand\listoftables{%
+	\noindent
+	\textbf{\large LISTA DE TABLAS} \hspace*{\fill} Página
+
+    \@starttoc{lot}%
+}
+\makeatother
+
+% ---------------------------
+% --- new list definition ---
+% ---------------------------
+\newlist{listsymbol}{itemize}{1}
+\setlist[listsymbol,1]{
+	label=,
+	labelwidth=1.9cm,
+	align=parleft,
+	itemsep=0.1\baselineskip,
+	leftmargin=!
+}
+
+% ----------------------
+% --- newenvironment ---
+% ----------------------
+\newenvironment{proofidea}{\begin{proof}[La idea de la demostración]}{\end{proof}}
+\newenvironment{blockindent}{\vskip 0cm
+\begin{adjustwidth}{.5cm}{.5cm}}{\end{adjustwidth}
+\vskip .5cm}
+
+% ------------------
+% --- newcommand ---
+% ------------------
+\newcommand{\aztecdiam}{\mathcal{AD}} % To denote AD (aztec diamond)
+\newcommand{\aztecrect}{\mathcal{AR}} % To denote AR (aztec rectangle)
+
+\newcommand{\midbar}{\;\middle|\;} % To draw midline in set
+
+\newcommand{\inout}[3]{ % To write a problem statement
+	\vspace{0.2cm}
+	\noindent
+	\begin{tabular}{p{.13\textwidth} p{.006\textwidth} p{.775\textwidth}}
+		\multicolumn{3}{l}{\scalebox{.85}{\textsc{#1}}}\\
+		\hline
+		\multicolumn{1}{|l}{ENTRADA} &:& \multicolumn{1}{p{.775\textwidth}|}{#2} \\
+		\multicolumn{1}{|l}{SALIDA} &:& \multicolumn{1}{p{.775\textwidth}|}{#3} \\
+		\hline
+	\end{tabular}
+	\vspace{0.2cm}
+}
+% \inout{<title>}{<input statement>}{<output statement>}
+%
+% will produce:
+%
+%  <title>
+%  /--------------------------------\
+%  | ENTRADA : <input statement>    |
+%  | SALIDA  : <output statement>   |
+%  \--------------------------------/
+
+% -------------------------------------
+% --- custom chapter heading format ---
+% -------------------------------------
+%     Label:  Chapter <chapter number>
+%     Title:  <chapter title>
+\newcommand{\chapterformatdefault}{
+	\titleformat{\chapter}[display]
+		{\LARGE } % Format for Label and Title
+		{\vspace*{3.5cm}\MakeUppercase{\chaptertitlename} {\thechapter}} % Label
+		{.2 cm} % Horizontal separation
+		{\bfseries } % Code preceding to title body.
+}
+
+%     Title:  <chapter title>
+\newcommand{\chapterformattitleonly}{
+	\titleformat{\chapter}[display]
+		{\LARGE } % Format for Label and Title
+		{\vspace*{3.5cm}\MakeUppercase{\chaptertitlename} {\thechapter}} % Label
+		{.2 cm} % Horizontal separation
+		{\bfseries } % Code preceding to title body.
+}
+
+\newcommand{\trominodl}{\begin{gathered}\includegraphics[scale=.75]{images/L-tromino1.pdf}\end{gathered}} % To write a L-tromino in equation.
+\newcommand{\trominodr}{\begin{gathered}\includegraphics[scale=.75]{images/L-tromino2.pdf}\end{gathered}} % To write a L-tromino in equation.
+\newcommand{\trominour}{\begin{gathered}\includegraphics[scale=.75]{images/L-tromino3.pdf}\end{gathered}} % To write a L-tromino in equation.
+\newcommand{\trominoul}{\begin{gathered}\includegraphics[scale=.75]{images/L-tromino4.pdf}\end{gathered}} % To write a L-tromino in equation.
+\newcommand{\dominov}{\begin{gathered}\includegraphics[scale=.75]{images/dominoV.pdf}\end{gathered}} % To write a domino in equation.
+\newcommand{\dominoh}{\begin{gathered}\includegraphics[scale=.75]{images/dominoH.pdf}\end{gathered}} % To write a domino in equation.
+\newcommand{\floor}[1]{\left \lfloor #1 \right \rfloor} % To denote floor function
+
+\newcommand\blfootnote[1]{ % To generate a footnote without marker
+	\begingroup
+	\renewcommand\thefootnote{}\footnote{#1}%
+	\addtocounter{footnote}{-1}%
+	\endgroup
+}
+
+% ---------------------------
+% --- spanish translation ---
+% ---------------------------
+
+% -- Spanish theorems ---
+\newtheorem{theorem}{Teorema}
+\numberwithin{theorem}{chapter} % To number theorems according to the chapter
+\newtheorem{definition}{Definición}
+\numberwithin{definition}{chapter} % To number definitions according to the chapter
+\newtheorem{lemma}{Lema}
+\numberwithin{lemma}{chapter} % To number lemmas according to the chapter
+\newtheorem{corollary}{Corolario}
+\numberwithin{corollary}{chapter} % To number corollaries according to the chapter
+\newtheorem{example}{Ejemplo}
+\numberwithin{example}{chapter} % To number examples according to the chapter
+\newtheorem{openproblem}{Problema abierto}
+\numberwithin{openproblem}{chapter} % To number open problem according to the chapter
+\addto\spanish{\renewcommand\proofname{Demostración}}
+
+% -- Spanish algorithmic --
+\algdef{S}[FOR]{ForEach}[1]{\algorithmicforeach\ #1\ \algorithmicdo}
+\algnewcommand\algorithmicforeach{\textbf{para cada}}
+
+\renewcommand{\algorithmicprocedure}{\textbf{procedimiento}}
+\renewcommand{\algorithmicend}{\textbf{fin}}
+\renewcommand{\algorithmicif}{\textbf{si}}
+\renewcommand{\algorithmicthen}{\textbf{entonces}}
+\renewcommand{\algorithmicelse}{\textbf{sino }}
+\renewcommand{\algorithmicfor}{\textbf{desde}}
+\renewcommand{\algorithmicforall}{\textbf{para todo}}
+\renewcommand{\algorithmicdo}{\textbf{repetir}}
+\renewcommand{\algorithmicwhile}{\textbf{mientras}}
+\renewcommand{\algorithmicrepeat}{\textbf{repetir}}
+\renewcommand{\algorithmicuntil}{\textbf{antes de}}
+\renewcommand{\algorithmicreturn}{\textbf{retornar}}
+%\renewcommand{\algorithmicrequire}{\textbf{Require:}}
+%\renewcommand{\algorithmicensure}{\textbf{Ensure:}}
+%\renewcommand{\algorithmicelsif}{\algorithmicelse\ \algorithmicif}
+%\renewcommand{\algorithmicendif}{\algorithmicend\ \algorithmicif}
+%\renewcommand{\algorithmicendfor}{\algorithmicend\ \algorithmicfor}
+%\renewcommand{\algorithmicendwhile}{\algorithmicend\ \algorithmicwhile}
+%\renewcommand{\algorithmicloop}{\textbf{loop}}
+%\renewcommand{\algorithmicendloop}{\algorithmicend\ \algorithmicloop}
+
+% -- Spanish list title --
+\addto\captionsspanish{\renewcommand*\contentsname{ÍNDICE}}
+\addto\captionsspanish{\renewcommand*\listfigurename{LISTA DE FIGURAS}}
+\addto\captionsspanish{\renewcommand*\listtablename{LISTA DE TABLAS}}

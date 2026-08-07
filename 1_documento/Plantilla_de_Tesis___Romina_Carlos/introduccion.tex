@@ -1,0 +1,49 @@
+\section{Contexto y Motivación}
+
+El ransomware representa una de las amenazas cibernéticas más significativas de la última década, con pérdidas económicas globales estimadas en miles de millones de dólares anuales~\cite{europol2023}. Este tipo de malware restringe el acceso a los datos de la víctima mediante la encriptación de archivos y exige un pago, generalmente en criptomonedas, para restaurar el acceso. A diferencia de otras formas de malware que buscan robar información o comprometer sistemas de manera encubierta, el ransomware confronta directamente a la víctima con la pérdida de sus datos.
+
+Si bien la investigación en ransomware ha sido extensa en términos de prevención y detección temprana, el análisis post-ataque ha recibido considerablemente menos atención~\cite{paper_4_comparison_of_entropy}. La mayoría de las investigaciones se centran en el análisis del ejecutable malicioso, un enfoque que resulta poco práctico en escenarios reales donde el atacante suele eliminar el binario tras completar la encriptación. En contraste, los artefactos que invariablemente permanecen después de un ataque son los archivos encriptados y las notas de rescate depositadas por el ransomware.
+
+La identificación de la familia de ransomware responsable de un ataque constituye un paso crítico en la respuesta a incidentes, ya que permite determinar si existen herramientas de descifrado disponibles, evaluar la probabilidad de recuperación de datos, y caracterizar el modus operandi del grupo atacante. Herramientas existentes como CryptoSheriff e ID Ransomware abordan parcialmente este problema, pero presentan limitaciones significativas: CryptoSheriff clasifica correctamente solo el 16,67\% de las familias de ransomware, mientras que ID Ransomware alcanza el 66,67\% utilizando archivos encriptados, y el 72\% cuando se emplean notas de rescate~\cite{paper_2_on_efectiveness}.
+
+Estos resultados revelan una brecha importante en la capacidad de identificación automatizada de familias de ransomware, y sugieren que las notas de rescate contienen información discriminativa valiosa que no está siendo explotada adecuadamente por los métodos actuales.
+
+\section{Planteamiento del Problema}
+
+El problema central que aborda este trabajo es la clasificación automatizada de familias de ransomware en un escenario post-ataque, donde los únicos artefactos disponibles son los archivos encriptados y las notas de rescate.
+
+Este problema presenta dos desafíos fundamentales. El primero se relaciona con la naturaleza de los archivos encriptados: los algoritmos criptográficos modernos (AES, RSA, ChaCha20) producen salidas estadísticamente indistinguibles de datos aleatorios~\cite{paper_4_comparison_of_entropy, paper_3_enhancing_file_entropy}. Esto implica que las métricas estadísticas tradicionales como la entropía de Shannon, si bien son efectivas para detectar la presencia de encriptación, resultan insuficientes para discriminar entre diferentes familias de ransomware. Trabajos recientes han demostrado que la entropía de Shannon no es la métrica óptima para todos los escenarios de detección, y que la combinación de múltiples pruebas estadísticas, incluyendo Chi-Cuadrado, Monte Carlo y el coeficiente de correlación serial de bytes, ofrece resultados superiores en la detección de archivos cifrados~\cite{lee2022}.
+
+El segundo desafío concierne a las notas de rescate: aunque cada familia de ransomware utiliza plantillas de texto características, la recopilación de un corpus suficientemente amplio y representativo de estas notas constituye un problema abierto, dado que no existe un repositorio centralizado y estandarizado.
+
+\section{Objetivos}
+
+\subsection{Objetivo General}
+
+Evaluar y comparar técnicas de aprendizaje automático para la clasificación de familias de ransomware utilizando dos fuentes de evidencia post-ataque: las propiedades estadísticas de archivos encriptados y el análisis de procesamiento de lenguaje natural (NLP) de notas de rescate.
+
+\subsection{Objetivos Específicos}
+
+\begin{enumerate}
+    \item Evaluar la efectividad de métricas estadísticas (entropía de Shannon, Chi-Cuadrado, estimación Monte Carlo de $\pi$, coeficiente de correlación serial de bytes) para la detección binaria de archivos cifrados por ransomware versus archivos seguros, utilizando el dataset NapierOne.
+
+    \item Investigar las limitaciones de la clasificación multiclase de familias de ransomware basada exclusivamente en propiedades estadísticas de archivos encriptados, proporcionando evidencia empírica de la indistinguibilidad estadística entre familias.
+
+    \item Construir un corpus de notas de rescate asociadas a las 30 familias de ransomware del dataset NapierOne, integrando múltiples fuentes públicas.
+
+    \item Implementar y evaluar un sistema de clasificación de familias de ransomware basado en el análisis NLP de notas de rescate, utilizando técnicas de TF-IDF y modelos de aprendizaje automático.
+
+    \item Comparar cuantitativamente la efectividad de ambos enfoques (análisis de archivos vs. análisis de notas) para la identificación de familias de ransomware.
+\end{enumerate}
+
+\section{Alcance y Limitaciones}
+
+El presente trabajo se enfoca en 30 familias de ransomware incluidas en el dataset NapierOne~\cite{paper_7_napierone}, que abarca variantes activas entre 2013 y 2022. El análisis de archivos encriptados se realiza sobre las versiones \textit{extra-small} y \textit{small} del dataset, que contienen 100 y 1.000 archivos por familia respectivamente, además de archivos seguros pertenecientes a 44 tipos de archivos comunes.
+
+Para el corpus de notas de rescate, se integran muestras provenientes de repositorios públicos (ThreatLabz~\cite{threatlabz}, Lemmou~\cite{paper_5_dataset}) y notas documentadas en reportes de seguridad de fuentes reconocidas (CISA, Securelist, BleepingComputer, CrowdStrike).
+
+Las principales limitaciones del trabajo incluyen: (a) la dependencia de datasets públicos que pueden no representar todas las variantes de cada familia; (b) la cantidad limitada de notas de rescate disponibles para algunas familias; (c) el enfoque restringido a archivos encriptados en reposo, sin considerar tráfico de red ni comportamiento dinámico del malware.
+
+\section{Organización del Documento}
+
+El presente documento se organiza de la siguiente manera. El Capítulo~2 presenta el marco teórico, incluyendo los fundamentos de ransomware, las métricas estadísticas empleadas, los algoritmos de aprendizaje automático seleccionados, las técnicas de procesamiento de lenguaje natural, y una revisión de los trabajos relacionados. El Capítulo~3 describe la metodología adoptada, detallando la preparación de datos, la extracción de características, y el diseño experimental. El Capítulo~4 presenta los resultados experimentales obtenidos en los tres escenarios evaluados (detección binaria, clasificación multiclase por archivos, y clasificación por notas de rescate), junto con un análisis comparativo. Finalmente, el Capítulo~5 recoge las conclusiones del trabajo, las contribuciones realizadas, y las líneas de trabajo futuro identificadas.

@@ -1,0 +1,233 @@
+\section{Diseño Experimental General}
+
+La metodología de este trabajo se estructura en tres experimentos complementarios, cada uno diseñado para evaluar un aspecto específico de la clasificación de familias de ransomware en escenarios post-ataque:
+
+\begin{enumerate}
+    \item \textbf{Experimento 1 -- Detección Binaria:} Clasificación de archivos como cifrados o seguros, utilizando métricas estadísticas y múltiples algoritmos de aprendizaje automático.
+    \item \textbf{Experimento 2 -- Clasificación Multiclase por Archivos:} Identificación de la familia de ransomware específica a partir de las propiedades estadísticas de los archivos cifrados (31 clases: 30 familias + clase segura).
+    \item \textbf{Experimento 3 -- Clasificación por Notas de Rescate:} Identificación de la familia mediante análisis NLP del contenido textual de las notas de rescate.
+\end{enumerate}
+
+Esta estructura permite una comparación directa entre la capacidad discriminativa de los archivos cifrados y las notas de rescate para la tarea de identificación de familias.
+
+\section{Preparación de Datos}
+
+\subsection{Datos de Archivos Encriptados}
+
+Para los Experimentos 1 y 2, se utilizaron archivos del dataset NapierOne~\cite{paper_7_napierone} en su versión Extra-Small (100 archivos por familia). Se extrajeron las siguientes características para cada archivo:
+
+\begin{itemize}
+    \item Entropía de Shannon del archivo completo
+    \item Entropía de Shannon de los primeros 100 bytes
+    \item Estadístico Chi-Cuadrado
+    \item Promedio aritmético de bytes
+    \item Estimación Monte Carlo de $\pi$
+    \item Coeficiente de correlación serial de bytes (SBCC)
+\end{itemize}
+
+El conjunto resultante comprende 1.600 muestras: 50 archivos cifrados por cada una de las 30 familias (1.500 muestras de ransomware) más 100 archivos seguros (clase Z-Safe), etiquetados numéricamente del 0 al 30.
+
+Para la detección binaria (Experimento 1), las etiquetas se binarizaron: las clases 0--29 (ransomware) se agruparon como ``cifrado'' y la clase 30 (Z-Safe) como ``seguro''.
+
+\subsection{Corpus de Notas de Rescate}
+\label{subsec:corpus_notas}
+
+Para el Experimento 3, se construyó un corpus de notas de rescate asociadas a las 30 familias objetivo, cuya nomenclatura sigue la del dataset NapierOne~\cite{paper_7_napierone}. Las fuentes que aportaron notas al corpus final fueron:
+
+\begin{itemize}
+    \item \textbf{ThreatLabz}~\cite{threatlabz}: Repositorio público de Zscaler con notas de más de 200 familias de ransomware (49 notas del corpus final).
+    \item \textbf{Lemmou/RansomNoteFiles}~\cite{paper_5_dataset}: Colección de archivos de notas en formato original correspondiente al trabajo de Lemmou et al.~\cite{paper_5_note_files} (47 notas).
+    \item \textbf{Corpus previo del proyecto}: notas recolectadas en etapas anteriores del trabajo a partir de repositorios públicos (37 notas).
+    \item \textbf{PCRisk}~\cite{pcrisk}: Portal de seguridad con guías de eliminación que documentan notas de rescate verificadas; se utilizaron transcripciones para familias sin archivo bruto público (13 notas).
+\end{itemize}
+
+Se consultaron además otras fuentes (Malware-Notes~\cite{malwarenotes_repo}, CISA~\cite{cisa_stopransomware}, ANY.RUN~\cite{anyrun_sandbox}, F6 DFIR~\cite{f6dfir_ransomware}) que no aportaron notas adicionales para las 30 familias objetivo.
+
+El proceso de construcción del corpus siguió los siguientes pasos:
+
+\begin{enumerate}
+    \item Identificación de las 30 familias objetivo según la nomenclatura de NapierOne, considerando variantes de nombre (ej: BlackCat/ALPHV, Sodinokibi/REvil).
+    \item Recolección priorizando los \textbf{archivos brutos originales} (nombre y extensión con que el ransomware deposita la nota), por su valor forense.
+    \item Deduplicación por contenido exacto entre fuentes.
+    \item Validación manual de la correspondencia familia--nota y etiquetado de la procedencia de cada nota (archivo bruto, corpus previo o transcripción) en un manifiesto de trazabilidad.
+    \item Exclusión de familias con menos de 2 notas, requisito mínimo para validación cruzada estratificada.
+\end{enumerate}
+
+El corpus resultante (\texttt{corpus\_v2}) contiene \textbf{146 notas distribuidas en las 30 familias}, preservando las extensiones originales (117 \texttt{.txt}, 17 \texttt{.hta}, 9 \texttt{.html}, 2 \texttt{.htm} y 1 \texttt{.readme\_to\_restore}). Para seis familias sin archivo bruto público disponible (BadRabbit, Chimera, Jigsaw, NotPetya, WannaCry y CryptoLocker) se recurrió al corpus previo o a transcripciones documentadas, lo cual se declara como limitación de procedencia.
+
+\section{Extracción de Características}
+
+\subsection{Features para Clasificación de Archivos}
+
+La extracción de características estadísticas se realizó mediante un módulo Python personalizado que calcula las 6 métricas descritas en la Sección 2.3 para cada archivo. Todas las características fueron normalizadas mediante StandardScaler de scikit-learn~\cite{sklearn} para garantizar comparabilidad entre métricas con diferentes escalas.
+
+\subsection{Features para Clasificación de Notas (TF-IDF)}
+
+Para el análisis NLP de notas de rescate, se empleó una representación TF-IDF dual que combina:
+
+\begin{itemize}
+    \item \textbf{N-gramas de palabras (1-2):} Capturan frases discriminativas como ``bitcoin address'', ``decrypt files'', o direcciones de correo específicas de cada familia. Se limitó a un máximo de 5.000 features.
+    \item \textbf{N-gramas de caracteres (3-5):} Capturan patrones morfológicos y secuencias de caracteres características, siendo robustos ante errores ortográficos frecuentes en notas de rescate redactadas por atacantes no anglófonos. Se limitó a un máximo de 5.000 features.
+\end{itemize}
+
+Se evaluaron ambas representaciones por separado y su concatenación horizontal (configuración \textit{combinada}), que genera un espacio de características de hasta 10.000 dimensiones por nota. Para evitar fuga de información, los vectorizadores TF-IDF se ajustan exclusivamente con el subconjunto de entrenamiento de cada partición, encapsulados en un \texttt{Pipeline} de scikit-learn~\cite{sklearn}.
+
+\section{Diseño de los Experimentos}
+
+\subsection{Estrategia de Validación}
+
+Se empleó validación cruzada estratificada en todos los experimentos para garantizar la representatividad de las clases en cada fold:
+
+\begin{itemize}
+    \item \textbf{Experimentos 1 y 2:} 5-Fold cross-validation, dado el tamaño suficiente del dataset de archivos (1.600 muestras).
+    \item \textbf{Experimento 3:} 2-Fold cross-validation, límite impuesto por las familias con solo 2 notas (StratifiedKFold requiere al menos $k$ muestras por clase). Para compensar la variabilidad de una partición tan gruesa, la validación se \textbf{repite con 10 semillas aleatorias} distintas y se reporta media $\pm$ desvío estándar entre repeticiones. Se emplean dos protocolos de partición complementarios (Sección~\ref{subsec:protocolos_nlp}) que responden preguntas de investigación distintas.
+\end{itemize}
+
+\subsection{Modelos Evaluados}
+
+Los modelos seleccionados para cada experimento fueron:
+
+\begin{itemize}
+    \item \textbf{Experimento 1 (Binaria):} Regresión Logística, SVM, KNN, Decision Tree, Random Forest, Gradient Boosting.
+    \item \textbf{Experimento 2 (Multiclase):} Regresión Logística, SVM, KNN, Random Forest, Gradient Boosting.
+    \item \textbf{Experimento 3 (NLP):} LinearSVC, Regresión Logística, Random Forest, KNN.
+\end{itemize}
+
+La selección de LinearSVC para el Experimento 3 se fundamenta en su efectividad demostrada en espacios de alta dimensionalidad con datos dispersos, característica inherente a las representaciones TF-IDF~\cite{joachims1998}.
+
+\subsection{Métricas de Evaluación}
+
+Se reportan las siguientes métricas para todos los experimentos:
+
+\begin{itemize}
+    \item \textbf{Accuracy:} Proporción global de predicciones correctas.
+    \item \textbf{Balanced accuracy:} Promedio del recall por clase; corrige el efecto del desbalance entre clases.
+    \item \textbf{Macro-F1:} Promedio simple del F1 de cada clase, que otorga el mismo peso a todas las familias independientemente de su número de muestras.
+    \item \textbf{Weighted-F1:} Promedio del F1 ponderado por el tamaño de cada clase; se incluye por comparabilidad con trabajos previos.
+\end{itemize}
+
+En un corpus desbalanceado como el de notas (donde las dos familias más numerosas concentran el 25\% de las muestras), la accuracy y las métricas \textit{weighted} quedan dominadas por las familias grandes y pueden sobreestimar el rendimiento real. Por ello, para los experimentos multiclase (2 y 3) se adopta el \textbf{macro-F1 como métrica principal}, acompañado de balanced accuracy, el reporte detallado por familia y la matriz de confusión, lo que permite identificar qué familias son más fáciles o difíciles de clasificar.
+
+\subsection{Implementación}
+
+Todos los experimentos se implementaron en Python 3 utilizando scikit-learn~\cite{sklearn} para los modelos de aprendizaje automático y la extracción de características TF-IDF. El código fuente está disponible en el repositorio del proyecto.
+
+\section{Pruebas Preliminares con Archivos Encriptados}
+\label{sec:pruebas_preliminares}
+
+Este capítulo presenta los primeros experimentos realizados para evaluar la viabilidad del enfoque propuesto de detección de ransomware mediante análisis estadístico. Los objetivos específicos de estas pruebas preliminares fueron:
+
+\begin{itemize}
+    \item Establecer una línea base de rendimiento para diferentes algoritmos de clasificación
+    \item Identificar las características estadísticas más discriminativas
+    \item Determinar la capacidad de generalización de los modelos
+    \item Validar la hipótesis de que las métricas de entropía y aleatoriedad pueden servir como indicadores confiables
+\end{itemize}
+
+El diseño experimental se estructuró en dos fases principales:
+
+\subsection{Fase 1: Evaluación inicial}
+\begin{itemize}
+    \item Conjunto reducido de 350 archivos (300 encriptados + 50 no encriptados)
+    \item Dos características principales: entropía de Shannon y tamaño de archivo
+    \item Comparación de seis modelos de machine learning
+\end{itemize}
+
+\subsection{Fase 2: Análisis extendido}
+\begin{itemize}
+    \item Conjunto ampliado de 1,600 archivos
+    \item Cinco métricas estadísticas adicionales
+    \item Evaluación de combinaciones de características
+\end{itemize}
+
+Estas pruebas preliminares permitieron ajustar la metodología antes de realizar experimentos a mayor escala, optimizando tanto la selección de modelos como las características utilizadas. Los siguientes apartados detallan los procedimientos y resultados obtenidos en cada fase.
+
+\subsection{Diseño de la Fase 1 (clasificación binaria preliminar)}
+
+Se construyó un conjunto de 350 archivos: 300 cifrados (10 por cada una de las 30 familias) y 50 no cifrados obtenidos de NapierOne~\cite{paper_7_napierone}. Se emplearon dos características ---la entropía de Shannon del archivo completo y su tamaño en bytes--- normalizadas mediante escalado min-max:
+
+\begin{equation}
+X_{\text{norm}} = \frac{X - X_{\min}}{X_{\max} - X_{\min}}
+\end{equation}
+
+Se compararon seis modelos (SVM, Regresión Logística, MLP, KNN, Árbol de Decisión y Gradient Boosting) sobre una partición fija entrenamiento--prueba, sin validación cruzada, por tratarse de una prueba exploratoria de viabilidad.
+
+\subsection{Diseño de la Fase 2 (clasificación multiclase preliminar)}
+
+Se amplió el conjunto a 1.600 archivos (50 cifrados por familia más 100 legítimos) y a las seis métricas estadísticas descritas en el marco teórico, evaluando tanto métricas individuales como combinaciones de pares, con y sin transformación polinomial de las características. Los modelos y el preprocesamiento fueron los de la Fase 1, con partición fija entrenamiento--prueba.
+
+Los resultados de ambas fases preliminares se presentan en el Capítulo~4.
+
+\section{Clasificación de Familias mediante Notas de Rescate}
+
+Dado que las propiedades estadísticas de los archivos encriptados no permiten discriminar entre familias, se evaluó una fuente de evidencia alternativa: las notas de rescate que cada familia deposita en el sistema de la víctima.
+
+\subsection{Conjunto de Datos}
+Se utilizó el corpus \texttt{corpus\_v2} descrito en la Sección~\ref{subsec:corpus_notas}: 146 notas de rescate distribuidas en las 30 familias objetivo, con procedencia trazable por nota (96 archivos brutos, 37 del corpus previo y 13 transcripciones).
+
+\subsection{Preprocesamiento}
+\begin{itemize}
+\item \textbf{Detección de codificación:} las notas se generan en los equipos comprometidos y no siempre están en UTF-8; una fracción del corpus (14 archivos de las familias DHARMA, GANDCRAB y SUNCRYPT) está codificada en UTF-16 o cp1252. La lectura detecta la codificación real de cada archivo (marca BOM, heurística de bytes nulos para UTF-16 sin BOM, y \textit{fallback} a cp1252), evitando que las notas ingresen al pipeline como texto ilegible.
+\item \textbf{Extracción de texto visible:} los archivos HTML/HTA fueron procesados con BeautifulSoup para extraer únicamente el texto visible, eliminando etiquetas HTML, scripts y estilos.
+\item \textbf{Normalización:} conversión a minúsculas y eliminación de acentos (\texttt{strip\_accents=unicode}).
+\end{itemize}
+\subsection{Características (TF-IDF)}
+
+La representación de texto mediante TF-IDF (Term Frequency--Inverse Document Frequency) fue seleccionada por su efectividad demostrada en tareas de clasificación de texto en espacios de alta dimensionalidad~\cite{joachims1998}. Se empleó la variante con suavizado sublineal ($1 + \log(tf)$), que atenúa el efecto de términos excesivamente frecuentes dentro de un documento y mejora la discriminación en corpus pequeños~\cite{sklearn}.
+
+Se evaluaron tres configuraciones:
+
+\begin{itemize}
+\item \textbf{N-gramas de palabras (1-2)}: Los unigramas y bigramas de palabras capturan frases discriminativas específicas de cada familia, tales como direcciones de correo electrónico, nombres de servicios, instrucciones de pago y vocabulario característico. Este rango fue seleccionado siguiendo el enfoque de Lemmou et al.~\cite{paper_5_note_files}, quienes demostraron que los marcadores textuales (emails, direcciones Bitcoin, palabras clave) son altamente discriminativos para la clasificación de notas de rescate. Se limitó a un máximo de 5.000 features para evitar sobreajuste dado el tamaño reducido del corpus (146 notas).
+
+\item \textbf{N-gramas de caracteres (3-5)}: Los n-gramas de caracteres a nivel de palabra (\texttt{char\_wb}) capturan patrones morfológicos y secuencias de caracteres subcadena, tales como fragmentos de hashes, extensiones de archivo y partes de URLs. Este enfoque es robusto ante errores ortográficos y variaciones tipográficas frecuentes en notas de rescate redactadas por atacantes no anglófonos~\cite{paper_5_note_files}. El rango de 3 a 5 caracteres se seleccionó porque trigramas capturan sufijos y prefijos comunes, mientras que 5-gramas capturan fragmentos de palabras completas sin generar un espacio de features excesivamente disperso.
+
+\item \textbf{Combinado}: La concatenación horizontal de ambas matrices TF-IDF (palabras + caracteres) permite evaluar si la información semántica (palabras) y morfológica (caracteres) son complementarias o redundantes. Este enfoque de representación dual ha sido empleado en clasificación de textos cortos donde la información a nivel de caracteres compensa la escasez de contexto a nivel de palabras~\cite{joachims1998}.
+\end{itemize}
+
+En las tres configuraciones se aplicó conversión a minúsculas y eliminación de acentos (\texttt{strip\_accents=unicode}) para normalizar el texto, y se estableció \texttt{min\_df=1} para retener todos los términos dado el tamaño reducido del corpus.
+
+\subsection{Modelos}
+
+La selección de modelos busca cubrir un espectro diverso de enfoques de clasificación, permitiendo evaluar qué tipo de algoritmo se adapta mejor a las características del espacio TF-IDF:
+
+\begin{itemize}
+\item \textbf{LinearSVC}: Seleccionado por su efectividad demostrada en clasificación de texto con representaciones TF-IDF de alta dimensionalidad y datos dispersos~\cite{joachims1998}. Se configuró con \texttt{class\_weight=balanced} para compensar el desbalance entre familias con diferente número de notas, y \texttt{C=1.0} como parámetro de regularización.
+
+\item \textbf{Regresión Logística}: Modelo lineal probabilístico que, a diferencia de LinearSVC, proporciona estimaciones de probabilidad por clase~\cite{hastie2009}. Se empleó el solver \texttt{lbfgs} con esquema multinomial y \texttt{class\_weight=balanced}. Su inclusión permite comparar el rendimiento de dos enfoques lineales con diferentes funciones objetivo (hinge loss vs. log loss).
+
+\item \textbf{Random Forest}: Método de ensamblaje basado en árboles~\cite{breiman2001} que captura relaciones no lineales entre features. Se configuró con 200 estimadores y \texttt{class\_weight=balanced}. Su inclusión permite evaluar si existen interacciones no lineales entre los términos TF-IDF que los modelos lineales no capturan.
+
+\item \textbf{KNN}: Clasificador basado en instancias con $k=3$ vecinos y métrica coseno~\cite{hastie2009}. Se seleccionó $k=3$ por el tamaño reducido del corpus, y la métrica coseno por ser la más adecuada para espacios TF-IDF donde la magnitud del vector es menos informativa que su dirección. Su inclusión permite evaluar si la similitud directa entre representaciones TF-IDF es suficiente para la clasificación sin un modelo paramétrico.
+\end{itemize}
+
+\subsubsection{Análisis de variabilidad y casi-duplicados}
+\label{subsec:neardups}
+
+Las notas de rescate son esencialmente plantillas: una misma familia reutiliza el mismo texto cambiando únicamente datos de contacto o identificadores de víctima. Para cuantificar este fenómeno y evitar que contamine la evaluación, se calculó la similitud coseno entre todas las notas del corpus (representación TF-IDF de n-gramas de caracteres) y se agruparon como \textit{casi-duplicados} las notas con similitud superior a 0,90 (componentes conexas del grafo de similitud). Las 146 notas se reducen así a \textbf{95 grupos de contenido distinto}. Este agrupamiento es un paso de preparación de datos no supervisado: no utiliza las etiquetas de familia ni participa del entrenamiento.
+
+\subsubsection{Estrategia de Validación: dos protocolos}
+\label{subsec:protocolos_nlp}
+
+Se emplea validación cruzada estratificada de 2 folds repetida con 10 semillas aleatorias, bajo dos protocolos de partición que responden preguntas de investigación distintas:
+
+\begin{itemize}
+\item \textbf{P1 --- plantilla conocida (StratifiedKFold):} las particiones se estratifican por familia sin restricción adicional, por lo que variantes casi idénticas de una nota pueden quedar repartidas entre entrenamiento y prueba. Mide la capacidad del sistema de identificar la familia de una \textbf{nueva instancia de una plantilla ya catalogada}: el escenario operativo de herramientas como ID Ransomware~\cite{idransomware}, que reconocen patrones conocidos.
+\item \textbf{P2 --- variante nunca vista (StratifiedGroupKFold):} los grupos de casi-duplicados de la Sección~\ref{subsec:neardups} nunca se reparten entre entrenamiento y prueba. El modelo se evalúa únicamente sobre contenidos que no vio, midiendo la capacidad de \textbf{generalizar a variantes nuevas} de una familia.
+\end{itemize}
+
+En ambos protocolos, el pipeline completo (vectorización TF-IDF y clasificador) se ajusta exclusivamente con el fold de entrenamiento de cada partición. Se reportan las métricas de la Sección~3.4.3 (media $\pm$ desvío estándar entre las 10 semillas), el reporte por familia y la matriz de confusión. Las familias cuyo contenido forma un único grupo de casi-duplicados no pueden evaluarse bajo P2 (nunca aparecen simultáneamente en entrenamiento y prueba), lo cual se declara en el reporte por familia.
+
+Los resultados del experimento se presentan en el Capítulo~4.
+
+\section{Evaluación de Herramientas Existentes}
+\label{sec:met_herramientas}
+
+Como línea base práctica, se evaluaron las dos herramientas públicas de identificación de ransomware más utilizadas: CryptoSheriff~\cite{cryptosheriff}, del proyecto No More Ransom, e ID Ransomware~\cite{idransomware}. El procedimiento fue el siguiente:
+
+\begin{enumerate}
+\item \textbf{Con archivos cifrados:} se tomaron archivos cifrados del dataset NapierOne~\cite{paper_7_napierone} para cada una de las 30 familias y se subieron a ambas plataformas, registrando si la herramienta identificaba correctamente la familia. CryptoSheriff impone un límite de 1~MB por archivo, por lo que solo pudo probarse con archivos pequeños. Para ID Ransomware se registró además si la identificación se mantenía al renombrar el archivo, lo que permite distinguir si la detección se basa en el contenido (firmas de bytes en posiciones conocidas, \textit{magic bytes}) o en el patrón del nombre y la extensión.
+\item \textbf{Con notas de rescate:} se subieron a ID Ransomware 57 notas de 22 familias del corpus, registrando los aciertos por familia.
+\end{enumerate}
+
+Los resultados de esta evaluación se presentan en el Capítulo~4 y constituyen el punto de comparación directo para los Experimentos 2 y 3.
