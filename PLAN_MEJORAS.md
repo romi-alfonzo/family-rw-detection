@@ -65,6 +65,16 @@ Es la única prueba de confundido que se puede hacer con NapierOne.
 
 ### 3.1 Ampliar el corpus en plantillas
 URLs ya identificadas en `6_notas_trabajo/mas_notas_descarga.md` para 14 familias.
+
+> ⚠️ **Corregido el 2026-08-12.** Fijar «≥3 plantillas por familia» como meta es
+> inviable: las fuentes públicas ya se recolectaron y para varias familias probablemente
+> no existan plantillas adicionales. El planteo correcto tiene tres frentes:
+> **(a)** reportar el desempeño estratificado por cantidad de plantillas disponibles, que
+> no requiere datos nuevos y documenta el límite; **(b)** ampliar de forma oportunista
+> informando el resultado sea cual sea; **(c)** evaluar aprendizaje few-shot para las
+> familias con una o dos plantillas, única vía cuando la recolección no puede aportar más
+> ejemplos.
+
 **Objetivo correcto: ≥3 plantillas distintas por familia**, no "≥5 notas" — la métrica
 sale del hallazgo de que 146 notas son solo 95 contenidos.
 Es lo único que puede mover P2 de forma sustancial, porque ataca la causa.

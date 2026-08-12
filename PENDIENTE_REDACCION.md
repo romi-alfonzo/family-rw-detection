@@ -255,8 +255,11 @@ familia; en los archivos, la información contenida en las características esta
    sección, según lo sugerido el 08/05/2024?
 3. El clúster dispone de GPU. ¿Incluir una comparación con modelos de tipo *transformer* como
    sección adicional, o dejarla como trabajo futuro dado el tamaño del corpus (146 documentos)?
-4. Criterio de ampliación del corpus: se propone **al menos tres plantillas distintas por
-   familia** en lugar de un número fijo de notas. ¿Se considera adecuado?
+4. Alcance de la ampliación del corpus: las fuentes públicas ya fueron recolectadas de
+   forma sistemática y para varias familias probablemente no existan plantillas
+   adicionales publicadas. ¿Es aceptable **documentar el límite que impone la evidencia
+   disponible** —reportando el desempeño según la cantidad de plantillas por familia— en
+   lugar de comprometer una cantidad mínima que depende de terceros?
 5. ¿Incorporar el aprendizaje *few-shot* (arXiv 1908.06750, sugerido el 06/06/2024) para las
    familias con una o dos plantillas, o dejarlo como trabajo futuro?
 
