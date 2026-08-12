@@ -1,0 +1,145 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noquoting]{babel}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{parskip}
+\usepackage{amsmath}
+\setlist{nosep,leftmargin=1.4em}
+\pagestyle{empty}
+\renewcommand{\arraystretch}{1.15}
+
+\begin{document}
+
+{\large\textbf{Plan de trabajo --- próximas etapas}}\\[2pt]
+\textbf{Detección de familias de ransomware en base a archivos encriptados y notas de rescate}\\[2pt]
+Romina Alfonzo, Carlos Urdapilleta \quad$\vert$\quad Tutor: Prof. Cristian Cappo \quad$\vert$\quad 12 de agosto de 2026
+
+\hrulefill
+
+\textbf{Punto de partida.} Los dos frentes cuentan con resultados consolidados y el capítulo de
+resultados está redactado. La identificación de familia a partir de archivos cifrados alcanza
+una exactitud de 0,910 sobre 29 familias, validada frente a tipos de documento no vistos
+(0,879). La identificación a partir de notas de rescate alcanza un macro-F1 de 0,760 en el
+escenario comparable con las herramientas existentes y de 0,435 ante plantillas nunca vistas.
+
+El plan que sigue se ordena por dependencias, no por preferencia: la Etapa 1 condiciona los
+resultados que se reportarán, y la Etapa 3 requiere que las anteriores estén cerradas.
+
+\textbf{Fundamento del orden propuesto.} Tres verificaciones independientes indican que el
+factor limitante ya no es metodológico:
+
+\begin{center}
+\small
+\begin{tabular}{@{}llc@{}}
+\toprule
+\textbf{Verificación} & \textbf{Alcance} & \textbf{Efecto} \\
+\midrule
+Hiperparámetros del clasificador de notas & 840 configuraciones, búsqueda anidada & sin mejora \\
+Abstracción de marcadores variables en las notas & 130 de 144 notas modificadas & sin mejora \\
+Hiperparámetros de las características estadísticas & 4 combinaciones, hasta 2,5 h cada una & sin variación \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+En consecuencia, el esfuerzo se concentra en la composición del corpus y no en la
+optimización de los modelos.
+
+\section*{Etapa 1 --- Ampliación del corpus de notas de rescate}
+
+Es la única acción con capacidad de mejorar sustancialmente el resultado del segundo
+protocolo de evaluación, porque ataca su causa.
+
+El análisis de similitud mostró que las 146 notas del corpus corresponden a solo 95
+contenidos distintos: cada familia reutiliza un repertorio reducido de plantillas. Siete
+familias están representadas por una única plantilla, de modo que ningún método supervisado
+puede generalizar en ellas.
+
+\begin{itemize}
+\item \textbf{Criterio propuesto:} al menos \textbf{tres plantillas distintas por familia},
+en lugar de un número fijo de notas. La métrica se deriva del hallazgo anterior: incorporar
+notas que repitan una plantilla ya presente no aporta capacidad de generalización.
+\item \textbf{Fuentes identificadas:} se dispone de las direcciones concretas para catorce
+familias con menos de cuatro notas, provenientes de portales de seguridad con
+documentación verificable.
+\item \textbf{Tarea complementaria:} auditar la procedencia de 37 notas cuya fuente quedó
+registrada de forma ambigua, para que la sección de procedencia del capítulo de metodología
+sea verificable en su totalidad.
+\item \textbf{Duración:} es la etapa de duración menos previsible, por depender de la
+disponibilidad pública de las notas. Se propone informar el avance por familia.
+\end{itemize}
+
+\section*{Etapa 2 --- Verificaciones pendientes}
+
+Tareas acotadas, con costo computacional conocido, que cierran objeciones previsibles.
+
+\begin{itemize}
+\item \textbf{Naturaleza del bloque final en SUNCRYPT y NOTPETYA.} Ambas familias añaden
+datos no aleatorios al final del archivo (entropía de cola de 4,78 y 6,58 frente a 7,44 en el
+resto) y, sin embargo, no se identifican correctamente. La hipótesis es que ese bloque varía
+en cada archivo ---una clave, un identificador de víctima o el tamaño original--- de modo que
+constituye estructura pero no firma de familia. Se verificará comparando el contenido
+hexadecimal de la cola en varias muestras. De confirmarse, permite redactar el diagnóstico
+como hecho y no como conjetura.
+\item \textbf{Incorporación del nombre de archivo como característica.} Lemmou et al. (2021)
+obtienen un F de 0,920 clasificando únicamente por el nombre de la nota. En este trabajo se
+descartó porque aproximadamente la mitad de los nombres del corpus fueron asignados por los
+repositorios de origen y no por el atacante. Se propone anotar la procedencia de cada nombre
+en el manifiesto y emplear como característica solo los auténticos.
+\item \textbf{Reejecución sobre la base final.} Una vez ampliado el corpus y restauradas dos
+notas de DHARMA que resultaron afectadas por el antivirus del equipo de trabajo, se repetirá
+la corrida completa para que todas las cifras del documento provengan de un mismo conjunto.
+\end{itemize}
+
+\section*{Etapa 3 --- Redacción y cierre}
+
+\begin{itemize}
+\item Incorporar al capítulo de resultados los ocho conjuntos de mediciones ya obtenidas y
+todavía no redactadas, entre ellas la validación de generalización a tipos de documento, la
+localización de la información dentro del archivo y el diagnóstico de las familias de bajo
+rendimiento.
+\item Reformular en el marco teórico la delimitación del aporte respecto de Lemmou et al.
+(2021), quienes identifican la familia mediante reglas y marcadores curados. La contribución
+de este trabajo se define con precisión como el primer clasificador supervisado multiclase
+sobre el contenido completo, con medición explícita de la generalización a variantes no vistas.
+\item Completar la bibliografía con nueve referencias identificadas, entre ellas la del propio
+conjunto de datos NapierOne, el trabajo sobre comparación de métodos de entropía del mismo
+grupo, y el artículo de \textit{Electronics} sugerido en la reunión del 13/03/2024.
+\item Redactar las conclusiones, el resumen y el \textit{abstract}, y completar el material
+preliminar del documento. Incluir el agradecimiento al clúster computacional del NIDTEC, cuyo
+reglamento de uso lo requiere.
+\end{itemize}
+
+\section*{Decisiones que requieren su criterio}
+
+\begin{enumerate}[label=\alph*)]
+\item \textbf{Procedencia de las notas.} Seis familias (BadRabbit, Chimera, Jigsaw, NotPetya,
+WannaCry y CryptoLocker) no cuentan con archivo bruto público disponible y se cubrieron con
+transcripciones documentadas de portales de seguridad. ¿Se consideran fuentes admisibles,
+declarándolo como limitación de procedencia?
+\item \textbf{Criterio de ampliación.} ¿Resulta adecuado el criterio de tres plantillas
+distintas por familia en lugar de un número fijo de notas?
+\item \textbf{Estructura del documento.} ¿Conviene reorganizar los capítulos de modo que cada
+objetivo específico corresponda a una sección, según lo sugerido el 08/05/2024?
+\item \textbf{Alcance.} El clúster dispone de unidades de procesamiento gráfico. ¿Corresponde
+incorporar una comparación con modelos basados en \textit{transformers} como sección
+adicional, o dejarla planteada como trabajo futuro, considerando que el corpus consta de 146
+documentos y tales modelos tienden al sobreajuste en conjuntos de ese tamaño?
+\item \textbf{Familias con una sola plantilla.} Para las siete familias en esa situación,
+ningún método supervisado clásico puede generalizar. ¿Incorporar el enfoque de aprendizaje
+\textit{few-shot} del repositorio que nos compartió el 06/06/2024, o dejarlo como trabajo
+futuro?
+\end{enumerate}
+
+\section*{Sobre las seis familias que el análisis de archivos no resuelve}
+
+Conviene señalar que las seis familias cuya identificación por archivos cifrados resulta
+deficiente ---SUNCRYPT, WASTEDLOCKER, CRYPTOLOCKER, DARKSIDE, JIGSAW y NOTPETYA--- refuerzan
+el planteo de investigar ambos artefactos por separado: son precisamente los casos en que la
+nota de rescate constituye la única vía de identificación disponible. La independencia de los
+dos frentes, mantenida a lo largo del trabajo, resulta así justificada por los datos y no
+solo por el diseño.
+
+\end{document}
