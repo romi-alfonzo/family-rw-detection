@@ -63,21 +63,29 @@ Es la única prueba de confundido que se puede hacer con NapierOne.
 
 ## SPRINT 3 — En paralelo, trabajo manual de Romina
 
-### 3.1 Ampliar el corpus en plantillas
-URLs ya identificadas en `6_notas_trabajo/mas_notas_descarga.md` para 14 familias.
+### 3.1 Tratamiento del límite que impone el corpus
 
-> ⚠️ **Corregido el 2026-08-12.** Fijar «≥3 plantillas por familia» como meta es
-> inviable: las fuentes públicas ya se recolectaron y para varias familias probablemente
-> no existan plantillas adicionales. El planteo correcto tiene tres frentes:
-> **(a)** reportar el desempeño estratificado por cantidad de plantillas disponibles, que
-> no requiere datos nuevos y documenta el límite; **(b)** ampliar de forma oportunista
-> informando el resultado sea cual sea; **(c)** evaluar aprendizaje few-shot para las
-> familias con una o dos plantillas, única vía cuando la recolección no puede aportar más
-> ejemplos.
+> ⚠️ **Replanteado el 2026-08-12.** La versión anterior fijaba «≥3 plantillas distintas por
+> familia» como objetivo. **Es inviable:** las fuentes públicas ya se recolectaron de forma
+> sistemática y para varias familias probablemente no existan plantillas adicionales
+> publicadas. Comprometer ese número supondría depender de la disponibilidad de terceros.
 
-**Objetivo correcto: ≥3 plantillas distintas por familia**, no "≥5 notas" — la métrica
-sale del hallazgo de que 146 notas son solo 95 contenidos.
-Es lo único que puede mover P2 de forma sustancial, porque ataca la causa.
+Tres frentes, en orden de certeza:
+
+**(a) Documentar el límite — no requiere datos nuevos.** Reportar el desempeño estratificado
+según la cantidad de plantillas disponibles por familia. Establece cuántas plantillas hacen
+falta para que la generalización sea posible, y es útil a trabajos posteriores: indica qué
+evidencia hay que reunir antes de abordar el problema por esta vía. Se obtiene del corpus
+actual. **Es la parte que sí está bajo control.**
+
+**(b) Ampliar de forma oportunista.** URLs ya identificadas en
+`6_notas_trabajo/mas_notas_descarga.md` para 14 familias. Recolectar lo que esté disponible y
+medir la mejora; si para algunas familias no aparecen plantillas nuevas, ese hecho se documenta
+como resultado y no como tarea incumplida.
+
+**(c) Evaluar aprendizaje few-shot** para las familias con una o dos plantillas. Es la única
+vía metodológica cuando la recolección no puede aportar más ejemplos. Paper sugerido por Cappo
+el 06/06/2024 (arXiv 1908.06750).
 
 ### 3.2 Auditar las 37 notas de procedencia "NapierOne/varios"
 Pista: el repositorio `kipziptie` que apareció en `Pruebas.xlsx`. Necesario para que la
@@ -111,8 +119,8 @@ y del corpus ampliado.
 
 - **Clasificación combinada notas + archivos:** descartada por decisión de Romina; los dos
   frentes se mantienen separados.
-- **Aprendizaje few-shot** para las familias con 1-2 plantillas (paper que sugirió Cappo el
-  06/06/2024): queda como *trabajo futuro* en la tesis, salvo que él pida incorporarlo.
+- ~~**Aprendizaje few-shot** como trabajo futuro~~ → **pasó al Sprint 3.1(c)**: es la única
+  vía posible para las familias con una o dos plantillas, así que se evalúa, no se posterga.
 - **Perseguir más exactitud en archivos:** con 0,910 y seis familias probablemente sin señal,
   el rendimiento marginal es bajo. El Sprint 2.2 busca entender y blindar, no subir el número.
 - **Resolver la limitación de campaña:** no es posible con NapierOne (una campaña por
