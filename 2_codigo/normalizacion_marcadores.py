@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-normalizacion_marcadores.py — Abstracción de los marcadores variables de las notas.
+normalizacion_marcadores.py -- Abstracción de los marcadores variables de las notas.
 
 HIPÓTESIS
 Bajo el protocolo P2 (variante nunca vista) el clasificador debe atribuir la familia de una

@@ -38,6 +38,7 @@ _archivo/
 backup_pre_cap4/
 PARA_SUBIR_AL_CLUSTER/
 wheels_cluster/
+wheels_matplotlib/
 
 # --- Resultados voluminosos o regenerables ---
 # advanced_features.csv pesa 160 MB (supera el límite de GitHub) y se regenera

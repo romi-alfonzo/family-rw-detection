@@ -500,6 +500,24 @@ con el resultado de hiperparámetros, son **dos resultados negativos independien
 apuntan a lo mismo: el límite es la cantidad de plantillas del corpus. Escribirlo en el
 cap. 4 (subsección junto a §4.7.5) — documenta que se intentó la corrección obvia.
 
+## SPRINT 2 EN EJECUCIÓN (lanzado 2026-08-05)
+
+Dos trabajos en el clúster, pendientes de resultado:
+- `job_analisis_bytes.sh` → `analisis_bytes.py` (40-70 min). Cuatro análisis:
+  **(a) generalización a tipos de archivo nunca vistos ← EL CRÍTICO**, puede confirmar o
+  matizar el 0,910; (b) importancia por posición de byte + figura; (c) ablación de ventana
+  (64/128/256/512, solo cabecera, solo cola); (d) diagnóstico de las 6 familias difíciles.
+- `job_gridsearch_estadisticas.sh` → `gridsearch_estadisticas.py` (~30 min). Cierra el
+  ÚNICO hueco de optimización declarado (§4.3.1): búsqueda anidada sobre las
+  características estadísticas. Referencias: 0,603 sin ajustar · 0,910 del Exp. 2c.
+
+**Qué hacer al volver:** si (a) mantiene el rendimiento (caída < 0,10), el resultado
+principal queda confirmado y se agrega como subsección de validación en §4.5. Si cae más,
+hay que matizar §4.5 y §4.6 antes de la reunión con Cappo.
+
+Salidas esperadas en `4_resultados/resultados_analisis_bytes/` y
+`4_resultados/resultados_gridsearch_estadisticas/`.
+
 ## PLAN DE MEJORAS (2026-08-05) → ver `PLAN_MEJORAS.md`
 
 Cinco sprints, frentes separados. Resumen:

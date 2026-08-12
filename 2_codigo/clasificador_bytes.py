@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-clasificador_bytes.py — Experimento 2c: clasificación de familias de ransomware
+clasificador_bytes.py -- Experimento 2c: clasificación de familias de ransomware
 mediante APRENDIZAJE AUTOMÁTICO sobre los bytes de cabecera y cola de los archivos
 cifrados, con búsqueda de hiperparámetros.
 
@@ -15,7 +15,7 @@ Este experimento reemplaza la regla exacta por un clasificador entrenado. Ventaj
   * COBERTURA 100 %: siempre produce una predicción, no depende de que exista una firma
     idéntica en todos los archivos de la familia.
   * Tolera variabilidad: aprende patrones parciales o desplazados que la regla exacta pierde.
-  * SOLO CONTENIDO: no usa el nombre ni la extensión del archivo. Esto es deliberado —
+  * SOLO CONTENIDO: no usa el nombre ni la extensión del archivo. Esto es deliberado --
     en el Exp. 2b la extensión aportaba el 82,8 % pero es un identificador de campaña
     (constante dentro de NapierOne, variable en la práctica). Acá se mide qué información
     hay en los BYTES.
@@ -198,7 +198,7 @@ def main():
     log = lambda m: print(m, flush=True)
 
     log("=" * 74)
-    log(f"  EXPERIMENTO 2c — ML sobre bytes de cabecera/cola{' [SMOKE]' if args.smoke else ''}")
+    log(f"  EXPERIMENTO 2c -- ML sobre bytes de cabecera/cola{' [SMOKE]' if args.smoke else ''}")
     log(f"  Ventana: {N_HEAD} bytes de cabecera + {N_TAIL} de cola. SIN nombre ni extensión.")
     log("=" * 74)
     log(f"Cargando desde {args.raiz} (hasta {args.por_familia} archivos por familia)...")
@@ -242,7 +242,7 @@ def main():
     # ---- Re-evaluación de la mejor configuración con más archivos por familia ----
     mejor = max(filas, key=lambda r: r["f1_macro"])
     log("=" * 74)
-    log(f"  ETAPA FINAL — {mejor['configuracion']} con {args.por_familia_final} "
+    log(f"  ETAPA FINAL -- {mejor['configuracion']} con {args.por_familia_final} "
         f"archivos/familia")
     log("=" * 74)
     Xb2, y2, fam2 = cargar(args.raiz, args.por_familia_final, seed=7)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-deteccion_estructural.py — Experimento 2b: clasificación de familias por
+deteccion_estructural.py -- Experimento 2b: clasificación de familias por
 ARTEFACTOS ESTRUCTURALES de los archivos cifrados (magic bytes / metadatos).
 
 Motivación (pedido del tutor 11/01/25 + hallazgo de Pruebas.xlsx): las propiedades
@@ -17,7 +17,7 @@ Dos análisis:
   2. CLASIFICACIÓN leave-one-out: para cada archivo, las marcas se aprenden con
      los archivos RESTANTES de cada familia (sin ver el archivo evaluado) y se
      predice la familia cuya marca (más larga) coincida. Reporta exactitud
-     multiclase y cobertura — comparable con el 9,9 % del enfoque estadístico.
+     multiclase y cobertura -- comparable con el 9,9 % del enfoque estadístico.
 
 Estructura esperada del dataset (NapierOne tiny en el servidor):
     RAIZ/<FAMILIA>-tiny/*   o   RAIZ/<FAMILIA>/*
@@ -28,7 +28,7 @@ Salidas en .\resultados_estructural\:
 
 Nota metodológica: NapierOne genera los archivos cifrados ejecutando las muestras
 reales de ransomware, por lo que las extensiones y marcas son artefactos auténticos
-del atacante (verificar y citar Davies et al. 2022) — a diferencia de los nombres
+del atacante (verificar y citar Davies et al. 2022) -- a diferencia de los nombres
 de archivo de notas curados por repositorios, aquí el nombre/extensión SÍ es evidencia.
 """
 
