@@ -588,6 +588,104 @@ incorporar Davies 2022 ×2 / Gómez Hernández 2023 / Pont 2023 / Sokolova & Lap
 las 37 notas "NapierOne/varios" del manifiesto, y Fase 3 (expandir corpus con URLs pcrisk ya
 listadas, GridSearch en servidor, advanced_features para blindar Exp. 2).
 
+## ★ REUNIÓN CON EL TUTOR 2026-08-12 — «Revisión de resultados»
+
+Notas textuales del Prof. Cappo + el mapeo de cómo se aborda cada punto:
+**`6_notas_trabajo/reunion_2026-08-12_revision_resultados.md`** (y el `.docx` original al lado).
+Manda sobre la hoja de ruta previa. Resumen de lo accionable:
+
+- **Lo más urgente:** la ablación de ventana (64/128/256/512 → 0,908) **sigue subiendo en el
+  último punto**, así que el gráfico no muestra saturación. Correr 1024 y 2048 hasta que se
+  aplane o baje, o corregir el dato. Es una crítica válida a una figura ya hecha.
+- Subir **BLACKBASTA** al cluster → cierra el hueco de 29/30 familias (ver línea ~549).
+- Probar **bytes del medio**, no solo cabecera y cola.
+- **Curva de aprendizaje** en los dos frentes (cuántas muestras hacen falta) + desvío en el
+  frente de archivos, que hoy va sin error.
+- Ya contestable con datos existentes: validación separada (= P1/P2), justificación de ML
+  frente a firmas (53,3 % de cobertura vs 0,910), y el **año de cada familia**, que está en
+  `Pruebas.xlsx` (ver bloque siguiente).
+- **Pendiente de decisión de Romina:** el tutor pide *majority voting* combinando los dos
+  frentes, lo que choca con la decisión de mantenerlos independientes — y no hay muestras
+  pareadas para evaluarlo. Detalle en el archivo de la reunión, sección D.
+
+## FUENTE RECUPERADA 2026-08-13 — `Pruebas.xlsx`: comparación con herramientas públicas
+
+**Ubicación:** `7_compartido_carlos/Tesis Carlos y Romina/Pruebas.xlsx`. Cuatro hojas. Es el
+registro de las pruebas manuales contra ID Ransomware y Crypto Sheriff, y **el origen del
+71,93 %** que se venía citando sin saber qué medía. Registrarlo acá para no volver a perderlo.
+
+### Hoja «Deteccion de notas» — el 71,93 %
+ID Ransomware acertó **41 de 57 notas de 22 familias** (0,7192982456). Las notas se bajaron de
+tres repositorios públicos —threatlabz/ransomware_notes, kipziptie/ai_ransomware_note_detection
+(GitLab) y RansomNoteFiles del propio Lemmou— eligiendo las familias de las que hay archivos
+cifrados en NapierOne. Crypto Sheriff se descartó «por su baja deteccion con los archivos
+encriptados».
+
+> ⚠️ **No es el corpus de la tesis.** La tesis mide sobre 146 notas / 30 familias; esto son
+> 57 notas / 22 familias, un subconjunto anterior. Al citarlo hay que escribir «57 notas de 22
+> familias tomadas de los mismos repositorios públicos», **nunca** «sobre el mismo corpus».
+
+Fallos: WASTEDLOCKER 0/1 · PHOBOS 0/1 · DARKSIDE 1/3 · RANSOMEXX 2/5 · CERBER 3/6 · CUBA 1/2 ·
+TESLACRYPT 1/2 · BLACKBASTA 2/4 · BLACKMATTER 1/2 · BLACKCAT 3/4. Doce familias perfectas,
+entre ellas GANDCRAB 8/8, CONTI 4/4, LOCKBIT 3/3, CLOP 3/3.
+
+### Hoja «Deteccion de archivos encriptad» — la comparación fuerte del frente de archivos
+30 familias de NapierOne subidas a las dos webs (Crypto Sheriff tiene tope de 1 MB, por eso
+solo archivos chicos). Los «SI\*» son, textual, **«los que se detectan incluso al cambiar el
+nombre al archivo»**:
+
+| Herramienta | Detecta | Sobre 30 |
+|---|---|---|
+| Crypto Sheriff | 5 | 16,7 % |
+| ID Ransomware, nombre original | 20 | 66,7 % |
+| **ID Ransomware, con el nombre cambiado (SI\*)** | **9** | **30,0 %** |
+
+Los 9 robustos al renombrado: GANDCRAB, LORENZ, MAZE, MEDUSALOCKER, PHOBOS, RYUK, SODINOKIBI,
+TESLACRYPT, WANNACRY. Contra eso, el clasificador de bytes del Exp. 2c llega a exactitud 0,910
+/ macro-F1 0,908 en 29 familias **sin usar nombre ni extensión**.
+**Cuidado con la métrica:** lo de ID Ransomware es cobertura por familia (sí/no), no exactitud
+por archivo. Enunciarlo como «cubre 9 de 30 familias» frente a «29 de 29», no como 30 % vs 91 %.
+
+**Corroboración independiente del Exp. 2b:** la hoja guarda los `sample_bytes` que reporta la
+herramienta y coinciden con las firmas halladas por cuenta propia — WANNACRY
+`[0x00-0x08] 0x57414E4143525921` («WANACRY!»), RYUK `0x4845524D4553` («HERMES»), LORENZ
+`[0x00-0x05] 0x2E737A3430`, TESLACRYPT `[0x00-0x30]`, MEDUSALOCKER `[0x5A20A-0x5A218]`,
+GANDCRAB `[0x43614-0x4361C]`, MAZE `[0x58771-0x58779]`. Dos caminos distintos, mismas marcas.
+
+### Hoja «Informacion sobre familias»
+Las 30 familias de NapierOne con su **año** (2013 CRYPTOLOCKER → 2022 BLACKBASTA) y si hay nota
+disponible: **22 sí, 8 no** (HELLOKITTY, SODINOKIBI, BADRABBIT, NOTPETYA, WANNACRY, JIGSAW,
+CHIMERA, CRYPTOLOCKER). Sirve para la tabla descriptiva del corpus en el cap. 3.
+
+### Hoja «Resultados» — el resultado negativo original del frente de archivos
+Experimento inicial (etapa Carlos): 1 600 archivos, 50 encriptados por familia + 100 no
+encriptados, `test_size` 0,4. Seis estadísticas —shannon, shannon de 100 bytes, chi cuadrado,
+promedio, Monte Carlo, coeficiente de correlación serial de bytes— × seis modelos —logistic
+regression, MLP, SVM, árbol de decisión, KNN, random forest—, en combinaciones de 1 a 6.
+Individuales **0,036–0,086**; el máximo de toda la hoja es **0,228** (MLP, combinación de 3).
+Es el punto de partida de la progresión del cap. 4 (0,228 → 0,603 estadísticas regionales →
+0,910 bytes posicionales).
+
+**Procedencia verificada 2026-08-13** leyendo los notebooks
+`Notebooks/Pruebas multiclasificación/{Multiclass with multiple features, MulticlassDecisionTree}.ipynb`:
+
+- **El dataset es NapierOne Tiny.** Las 30 carpetas de familia se llaman literalmente
+  `AVOSLOCKER-tiny`, `BADRABBIT-tiny`, … `WASTEDLOCKER-tiny`, más una clase limpia `Z-Safe`.
+  Son **31 clases**, así que el azar de este experimento es **0,032** y el 0,228 lo supera
+  unas 7 veces — es un resultado pobre, no nulo. Decirlo así en el cap. 4.
+- **La métrica es exactitud (accuracy).** En el código: `acc = accuracy_score(y_test, y_pred)`
+  con `print(f'Precisión: {acc}')`. Queda confirmado, ya no hay que preguntarle a Carlos.
+- `train_test_split(..., test_size=0.4, random_state=42)` — coincide con el encabezado de la
+  hoja. El otro notebook usa 0,3; la fila 101 («80 test/ 20») sugiere que probaron más cortes.
+- Las notas de esa etapa son **las del repositorio de Lemmou** (`RansomNoteFiles`), una de las
+  tres fuentes listadas en la hoja de notas.
+
+> ⚠️ **El dataset de 1 600 archivos NO está en la carpeta de la tesis.** Los notebooks lo leen
+> de `Pruebas2.rar` en el Google Drive de Carlos (`/content/drive/MyDrive/…`), desde Colab. Lo
+> que sí hay localmente es una **muestra chica**: `3_datos/archivos_cifrados/SVM/Pruebas/`
+> (73 cifrados + 41 limpios) y una copia en `Notebooks/Datasets/`. Para reproducir el 0,228 hay
+> que pedirle el `.rar` a Carlos, o rehacerlo bajando NapierOne Tiny.
+
 ## 7. Reglas / convenciones (IMPORTANTES — respetar en todo chat)
 - **★ FUENTES FIDEDIGNAS:** todo dato, archivo, métrica o afirmación que vaya a la tesis
   debe provenir de una **fuente verificable y citable** (paper, dataset oficial, repo con
