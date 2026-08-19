@@ -7,7 +7,7 @@ finito: **llegar a 4 textos distintos (plantillas) por familia**. Fuente de los 
 
 ## Prioridad 1 — donde duele: 17 notas en 9 familias
 
-Familias con F1 por familia bajo (P2ret, 10 semillas) **y** plantillas faltantes. Ordenadas
+Familias con F1 por familia bajo (P2ret, 100 repeticiones) **y** plantillas faltantes. Ordenadas
 por urgencia:
 
 | Familia | Tiene | Faltan para 4 | F1 actual | Nota |
