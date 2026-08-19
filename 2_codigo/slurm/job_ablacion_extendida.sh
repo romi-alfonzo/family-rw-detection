@@ -3,13 +3,15 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=64G
+#SBATCH --mem=32G
+#SBATCH --nodelist=c2
 #SBATCH --time=10:00:00
 #SBATCH --output=slurm-ablacion-%j.out
 # Ablacion de ventana extendida (1024, 2048, 4096) + bloque del medio.
 # Pedido del tutor en la reunion del 12-08-2026: la curva anterior seguia subiendo
 # en 512+512 (0,908) y el grafico no mostraba saturacion.
-# Memoria: a 4096+4096 la matriz float32 pesa ~475 MB por copia; de ahi los 64G.
+# Memoria: a 4096+4096 la matriz float32 pesa ~475 MB por copia; 32G sobra.
+# Nodo: c1 y c3 tienen /scratch degradado (ver PENDIENTE_REDACCION.md seccion G).
 # Estimado: 2-4 h. Si se corta por tiempo, relanzar con --ventanas 64 128 256 512 1024 2048
 
 cd "$SLURM_SUBMIT_DIR" || exit 1
