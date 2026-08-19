@@ -69,12 +69,31 @@ EXT_IMG = {".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tif", ".tiff", ".webp"}
 # OCR con preprocesamiento (upscale ×3 + binarizado; es lo que funcionó para la
 # pantalla MBR de NotPetya). Degrada con aviso si falta tesseract/pytesseract.
 # ────────────────────────────────────────────────────────────────────────────
+def _localizar_tesseract(pytesseract):
+    """El instalador de Windows no siempre deja tesseract en el PATH. Si no está,
+    lo buscamos en las rutas estándar y se lo indicamos a pytesseract."""
+    import os
+    import shutil
+    if shutil.which("tesseract"):
+        return  # ya visible en el PATH
+    candidatos = [
+        r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+        r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+        os.path.expandvars(r"%LOCALAPPDATA%\Programs\Tesseract-OCR\tesseract.exe"),
+    ]
+    for c in candidatos:
+        if Path(c).is_file():
+            pytesseract.pytesseract.tesseract_cmd = c
+            return
+
+
 def ocr_imagen(path: Path, idioma: str) -> tuple[str, str]:
     """Devuelve (texto, metodo). metodo = 'ocr' | 'ocr-eng-fallback' | 'sin-ocr(...)'."""
     try:
         import pytesseract
     except ImportError:
         return "", "sin-ocr(falta pytesseract)"
+    _localizar_tesseract(pytesseract)
 
     try:
         img = Image.open(path).convert("L")            # escala de grises
