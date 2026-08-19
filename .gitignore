@@ -83,3 +83,6 @@ desktop.ini
 *.bak
 4_resultados/*.tgz
 4_resultados/resumen_capitulo4/
+
+# --- Packs de idioma de tesseract (datos de herramienta OCR, no del proyecto) ---
+2_codigo/tessdata/

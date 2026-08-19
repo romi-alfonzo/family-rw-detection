@@ -96,11 +96,26 @@ def ocr_imagen(path: Path, idioma: str) -> tuple[str, str]:
     _localizar_tesseract(pytesseract)
 
     try:
+        from PIL import ImageOps
         img = Image.open(path).convert("L")            # escala de grises
         img = img.resize((img.width * 3, img.height * 3), Image.LANCZOS)  # upscale ×3
+        # Las notas de rescate suelen ser texto CLARO sobre fondo OSCURO; tesseract
+        # lee mucho mejor texto oscuro sobre claro, así que invertimos si el fondo
+        # es oscuro (media baja). Sin esto, «Opfer» sale «Opier», «Chimera» «Chımorax».
+        if sum(img.getdata()) / (img.width * img.height) < 128:
+            img = ImageOps.invert(img)
         img = img.point(lambda p: 0 if p < 140 else 255)  # binarizado simple
     except Exception as e:
         return "", f"sin-ocr(imagen ilegible: {type(e).__name__})"
+
+    # Si hay una carpeta tessdata local junto al script (packs de idioma bajados a
+    # mano, sin permisos de admin sobre Program Files), se la indicamos a tesseract
+    # vía TESSDATA_PREFIX. Se usa el env var y NO el config '--tessdata-dir' porque
+    # pytesseract parte el config por espacios y una ruta entrecomillada se rompe.
+    import os
+    tessdata = Path(__file__).resolve().parent / "tessdata"
+    if tessdata.is_dir():
+        os.environ["TESSDATA_PREFIX"] = str(tessdata)
 
     try:
         return pytesseract.image_to_string(img, lang=idioma), "ocr"
