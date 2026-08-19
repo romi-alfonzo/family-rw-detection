@@ -253,7 +253,9 @@ escribirla.
 >
 > **Objetivo acotado y finito: 4 textos distintos por familia = 33 plantillas nuevas en 19
 > familias**, o sea al menos 33 notas nuevas, cada una de contenido distinto. Detalle,
-> métricas y límites en `ESTADO_TESIS.md`, sección «B.1 CERRADO».
+> métricas y límites en `ESTADO_TESIS.md`, sección «B.1 CERRADO». **Plan operativo de la
+> recolección** (prioridades por familia, fuentes, reglas y qué se corre al volver):
+> `6_notas_trabajo/plan_recoleccion_notas_2026-08-19.md`.
 >
 > **La chatura de la curva de 30 familias era AGOTAMIENTO del corpus, no saturación del
 > aprendizaje** (`n_fam_bajo_tope` cae de 16,8 en k=1 a 5,0 en k=3 y a 0,0 en k=7). No usar
