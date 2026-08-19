@@ -177,16 +177,25 @@ el F1 va de 0,000 a 1,000.
   subcadena en cualquier posición y «conti» está dentro de «continue», «cerber» dentro de
   «cerberus». Puede haber exclusiones espurias.
 - **Las aristas entre familias caen de 133 a 7 con el filtro.** Las 133 eran casi todas
-  infraestructura compartida; las 7 que sobreviven son las candidatas a parentesco real.
+  infraestructura compartida. ⚠️ **Las 7 que sobreviven NO son parentescos**: son
+  `https://torproject.org` con una grafía peculiar y un enlace viejo de descarga de Tor. Ver
+  la «AUDITORÍA DE B.3 CERRADA», que lo verificó valor por valor.
 
-### Lo que falta de B.3
+### Lo que falta de B.3 — ✅ **NADA: los tres puntos están cerrados**
 
-1. **Correr P1/P2/P3 completo** (4 variantes de P3 × 2 pliegues × 10 semillas). Va al
-   clúster con `slurm/job_grafo_marcadores.sh`. La diferencia P2 − P3 es lo que dice cuánto
-   del macro-F1 venía de la continuidad de IOCs.
-2. **Auditar `b3_valores_excluidos.csv`** a mano, antes de citar el 15-18 %.
-3. **Revisar las 7 aristas entre familias** que sobreviven al filtro: si reencuentran
-   BLACKBASTA/CONTI y DHARMA/PHOBOS, es una validación cruzada del hallazgo por contenido.
+1. ✅ **P1/P2/P3 completo, corrido local** el 2026-08-19, más el control de azar con n = 20.
+   Ver la sección de P3 más abajo. **Y la premisa de este punto era errónea:** la diferencia
+   P2 − P3 **no** dice por sí sola cuánto venía de la continuidad de IOCs; hace falta el
+   control de azar, y con él el aporte de los IOCs es −0,0042 de macro-F1, o sea nulo.
+2. ✅ **`b3_valores_excluidos.csv` auditado** (2026-08-19, commit c654e72): **cero exclusiones
+   espurias**, el caso «conti dentro de continue» no existe. Los 21 de 146 se confirman, con
+   una precisión que hay que decir al citar el 15-18 %: **se concentran en LOCKBIT**, no están
+   repartidos entre familias.
+3. ✅ **Las 7 aristas entre familias revisadas, y refutaron la expectativa que había escrito
+   acá.** No reencuentran los parentescos. **NUNCA escribir «el grafo reencuentra los
+   parentescos».** El resultado citable es el inverso: tras filtrar la infraestructura común,
+   **ningún IOC operativo se comparte entre familias distintas** — los marcadores reales son
+   privados de cada familia.
 
 ## ★★★ B.1 CERRADO — CURVA DE APRENDIZAJE DE NOTAS (2026-08-19, local, 100 repeticiones)
 
@@ -418,8 +427,12 @@ relación conocida entre familias — es material para el capítulo, no un defec
 **Tres consecuencias operativas:**
 - Bajo P2, `StratifiedGroupKFold` manda las dos familias del grupo al **mismo pliegue**: nunca
   quedan una en train y la otra en test. No es un error, pero hay que declararlo.
-- Es evidencia previa y directa para **B.3**: hay parentesco entre familias medible a nivel de
-  contenido, antes de mirar marcadores. El grafo de B.3 debería reencontrarlo por IOCs.
+- Hay parentesco entre familias medible a nivel de **contenido**. ⚠️ **Predicción que escribí
+  acá y que B.3 REFUTÓ:** decía «el grafo de B.3 debería reencontrarlo por IOCs». **No lo
+  reencuentra.** DHARMA↔PHOBOS no aparece en ninguna variante del grafo, y BLACKBASTA↔CONTI
+  aparece solo por una grafía peculiar de una URL de torproject. Los parentescos los encontró
+  la **deduplicación por contenido** (grupos 6 y 55), no los marcadores. Ver la «AUDITORÍA DE
+  B.3 CERRADA».
 - Encaja con lo que ya dice `corrida_canonica_por_familia.csv`. **Ojo con la métrica: son F1
   POR FAMILIA, no macro-F1** (el macro-F1 es el promedio de las 30 y vale 0,435 ± 0,057).
   Base: protocolo P2, vista combinada + LinearSVC, 146 notas, 2 pliegues, promedio de 10

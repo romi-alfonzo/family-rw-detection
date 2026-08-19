@@ -201,11 +201,17 @@ Todas las cifras y los límites, en `ESTADO_TESIS.md`, sección «B.3». Tres re
 3. **Sin filtrar los valores de infraestructura común el grafo colapsa** (una componente de
    39 nodos de 97, 13 familias inevaluables). Corre en cuatro variantes y reporta las cuatro.
 
-**Pendiente de B.3:** (a) auditar a mano `b3_valores_excluidos.csv` antes de citar que el
-criterio de circularidad elimina 21 de 146 aristas dentro de familia (15-18 %) — el criterio
-es subcadena y «conti» está dentro de «continue»; (b) revisar las 7 aristas entre familias que
-sobreviven al filtro, para ver si reencuentran BLACKBASTA/CONTI y DHARMA/PHOBOS; (c) el
-control de azar solo está corrido sobre la variante más estricta.
+**B.3 no tiene pendientes: la auditoría se cerró el 2026-08-19** (commit c654e72, detalle en
+`ESTADO_TESIS.md`). Dos precisiones que hay que arrastrar al capítulo:
+- El filtro de circularidad es **limpio, cero exclusiones espurias**, y los 21 de 146 se
+  confirman — pero **se concentran en LOCKBIT**. Decirlo al citar el 15-18 %.
+- ⚠️ **Las 7 aristas entre familias NO validan los parentescos**, al revés de lo que este plan
+  anticipaba: son URLs de torproject con grafías peculiares. **NUNCA escribir «el grafo
+  reencuentra los parentescos»**; los parentescos salen de la deduplicación por contenido
+  (grupos 6 y 55). El resultado citable es el inverso: **tras filtrar infraestructura común,
+  ningún IOC operativo se comparte entre familias** — los marcadores son privados de cada una.
+- El control de azar está corrido solo sobre la variante más estricta (con exclusión, filtro
+  ≤2 familias), que es la que se reporta.
 
 <details>
 <summary>Planteo original de B.3 (registro)</summary>
