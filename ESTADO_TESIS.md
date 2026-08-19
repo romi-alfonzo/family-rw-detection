@@ -995,7 +995,44 @@ Todo bajado en `4_resultados/` el 2026-08-17 (22:04 y 22:34): `resultados_ablaci
 7. `bytes_resumen.csv` confirma que es el **3639**: 0,9089 / 0,9089 / 0,9074 sobre 15.000
 archivos y 30 familias. **Solo faltan los `slurm-*.out`.**
 
-## 1. Identificación
+## ✅ AUDITORÍA DE B.3 CERRADA (2026-08-19) — el filtro es limpio; los parentescos NO salen del grafo
+
+Los dos pendientes que dejó B.3, auditados sobre `b3_valores_excluidos.csv` y `b3_aristas.csv`:
+
+### 1. El filtro de circularidad pasa la auditoría — el 15-18 % es citable
+Se revisaron **todos** los valores excluidos. Cada uno contiene de verdad el nombre o alias de
+su familia, porque son infraestructura con marca: `contirecovery.xyz`, `bastad5…onion` (lleva
+«basta»), `alphvmmm…onion`, decenas de `lockbit*.onion`, `gandcrabmfe6mnef.onion`,
+`phobos_helper@xmpp.jp`, `mazedecrypt.top`, `medusa*`, `cuba*`, `darksidedxcftmqa.onion`.
+**El temido falso positivo tipo «conti dentro de continue» no existe: cero exclusiones
+espurias.** La aritmética cierra: 146 aristas dentro de familia sin exclusión → 125 con
+exclusión = **21 eliminadas**, como estaba anotado. Nota para el capítulo: las exclusiones se
+concentran en LOCKBIT (la mayoría de los 21), así que el «15-18 % de la continuidad viene de
+valores con el nombre adentro» es en buena parte un fenómeno de LOCKBIT, no repartido.
+
+### 2. ⚠️ Las 7 aristas entre familias NO validan los parentescos — corregir la expectativa
+Se esperaba que fueran BLACKBASTA↔CONTI y DHARMA↔PHOBOS por marcadores compartidos. La
+realidad, valores completos:
+
+- BLACKBASTA↔CONTI (4 aristas): comparten la URL `https://torproject.org` — **la grafía exacta
+  sin `www` y sin barra final**, que escapó al filtro de infraestructura común porque solo esas
+  dos familias la escriben así.
+- CERBER↔CRYPTOLOCKER (3 aristas): comparten un enlace viejo de descarga de Tor
+  (`download-easy.html.en`). Dos familias antiguas usando la misma página de época. **No es
+  parentesco.**
+- **DHARMA↔PHOBOS no aparece en ninguna variante**: su vínculo es por contenido casi duplicado
+  (grupo 55), no por IOCs; el email `phobos_helper@…` queda excluido por llevar el nombre.
+
+**Conclusión honesta para el capítulo:** los parentescos BLACKBASTA↔CONTI y DHARMA↔PHOBOS los
+encontró la **deduplicación por contenido** (grupos 6 y 55), no el grafo de marcadores. Tras
+filtrar la infraestructura común, **en este corpus no queda ningún IOC operativo (email,
+billetera, onion) compartido entre familias distintas** — los IOCs reales son privados de cada
+familia. Eso es un resultado en sí (los marcadores no confunden familias entre sí), pero la
+frase «el grafo reencuentra los parentescos» **no debe escribirse**: la única arista
+BLACKBASTA↔CONTI que sobrevive es una grafía peculiar de una URL pública, consistente con la
+plantilla copiada pero no un IOC compartido.
+
+## 1. Identificación## 1. Identificación
 - **Título:** "Detección de familias de ransomware en base a archivos encriptados y notas de rescate"
 - **Autores:** Romina Alfonzo, Carlos Urdapilleta
 - **Tutor:** Cristian Cappo — Universidad Nacional de Asunción (FP-UNA)
