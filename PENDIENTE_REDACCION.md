@@ -286,3 +286,23 @@ familia; en los archivos, la información contenida en las características esta
 Los nodos **c1 y c3 tienen el acceso a `/scratch` degradado**: un trabajo puede quedar horas
 consumiendo un 2 % de CPU sin leer datos. Lanzar siempre con `--nodelist=c2`. Conviene
 informarlo al administrador del clúster.
+
+---
+
+## H. Actualizar `GUIA_CODIGO.md` (pedido de Romina, 2026-08-18)
+
+La guía cubre `clasificador_notas_v2.py`, `clasificador_bytes.py` y `deteccion_estructural.py`,
+pero quedó atrás. Falta explicar, en el mismo estilo de orden de lectura:
+
+- **`ablacion_ventana_extendida.py`** (nuevo) — la curva de ventana hasta 4096 bytes, el bloque
+  del medio, y el control sin relleno de ceros que descarta el artefacto del tamaño.
+- **`resumen_para_capitulo4.py`** (nuevo) — agrega los resultados multisemilla y emite las
+  tablas del capítulo. Existe porque los experimentos escriben un archivo por semilla y el
+  promedio se venía haciendo a mano.
+- **`deteccion_estructural.py`** (cambiado) — criterio de mayoría en lugar de unanimidad byte a
+  byte, exclusión del `.pdf` de documentación, muestreo aleatorio con semilla, y salida en una
+  carpeta por semilla y job.
+- **`clasificador_bytes.py`** (cambiado) — modo multisemilla, carpeta de salida propia por
+  corrida, y las semillas que estaban clavadas.
+
+Romina pidió que se lo explique cuando llegue a esa etapa, no ahora.

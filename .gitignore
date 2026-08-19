@@ -78,3 +78,7 @@ desktop.ini
 ~$*
 *.tmp
 .claude/
+
+# Respaldos y paquetes de resultados (regenerables o bajados del cluster)
+*.bak
+4_resultados/*.tgz

@@ -4,7 +4,7 @@
 > dile a Claude: *"lee ESTADO_TESIS.md en mi carpeta Tesis"*. Con eso retoma todo.
 > Mantener actualizado al final de cada sesión.
 
-_Última actualización: 2026-08-04_
+_Última actualización: 2026-08-17_
 
 > **⚠️ La carpeta fue reorganizada el 2026-08-04.** Ver `LEEME_ESTRUCTURA.md` para el mapa.
 > Rutas nuevas (las de este documento que digan lo viejo, traducir así):
@@ -16,6 +16,569 @@ _Última actualización: 2026-08-04_
 > Nada fue borrado.
 
 ---
+
+## ★ B.1/B.3 — VERIFICACIONES PREVIAS AL DISEÑO DE LA CURVA (2026-08-18)
+
+Todo lo de esta sección se verificó **abriendo los archivos y recorriendo el corpus**, no de
+memoria. Es la base sobre la que se diseña la curva de aprendizaje de notas (B.1).
+
+### 1. La estructura de plantillas NO cambió con el incidente de Defender
+El corpus en disco hoy tiene **144 notas** (DHARMA 17, faltan `Info__13.hta` e `Info__3.hta`).
+Recorriendo `3_datos/corpus_v2` con `agrupar_neardups()` (coseno char 3-5 > 0,90):
+
+| | Corrida canónica (146 notas) | Corpus de hoy (144 notas) |
+|---|---|---|
+| Grupos de contenido (plantillas) | **95** | **95** |
+| Plantillas por familia | 1×1, 2×12, 3×6, 4×6, 5×2, 6×2, 8×1 | **idéntico** |
+| Grupos que cruzan familias | 2 | **los mismos 2** |
+
+**Las dos notas en cuarentena caen las dos dentro del grupo 55** (la plantilla grande de
+DHARMA, 11 notas), así que su ausencia no elimina ninguna plantilla. **Consecuencia práctica:
+el eje x de B.1 —plantillas por familia— es el mismo sobre 144 y sobre 146 notas**, y B.1 se
+puede correr hoy sin esperar a que Romina restaure los `.hta`. Lo que sí cambia con las dos
+notas es el eje de P1 (que cuenta notas), y ahí hay que declarar la base.
+
+### 2. Dos plantillas son compartidas ENTRE familias (hallazgo nuevo, no registrado antes)
+La suma de plantillas por familia da **97**, pero hay **95** componentes: dos grupos contienen
+notas de dos familias distintas.
+
+| Grupo | Familias | Notas |
+|---|---|---|
+| 6 | **BLACKBASTA + CONTI** | `BLACKBASTA/blackbasta2.txt`, `CONTI/conti4.txt` |
+| 55 | **DHARMA + PHOBOS** | 11 notas de DHARMA + `PHOBOS/pcrisk_phobos_1.txt` |
+
+Los dos pares coinciden con parentescos documentados en la bibliografía (Black Basta y Conti;
+Phobos como derivado de Dharma/CrySiS), así que el corpus **reproduce por contenido** una
+relación conocida entre familias — es material para el capítulo, no un defecto del corpus.
+
+**Tres consecuencias operativas:**
+- Bajo P2, `StratifiedGroupKFold` manda las dos familias del grupo al **mismo pliegue**: nunca
+  quedan una en train y la otra en test. No es un error, pero hay que declararlo.
+- Es evidencia previa y directa para **B.3**: hay parentesco entre familias medible a nivel de
+  contenido, antes de mirar marcadores. El grafo de B.3 debería reencontrarlo por IOCs.
+- Encaja con lo que ya dice `corrida_canonica_por_familia.csv`. **Ojo con la métrica: son F1
+  POR FAMILIA, no macro-F1** (el macro-F1 es el promedio de las 30 y vale 0,435 ± 0,057).
+  Base: protocolo P2, vista combinada + LinearSVC, 146 notas, 2 pliegues, promedio de 10
+  semillas, según `manifiesto_corrida.json`. **F1 por familia: BLACKBASTA 0,215 · DHARMA 0,483**
+  (entre las más bajas de las 30) frente a **PHOBOS 0,637 · CONTI 0,786**. La confusión que se
+  sospechaba tiene ahora un mecanismo verificado.
+
+### 3. Cuántos puntos admite realmente el eje x
+Familias que pueden aportar al menos k plantillas: **k≥1: 30 · k≥2: 29 · k≥3: 17 · k≥4: 11 ·
+k≥5: 5 · k≥6: 3 · k≥7: 1 · k≥8: 1** (CERBER es la única con 8). Esto acota el diseño de B.1:
+una curva con **el conjunto de clases fijo** solo llega a 3 puntos con 11 familias, o a 4
+puntos con 5 familias. **Hay que declarar el alcance del eje x como parte del resultado.**
+
+## ✅ A.2 CERRADO — DESVÍO DEL EXP. 2c SOBRE 10 SEMILLAS (job 3648, 2026-08-17)
+
+Diez semillas (0-9), hiperparámetros fijos, 500 archivos/familia, 30 familias, 5 pliegues.
+~560 s por semilla, 93 min en total. **Cifras para el capítulo:**
+
+> **Exp. 2c — exactitud 0,912 ± 0,002 · macro-F1 0,911 ± 0,001** (media ± desvío, 10 semillas)
+
+| | Media | Desvío | Mín | Máx | Rango |
+|---|---|---|---|---|---|
+| Exactitud | 0,9120 | 0,0016 | 0,9093 (s7) | 0,9147 (s2) | 0,0054 |
+| macro-F1 | 0,9111 | 0,0014 | 0,9084 (s7) | 0,9131 (s2) | 0,0047 |
+
+**Con esto los dos frentes tienen error reportado y el pedido del tutor queda cubierto.**
+
+### El 0,9089 del job 3639 queda explicado
+El 3639 usó `semilla_final=7`. En el multisemilla, la **semilla 7 da 0,9093 / 0,9084** — y es
+la más baja de las diez. La diferencia con el 3639 es **+0,0004 de exactitud**, o sea unos
+**6 archivos de 15.000**, del mismo orden que los 12 JPEG en claro que el 3639 excluía.
+
+Queda cerrada la sospecha que se había anotado al ver las cuatro primeras semillas por encima
+de 0,9089: **era ruido de semilla, no un problema de configuración.** El 0,9089 no es un
+número raro, es simplemente el peor de diez. **La cifra honesta a reportar es la media,
+0,912 ± 0,002**, no el valor puntual.
+
+### La comparación de desvíos entre frentes es, en sí misma, un resultado
+
+| Medición | Desvío | Base |
+|---|---|---|
+| Archivos, Exp. 2c (macro-F1) | **± 0,001** | 15.000 archivos |
+| Archivos, Exp. 2b (combinado) | ± 0,001 | 1.500 archivos |
+| Notas, P1 (macro-F1) | ± 0,029 | 146 notas |
+| Notas, P2 (macro-F1) | **± 0,057** | 95 plantillas |
+
+El frente de notas tiene **entre 20 y 40 veces más dispersión** que el de archivos. No es que
+un método sea peor que el otro: es que uno se mide sobre 15.000 muestras y el otro sobre 95
+plantillas. **Las barras de error son evidencia directa de la tesis de que el techo lo pone el
+dato y no el método** — y refuerzan los tres resultados negativos convergentes. Escribirlo en
+el cap. 4 junto a la discusión del límite del corpus.
+
+## ✅ RESUELTO — LA FIRMA DE BADRABBIT ES LA PALABRA «encrypted» (2026-08-17)
+
+Volcado de los últimos 18 bytes de **todos** los archivos de `BADRABBIT-small`:
+
+```
+    965 65006e006300720079007000740065006400
+      1 fe8564b129add8c65100e7e5ef64e5544e80
+      1 fe21dbb554d2d817a1753c0d512f8bfa07ee
+      ... (el resto, todos distintos entre sí)
+```
+
+`65 00 6e 00 63 00 72 00 79 00 70 00 74 00 65 00 64 00` es **`encrypted` en UTF-16
+little-endian** — el marcador documentado de BadRabbit. **La firma es real y tiene nombre.**
+
+**La aritmética del parpadeo queda cerrada.** 965 de ~1.000 archivos (96,5 %) llevan el
+marcador; el resto no. La probabilidad de que los 50 archivos sorteados lo lleven todos es
+0,965⁵⁰ ≈ **0,17**. O sea que **la semilla 42 fue la excepción afortunada**: en ~83 % de las
+semillas el detector NO encuentra la firma de BADRABBIT. Lo raro era el acierto, no el fallo.
+
+**Corrección a mi hipótesis previa:** no son archivos «sin cifrar» como los 12 JPEG de CERBER.
+Los últimos 18 bytes de los ~35 restantes son todos distintos entre sí y de aspecto aleatorio,
+o sea que están cifrados; simplemente no llevan el marcador al final, o lo llevan a otra
+distancia. **No hay indicio de contaminación del corpus en BADRABBIT**, así que esto NO afecta
+al Exp. 2c.
+
+**Arreglo que se desprende:** aplicar al prefijo/sufijo el **mismo criterio de mayoría** que ya
+se aplicó a la extensión, en vez de unanimidad byte a byte. Con umbral 0,90, BADRABBIT
+mostraría su marcador de 18 bytes en todas las semillas y se reportaría con su cobertura real
+(96,5 %). Un mismo cambio corrige la inestabilidad y mejora la cifra.
+
+**Y es un resultado mejor, no peor:** «BADRABBIT marca sus archivos con la cadena `encrypted`
+en UTF-16, en el 96,5 % de los casos» es más fuerte que «BADRABBIT no deja marca».
+
+## 🚨 TERCER DEFECTO, MÁS GRAVE — LA DETECCIÓN DE FIRMAS BINARIAS ES INESTABLE (2026-08-17)
+
+Comparando la corrida local (semilla 42) contra la del cluster (semilla 1), **la misma familia
+da resultados distintos**:
+
+| Familia | Semilla 42 | Semilla 1 |
+|---|---|---|
+| **BADRABBIT** | sufijo común de **18 bytes**, `marca_detectable=True` | prefijo 0, sufijo 0, **`False`** |
+
+Y en consecuencia cambia la lista que va al capítulo 4: con semilla 42 las familias sin marca
+son **NOTPETYA y SUNCRYPT (2)**; con semilla 1 son **BADRABBIT, NOTPETYA y SUNCRYPT (3)**.
+
+**Esto es más serio que la discusión del umbral de extensión.** El umbral afecta a la extensión,
+que es metadato; esto afecta a las **firmas binarias**, que son el hallazgo propio del Exp. 2b y
+el argumento de que la marca vive en el contenido. Las cifras de cobertura y exactitud del
+modo «solo firmas binarias» dependen de la semilla, y hoy se reportan como si fueran fijas.
+
+> ✅ **RESUELTO el 2026-08-17.** El volcado descartó la hipótesis de contaminación (los ~35 sin
+> marcador están cifrados) y el criterio de mayoría ya está aplicado al prefijo/sufijo y probado.
+> Ver la sección «EL ARREGLO DEL CASO BADRABBIT, YA IMPLEMENTADO». La hipótesis de abajo queda
+> como registro de lo que se pensó, **no** como pendiente.
+
+**Hipótesis a verificar (no afirmar sin comprobar):** que la carpeta de BADRABBIT contenga
+archivos **sin cifrar**, igual que los 12 JPEG en claro hallados en CERBER. Un solo archivo sin
+la marca dentro de la muestra de 50 destruye el sufijo común de toda la familia — que es el
+mismo mecanismo que ya se vio con la extensión de JIGSAW, pero sobre las firmas. BadRabbit
+tiene documentado que agrega un marcador al final de los archivos que cifra, así que un sufijo
+de 18 bytes es plausible y probablemente real; lo que falla es la muestra, no la familia.
+
+**Prueba decisiva:** contar cuántos archivos de BADRABBIT comparten los últimos 18 bytes. Si la
+mayoría los comparte y unos pocos no, está confirmado.
+
+**Consecuencia para el plan:** la corrida multisemilla del detector deja de ser opcional y deja
+de ser sobre el umbral. Hay que reportar, sobre 10 semillas, la varianza de: familias con marca,
+cobertura y exactitud de los tres modos. Y hay que auditar la integridad de las carpetas de
+todas las familias, no solo de CERBER.
+
+## ⚠️ DOS DEFECTOS HALLADOS AL AUDITAR LOS CSV (2026-08-17)
+
+Verificado abriendo los archivos bajados, no leyendo logs.
+
+### 1. El umbral del detector estructural NO estaba demostrado — ✅ **DEMOSTRADO 2026-08-17**
+`clasificacion_loo_unanimidad.csv` y `clasificacion_loo_umbral_90.csv` son **idénticos byte a
+byte**, igual que los `marcas_por_familia_*`. Con la semilla usada (42), tras excluir el `.pdf`,
+la unanimidad ya pasaba sola — JIGSAW incluido. **El trabajo lo hizo la exclusión del PDF, no el
+umbral.**
+
+JIGSAW tiene 990 `.fun` sobre 997 archivos sin contar PDF ⇒ la probabilidad de que 50 al azar
+sean todos `.fun` es **0,6968** (hipergeométrica exacta, `comb(990,50)/comb(997,50)`) ⇒ la
+unanimidad falla con probabilidad **0,3032**. Escribir «unanimidad y umbral 0,90 dan lo mismo»
+es cierto para la semilla 42 y falso en general.
+
+#### ★ RESULTADO — 10 semillas, el criterio de unanimidad PARPADEA (registrado de lo pegado)
+
+Corrida en el cluster (`srun --nodelist=c2`, 10 corridas de `deteccion_estructural.py --semilla
+1..10`, extensión y `marca_detectable` de JIGSAW bajo cada criterio):
+
+| Semilla | Unanimidad | Umbral 0,90 |
+|---|---|---|
+| **1** | **(vacía), False** | `.fun`, True |
+| 2–10 | `.fun`, True | `.fun`, True |
+
+- **La unanimidad falla en 1 de 10 semillas; el umbral acierta en las 10.** Es exactamente el
+  parpadeo que se predijo: JIGSAW aparece o desaparece de la lista de familias con marca según
+  qué 50 archivos toque el sorteo. **El umbral queda JUSTIFICADO y se declara en el capítulo.**
+  Queda descartada la alternativa «unanimidad + exclusión del `.pdf`», que era más simple pero
+  no es estable.
+- **Honestidad sobre la tasa:** lo esperado eran ~3,0 fallos en 10 y se observó 1. No hay
+  contradicción —P(≤1 fallo | p=0,3032, n=10) = 0,144— pero 10 ensayos son pocos: la tasa
+  observada 1/10 tiene IC 95 % de Wilson **[0,018; 0,404]**, que contiene a 0,30. **En la tesis
+  se reporta el hecho (falla en 1 de 10) y la probabilidad teórica (0,30), sin presentar 1/10
+  como estimación de la tasa.**
+- **La corrida canónica (job 3638) usó la semilla 42, una de las que coinciden.** Por eso sus dos
+  CSV salieron idénticos: es una de las ~7 de cada 10 en que la unanimidad sobrevive de casualidad.
+  El fraseo del punto 5 de la auditoría se mantiene y ahora tiene respaldo empírico.
+
+⚠️ **Efecto colateral del bucle: `deteccion_estructural.py` tenía el MISMO defecto de carpeta
+única que `clasificador_bytes.py`**, así que las 10 corridas se pisaron entre sí y
+`resultados_estructural/` **en el cluster** quedó con los CSV de la **semilla 10**, no con los
+del job 3638. Los locales en `4_resultados/resultados_estructural/` son los del 3638 y están
+intactos (siguen siendo la fuente canónica), pero **no volver a bajar esa carpeta del cluster sin
+re-correr con semilla 42**. Del bucle sobrevive solo la línea de JIGSAW, no la ablación por
+semilla. → ✅ Arreglado el 2026-08-17, igual que el clasificador de bytes.
+
+#### ★★ CUÁNTO CUESTA EL PARPADEO — semilla 1 completa (2026-08-17, `srun`, 30 fam. / 1.500 arch.)
+
+Registrado de lo pegado. La semilla 1 es la única de las diez en que la unanimidad falla, así que
+es el caso peor y da la cota del daño:
+
+| Modo | Unanimidad | Umbral 0,90 | Diferencia |
+|---|---|---|---|
+| Solo extensión | 0,833 (1250/1500) | **0,866** (1299/1500) | **+0,033** |
+| Solo firmas binarias | 0,533 (800/1500) | 0,533 (800/1500) | 0,000 |
+| **Combinado** | **0,867** (1300/1500) | **0,899** (1349/1500) | **+0,032** |
+| Cobertura combinada | 0,880 | 0,913 | +0,033 |
+| Familias con marca | 26/30 | 27/30 | +1 |
+
+- **El criterio de unanimidad no solo cambia la lista de familias: cuesta 0,032 de exactitud
+  combinada.** Ya no hay que argumentar el cambio de criterio en abstracto, hay un número.
+- Las firmas binarias dan idéntico en los dos criterios (0,533), como corresponde: **el umbral
+  solo afecta la extensión.** Sirve de control de que el parche no toca lo que no debía.
+- Bajo unanimidad, la semilla 1 reproduce exactamente el cuadro viejo del job 3632: las cuatro
+  sin marca son BADRABBIT, JIGSAW, NOTPETYA, SUNCRYPT.
+
+#### ★★ HALLAZGO NO BUSCADO: la firma binaria de BADRABBIT también depende de la semilla
+
+**Bajo umbral 0,90, la semilla 1 deja a BADRABBIT SIN MARCA** (`['BADRABBIT', 'NOTPETYA',
+'SUNCRYPT']`, 27/30). Con la semilla 42 (job 3638) BADRABBIT **sí** tiene marca: sufijo de 18 B
+`65006e006300720079007000740065006400` = «encrypted» en UTF-16LE — verificado en
+`4_resultados/resultados_estructural/marcas_por_familia_umbral_90.csv`, fila 3, con extensión
+vacía. Las dos fuentes están confirmadas abriendo los archivos, y se contradicen entre semillas.
+
+**Qué implica, y es lo importante:** BADRABBIT no cambia la extensión, así que su única marca
+posible es la firma. Si desaparece con otra muestra, el sufijo «encrypted» **no está en todos sus
+archivos** — está en los 50 que sorteó la semilla 42. Y eso expone una **asimetría del parche del
+16-08**: se le puso umbral de mayoría a la extensión, pero el criterio de firma binaria sigue
+siendo *unanimidad sobre los bytes* (prefijo/sufijo común a TODOS los archivos de la muestra, sin
+umbral). **Es el mismo defecto que acabamos de corregir, en el otro eje del detector.**
+
+**Consecuencia sobre lo ya escrito:** el hallazgo «BADRABBIT SÍ deja firma — y resuelve una
+anomalía registrada» (sección del job 3638) **queda matizado, no anulado**: la firma existe y es
+reproducible con semilla 42, pero no es universal. Al escribirlo hay que decir «detectada en la
+muestra de 50 archivos de la semilla 42», no «BADRABBIT deja firma».
+
+#### ★★★ MECANISMO COMPLETO, VERIFICADO CSV CONTRA CSV (2026-08-17)
+
+Comparando `marcas_por_familia_umbral_90.csv` de la semilla 1 (cluster) contra el del job 3638
+(semilla 42, local) fila por fila: **de las 30 familias, 28 tienen marcas idénticas.** Solo dos
+cambian, y cada una por un motivo distinto:
+
+| Familia | Semilla 42 (job 3638) | Semilla 1 | Naturaleza del cambio |
+|---|---|---|---|
+| **BADRABBIT** | sufijo **18 B** «encrypted» UTF-16LE | sufijo **0 B**, sin marca | **colapso total del LCS** |
+| **BLACKBASTA** | sufijo **2 B** (`0000`, < MIN_MARCA) | sufijo **4 B** | **cruce del umbral MIN_MARCA=4** |
+
+**Son dos fragilidades distintas del detector, no una:**
+1. **El sufijo común es un LCS, o sea unanimidad byte a byte: un solo archivo discrepante lo lleva
+   a CERO.** BADRABBIT no pasó de 18 a 3 bytes: pasó a 0. Alcanza que un archivo de los 50 difiera
+   en el último byte.
+2. **MIN_MARCA = 4 es un borde duro.** BLACKBASTA ronda los 2-4 bytes de sufijo común y entra o
+   sale de la lista de familias con firma según la muestra.
+
+**Y esto explica los dos números que parecían raros, con la aritmética cerrada:**
+
+- **Por qué `solo_firmas_binarias` da 800/1500 en las DOS semillas.** En el LOO del 3638
+  (`clasificacion_loo_umbral_90.csv`, local) hay exactamente **16 familias con
+  `recall_solo_firmas_binarias = 1,0`**, y 16 × 50 = 800. En la semilla 1, BADRABBIT sale de esa
+  lista y BLACKBASTA entra: **siguen siendo 16 familias, pero no las mismas.** El 0,533 idéntico
+  **es compensación, no estabilidad** — y escribirlo como «las firmas binarias son estables entre
+  semillas» sería un error de lectura.
+- **Por qué el combinado cae 0,933 → 0,899.** Son **1400 → 1349 aciertos, es decir −51**, y
+  BADRABBIT aporta 50 archivos. En el LOO del 3638 BADRABBIT tiene
+  `recall_solo_extension = 0,0` y `recall_solo_firmas = 1,0`: **la firma era su ÚNICA vía de
+  identificación** (no cambia la extensión). Al perderla, pierde los 50. BLACKBASTA no compensa
+  acá porque ya acertaba por extensión, así que ganar firma no le suma nada en modo combinado.
+  **La caída del combinado entre semillas es, casi exactamente, BADRABBIT.**
+
+Las otras familias que dependen de una sola vía, según el mismo LOO: **MAZE** vive solo de su
+firma (extensión 0,0 — extensión aleatoria por lote) y **NOTPETYA / SUNCRYPT** no tienen ninguna
+(0,0 en los tres modos). MAZE es entonces la próxima candidata a parpadear si su sufijo de 8 B se
+rompe en otra muestra.
+
+#### ✅ TODO CONFIRMADO CON LOS DOS CSV DE LA SEMILLA 1 (2026-08-17)
+
+`clasificacion_loo_umbral_90.csv` de la semilla 1, contra el del job 3638:
+
+| Familia | LOO job 3638 (ext / firma / comb.) | LOO semilla 1 | Lectura |
+|---|---|---|---|
+| **BADRABBIT** | 0,0 / **1,0** / **1,0** | 0,0 / **0,0** / **0,0** | pierde su única vía: −50 archivos |
+| **BLACKBASTA** | 1,0 / **0,0** / 1,0 | 1,0 / **1,0** / 1,0 | gana firma; en combinado no suma |
+| **JIGSAW** | 1,0 / 0,0 / 1,0 | **0,98** / 0,0 / **0,98** | ver abajo |
+
+**La aritmética cierra exacta en las dos corridas** (no queda nada sin explicar):
+- Semilla 1: 26 familias × 1,0 + JIGSAW 0,98 (=49) + 3 familias en 0,0 → 1300 + 49 = **1349/1500
+  = 0,899** ✓ lo reportado.
+- Job 3638: 28 × 1,0 + 2 en 0,0 → **1400/1500 = 0,933** ✓ lo reportado.
+- Firmas: **16 familias con recall 1,0 en ambas semillas** (BADRABBIT sale, BLACKBASTA entra) →
+  16 × 50 = **800/1500 = 0,533** en las dos. **Compensación confirmada, no estabilidad.**
+
+**El JIGSAW 0,98 es la prueba interna de por qué la semilla 1 es la que rompe la unanimidad.** Su
+muestra de 50 contiene exactamente **un** archivo que no es `.fun`: con umbral 0,90 la familia
+conserva la extensión, pero ese archivo suelto no matchea y falla ⇒ 49/50 = 0,98. En el job 3638
+los 50 eran `.fun` y daba 1,0. **La huella del archivo discrepante quedó registrada en el
+recall.** Es el detalle que convierte «la unanimidad falló en la semilla 1» en un mecanismo
+completamente trazado.
+
+#### ⚠ ¿Cuántas «firmas» son relleno? — verificado, y mi hipótesis inicial era medio falsa
+
+Hex de los sufijos, semilla 1:
+
+| Familia | Sufijo | Cuenta como firma (≥4 B) | Naturaleza |
+|---|---|---|---|
+| CONTI | `0000000000` (5 B) | **sí** | **ceros puros = relleno** |
+| BLACKBASTA | `00020000` (4 B) | **sí** | un único byte no nulo: trailer estructurado débil |
+| HELLOKITTY | `dadcccab` (4 B) | sí | datos reales |
+| AVOSLOCKER | `3d3d` (2 B) = «==» | no | probable relleno base64 |
+| DHARMA | `00` (1 B) | no | relleno |
+
+- **BLACKBASTA NO es relleno de ceros puros** como había supuesto: es `00020000`, con un `02`.
+  Probablemente un campo de un trailer (longitud o versión). Que en la semilla 42 diera `0000` y
+  acá `00020000` sugiere que **el sufijo real es más largo y el LCS lo trunca** según qué archivos
+  entren en la muestra. Firma débil, no espuria.
+- **CONTI sí es relleno puro y cuenta como firma en las dos semillas** (`recall_solo_firmas` 1,0).
+  Cinco ceros consecutivos no son un marcador deliberado del atacante: lo más probable es el
+  relleno del cifrado por bloques.
+- De las 16 firmas del 3638, **15 tienen contenido no trivial** (cadenas legibles «WANACRY!»,
+  «FIDEL.CA», «LOCK96», «.sz40», «encrypted»; blobs de 64 B en CERBER, LOCKBIT, RANSOMEXX,
+  TESLACRYPT; y los valores que coinciden con los `sample_bytes` de ID Ransomware en MAZE,
+  GANDCRAB, MEDUZALOCKER). **La única excepción es CONTI.**
+
+**A declarar en el capítulo:** no todas las firmas descubiertas son marcadores deliberados —
+1 de 16 es relleno y 1 más es débil. Encontrarlo nosotros vale más que que lo pregunte el tutor.
+**Mejora posible del detector (no hacer ahora, anotarla):** exigir que la firma tenga entropía o
+al menos un byte no nulo distinto de relleno, para no contar padding como marca.
+
+## ★★★ A.4 CERRADO — EXP. 2b SOBRE 10 SEMILLAS (2026-08-17, `srun`, 30 fam. / 1.500 arch.)
+
+**Este es el resultado que cierra el frente del detector.** Diez corridas, semillas 1-10, los dos
+criterios sobre la misma muestra. Registrado de lo pegado; medias y desvíos calculados de esas
+cifras.
+
+| Modo | Unanimidad (criterio viejo) | **Umbral 0,90 (criterio nuevo)** |
+|---|---|---|
+| Solo firmas binarias | 0,5099 ± 0,0159 [0,500; 0,533] | **0,5634 ± 0,0020** [0,560; 0,566] |
+| **Combinado** | **0,9000 ± 0,0156** [0,867; 0,933] | **0,9321 ± 0,0011** [0,930; 0,933] |
+| Familias con marca | **26, 27 o 28** según el sorteo | **28/30 en las diez, sin excepción** |
+
+**Las tres conclusiones, en orden de importancia para la tesis:**
+
+1. **El criterio de mayoría reduce el desvío 14 veces en el combinado** (0,0156 → 0,0011) **y 8
+   veces en las firmas** (0,0159 → 0,0020). El resultado deja de depender del sorteo: eso es lo
+   que hace publicable la cifra.
+2. **Y además mejora la media**: combinado **+0,0321**, firmas **+0,0535**. No hay que elegir
+   entre estabilidad y rendimiento; el mismo cambio da las dos cosas.
+3. **El conteo de familias con marca pasa a ser 28/30 en las diez semillas.** Bajo unanimidad
+   oscilaba entre 26 y 28 — o sea que *la lista de familias que va al capítulo* dependía de la
+   semilla. Con el criterio nuevo, **NOTPETYA y SUNCRYPT son las únicas dos sin marca, siempre.**
+
+**⚠️ Dato que hay que escribir con honestidad: el 0,933 que YA está en el capítulo (job 3638,
+semilla 42) es el MÁXIMO del rango bajo unanimidad, no su media (0,9000).** Salió esa cifra por
+suerte del sorteo. Bajo el criterio nuevo, **0,933 pasa a ser el valor esperado** (media 0,9321).
+La cifra escrita queda en pie, pero **por un motivo distinto del que se creía**: antes era el techo
+afortunado, ahora es la media legítima. Escribirlo así.
+
+**✅ La predicción teórica se cumplió, con datos independientes.** Bajo unanimidad, BADRABBIT fue
+detectado en **1 de 10 semillas** (solo la 3). La hipergeométrica sobre la base real (822/857)
+predecía p = 0,1167, es decir **1,2 de 10**. El modelo probabilístico queda validado: no era una
+racionalización a posteriori.
+
+**JIGSAW,** por su parte, perdió la extensión bajo unanimidad solo en la semilla 1 — **el mismo
+resultado que el bucle anterior**, lo que confirma que las corridas son reproducibles por semilla.
+
+**Corrección a lo que anoté con la sola semilla 42:** ahí escribí que el cambio de criterio «casi
+no mueve las cifras, su valor es la estabilidad». Era cierto *para esa semilla* —la afortunada— e
+incompleto en general: sobre las diez, el criterio nuevo **mejora la media y reduce el desvío**.
+
+**Cifras del Exp. 2b para el capítulo 4** (criterio declarado = umbral 0,90, media ± desvío sobre
+10 semillas): **combinado 0,932 ± 0,001 · solo firmas 0,563 ± 0,002 · 28 de 30 familias con
+marca.** La extensión sola no cambia entre criterios (0,867). ⚠️ Falta calcular la media del modo
+«solo extensión» y de las coberturas: están en los `log_estr_s*.txt` del cluster, **bajarlos antes
+de que se limpie el `/scratch`**.
+
+## ★★★ EL ARREGLO DEL CASO BADRABBIT, YA IMPLEMENTADO (2026-08-17)
+
+> El volcado, la aritmética del 0,17 y el descarte de la contaminación están en la sección
+> **«RESUELTO — LA FIRMA DE BADRABBIT ES LA PALABRA «encrypted»»** al principio de este
+> documento. Acá va solo lo que se hizo con eso.
+
+### ✅ La cifra definitiva, sobre la base que el detector realmente usa (2026-08-17)
+
+Recuento en el cluster excluyendo los `.pdf`, que es lo que el detector muestrea:
+**822 de 857 archivos llevan el marcador = 95,92 %.**
+
+| Base | Cobertura | P(los 50 lo lleven todos) | El detector NO la encuentra en |
+|---|---|---|---|
+| **Sin `.pdf` — la del detector** | **822/857 = 95,92 %** | **0,1167** (hipergeométrica) | **88,3 % de las semillas** |
+| Con `.pdf` (primer conteo) | 965/1.000 = 96,50 % | 0,1608 | 83,9 % |
+
+**Las cifras a citar en la tesis son 95,92 % de cobertura y 0,117 de probabilidad de detección**
+(hipergeométrica exacta, `comb(822,50)/comb(857,50)`; el 0,965⁵⁰ ≈ 0,17 era binomial y sobre la
+base con `.pdf`). La conclusión se refuerza: **el detector fallaba en ~88 % de las semillas**, no
+en 83 %.
+
+**Hallazgo lateral que sale del mismo conteo:** 1.000 − 857 = **143 `.pdf`**, y 965 − 822 =
+**143 con marcador**. Los números coinciden ⇒ **los 143 `.pdf` de BADRABBIT son archivos cifrados
+CON el marcador**, no documentación. Consecuencia incómoda y cuantificada: el filtro `.pdf`
+**empeora** la detección de BADRABBIT (descarta 143 archivos marcados y baja la cobertura de
+96,50 % a 95,92 %). El caveat del filtro ya estaba anotado; ahora tiene número. **En BADRABBIT y
+NOTPETYA el `.pdf` no es documentación** — son familias que conservan la extensión original.
+
+### ✅ CAMBIO DE CRITERIO IMPLEMENTADO Y PROBADO (`deteccion_estructural.py`)
+
+**El umbral de mayoría se aplica ahora también al prefijo y al sufijo**, no solo a la extensión.
+La firma binaria exigía unanimidad byte a byte, que es *más* frágil que la extensión: un único
+archivo discrepante lleva el trozo común a **cero** (por eso BADRABBIT pasó de 18 B a 0, no a 3).
+
+1. `prefijo_mayoritario` / `sufijo_mayoritario` reemplazan al LCS: el trozo más largo compartido
+   por al menos el umbral de los archivos.
+2. **Cada marca sale con su COBERTURA** (`prefijo_cobertura`, `sufijo_cobertura`,
+   `extension_cobertura` en el CSV) — el pedido 3: «tiene marca» y «todos sus archivos la tienen»
+   son cosas distintas, y para el detector manda la segunda.
+3. El LOO ya no recalcula las marcas de las demás familias por cada archivo (no dependen del
+   archivo evaluado): mismo resultado exacto, 30 veces menos trabajo.
+4. Los **dos criterios se siguen reportando** en la misma corrida, así que `_unanimidad` conserva
+   el comportamiento viejo completo y `_umbral_90` trae el nuevo. Se mantiene la decisión ya
+   tomada de reportar ambos.
+
+**Verificaciones hechas antes de subirlo:**
+- **Equivalencia:** con umbral 1,0 el algoritmo nuevo da **exactamente** el mismo resultado que el
+  LCS anterior — 6.000 comparaciones sobre datos aleatorios, **0 diferencias**. Las cifras del job
+  3638 siguen reproducibles.
+- **Caso BADRABBIT sintético** (familia con el marcador en 96/100 archivos y sin extensión propia):
+  bajo unanimidad queda **sin marca**; bajo umbral 0,90 aparece `sufijo 18B …encrypted (96%)` y el
+  combinado sube de **0,800 a 0,992**. Los 4 archivos que genuinamente no lo llevan fallan, que es
+  la cobertura real y no un error.
+- Costo: 6 s con 250 archivos / 5 familias ⇒ estimo **3-6 min** con 1.500 / 30, contra los 53 s del
+  3638 (el criterio de mayoría es más caro que el LCS). Pedir `--time=00:30:00`.
+
+### ★ CORRIDA CON EL CRITERIO NUEVO — job 3650, semilla 42 (2026-08-17)
+
+**1) Retrocompatibilidad confirmada en datos reales, no solo en el test sintético.** El criterio
+`unanimidad` reproduce el job 3638 **cifra por cifra**: extensión 0,867 (1300/1500) · firmas 0,533
+(800/1500, cobertura 0,541) · combinado 0,933 (1400/1500, cobertura 0,941) · 28/30 con marca ·
+sin marca NOTPETYA y SUNCRYPT. Nada se movió donde no debía moverse.
+
+**2) Qué cambia con el criterio de mayoría (`umbral_90`):**
+
+| Modo | Unanimidad | Umbral 0,90 |
+|---|---|---|
+| Solo extensión | 0,867 | 0,867 (igual) |
+| **Solo firmas binarias** | 0,533 (800), cob. 0,541 | **0,563 (845), cob. 0,571** |
+| Combinado | 0,933 | 0,933 (igual) |
+
+Dos familias ganan firma: **BLACKBASTA** sufijo 4 B `00020000` al **98 %** y **CUBA**, ver abajo.
+**El combinado NO se mueve porque las dos ya acertaban por extensión.**
+
+⚠️ **Lo importante de leer bien:** con la semilla 42 el cambio de criterio casi no mueve las
+cifras (+0,030 en firmas, 0 en el resto). **El valor del cambio NO es la cifra de esta semilla,
+es la estabilidad entre semillas** — con la semilla 42 BADRABBIT aparecía igual bajo unanimidad
+(es la afortunada del 12 %). La ganancia se ve en el otro ~88 % de las semillas, y eso lo mide
+A.4. **No escribir «el criterio de mayoría mejora el resultado» apoyándose en esta corrida.**
+
+**3) El riesgo de relleno quedó AUDITADO y limpio.** Temía que el umbral en las firmas inflara
+marcas de ceros: no pasó. Las dos firmas nuevas son `00020000` (tiene un byte no nulo) y la de
+CUBA (empieza con «FIDEL.CA»). CONTI sigue con sus `0000000000` al 100 %, igual que antes — el
+umbral no agregó ninguna falsa marca de relleno.
+
+**4) HALLAZGO NUEVO: la ventana de 64 bytes está TRUNCANDO las firmas.** CUBA pasa de **prefijo
+20 B al 100 %** a **prefijo 64 B al 92 %**, y 64 es exactamente `N_BYTES`, el máximo que el
+detector mira. O sea que **la firma de CUBA tiene al menos 64 bytes**, no 20. Están topeadas en 64
+también TESLACRYPT (prefijo, 100 %) y CERBER, LOCKBIT, RANSOMEXX (sufijos, 100 %): **cinco firmas
+contra el techo de la ventana.** Es un dato utilizable —«al menos 64 bytes», más fuerte que
+20— y es barato de medir: subir `N_BYTES` y volver a correr. **Anotarlo como pendiente, no
+cambiarlo antes de A.4**, porque mover la ventana también mueve todas las cifras.
+
+## ★ PEDIDOS DE CAPPO YA VERIFICADOS EN EL CÓDIGO (2026-08-17) — no reabrir
+
+Sobre «error» y «train/validation/test», verificado leyendo `clasificador_bytes.py` y
+`4_resultados/resultados_bytes/bytes_resumen.csv` (job 3639):
+
+| Etapa | Qué es | Exactitud | macro-F1 | n |
+|---|---|---|---|---|
+| **Búsqueda anidada** | `RandomizedSearchCV` **dentro** del pliegue de entrenamiento, evaluación en el pliegue externo que no participó de la selección | **0,8913** | **0,8920** | 6.000 |
+| Final | re-evaluación con hiperparámetros fijos sobre otra muestra | **0,9089** | **0,9074** | 15.000 |
+
+- **El 0,8913 es la cifra metodológicamente inatacable** y contesta el pedido de validación
+  separada: ya existe validación cruzada anidada, no hay que agregar nada.
+- **El matiz a declarar:** en la etapa final los hiperparámetros se eligieron con archivos que en
+  parte reaparecen en la muestra de evaluación. **Dejar el 0,8913 disponible como cifra
+  conservadora** y decir explícitamente de dónde sale cada una.
+- Las tres representaciones de la etapa de búsqueda, del mismo CSV: posicional + RF **0,8913** ·
+  n-gramas + LogReg **0,8623** · n-gramas + LinearSVC **0,8515**. La posicional gana también acá.
+- **Lo único que falta del pedido del tutor sobre archivos es el desvío: es el job 3648.**
+
+#### ★★ CONSECUENCIA: el Exp. 2b también necesita desvío, no solo el 2c
+
+Comparando el **mismo criterio** (umbral 0,90) entre dos semillas: combinado **0,899** (semilla 1)
+contra **0,933** (semilla 42, job 3638). **Diferencia 0,034 entre muestras.** Las cifras del
+Exp. 2b están hoy reportadas como valores exactos (0,867 / 0,533 / 0,933) y **tienen una
+dispersión del mismo orden que la que A.2 está midiendo para el 2c**.
+
+**Tarea nueva (barata: 27 s por semilla ⇒ ~5 min las diez):** correr el detector sobre 10 semillas
+y reportar el 2b como media ± desvío, igual que el resto. Ahora es posible sin perder datos porque
+la carpeta de salida ya lleva la semilla. **No escribir el capítulo del 2b con cifras puntuales
+antes de tener esto.**
+
+### 2. `clasificador_bytes.py` sobrescribe su carpeta de salida — ✅ **ARREGLADO 2026-08-17**
+Escribía siempre en `resultados_bytes/`: por eso el job 3639 pisó los CSV del 3633 y se perdió
+su reporte por familia completo. **El próximo paso del plan es A.2, que corre varias semillas.**
+Si cada una escribiera en la misma carpeta, quedaría solo la última y se perdería justo la
+dispersión que pidió el tutor.
+
+**Qué se cambió** (probado local con dataset sintético de 4 familias, antes de gastar cluster):
+1. **Carpeta única por corrida:** `resultados_bytes_s<semilla>[_job<SLURM_JOB_ID>]`, armada en
+   `carpeta_salida()`. `resultados_bytes/` (el 3639) queda intacta y ya no la pisa nadie.
+2. **Salvaguarda:** si la carpeta destino ya tiene archivos `bytes_*`, el script **aborta** con
+   un mensaje que dice qué hacer. Para sobrescribir hay que pedirlo con `--forzar`.
+3. **Semillas parametrizables** — sin esto, «correr diez semillas» daba diez veces el mismo
+   número: el muestreo estaba clavado en 42 (búsqueda) y 7 (etapa final), y todos los
+   `random_state` en 42. Ahora `--semilla` / `--semilla-final`, **con esos mismos valores por
+   defecto para que el job 3639 siga siendo reproducible**.
+4. **Modo `--multisemilla 1,2,3,…`** (esto ES el A.2): repite solo la evaluación final con los
+   hiperparámetros ya elegidos por la búsqueda anidada (`HIPER_2C`, constante nombrada en el
+   script) y escribe `bytes_multisemilla.csv` (una fila por semilla),
+   `bytes_multisemilla_por_familia.csv` (**F1 por familia y por semilla ⇒ desvío por familia,
+   que es lo que hace falta para las seis difíciles**) y `bytes_multisemilla_resumen.csv`
+   (media, desvío, mínimo, máximo). Los CSV se reescriben en cada iteración: si el trabajo se
+   corta por tiempo, lo ya corrido no se pierde.
+5. La semilla gobierna **las tres fuentes de azar**: qué archivos se muestrean, cómo se parten
+   los pliegues y la aleatoriedad interna del bosque.
+6. **El manifiesto guarda ahora `SLURM_JOB_ID`**, las semillas y los pliegues (hallazgo 7 de la
+   auditoría, que pedía exactamente esto para scripts futuros).
+
+**A declarar en la tesis:** en el modo multisemilla los hiperparámetros quedan **fijos**. Lo que
+se mide es la dispersión de la estimación, no una nueva selección de modelo — es el mismo
+criterio que usa `clasificador_notas_v2.py`, que reporta 10 semillas con la configuración ya
+elegida.
+
+**Listo para subir (2026-08-17):** los tres archivos están copiados en
+`PARA_SUBIR_AL_CLUSTER/` (verificados por hash contra `2_codigo/`): `clasificador_bytes.py`,
+`deteccion_estructural.py` y el nuevo `job_bytes_multisemilla.sh`. `LEEME_PRIMERO.txt` de esa
+carpeta tiene arriba un bloque con fecha que dice qué subir y los dos comandos a lanzar (A.2 y la
+semilla 1 del detector). Recordar que esa carpeta está en `.gitignore`: no entra en los commits,
+hay que mantenerla a mano.
+
+### Nota menor pero contagiosa — ✅ **ARREGLADA 2026-08-17**
+`bytes_manifiesto.json` guardaba comparaciones hardcodeadas (`extension_sola: 0.828`,
+`estadisticas_2_features: 0.099`) que quedaron viejas tras el parche del detector (los valores
+correctos del job 3638 son 0,867 y 0,533). Un manifiesto que propaga cifras congeladas es peor
+que no tenerlas. **Se eliminó el bloque `comparacion` del script**, con un comentario en el
+lugar explicando por qué: un manifiesto describe SU corrida; las comparaciones entre
+experimentos se arman leyendo los CSV de cada uno.
+
+### Estado verificado de la descarga
+Todo bajado en `4_resultados/` el 2026-08-17 (22:04 y 22:34): `resultados_ablacion_extendida/`
+5 archivos · `resultados_analisis_bytes/` 6 · `resultados_bytes/` 3 · `resultados_estructural/`
+7. `bytes_resumen.csv` confirma que es el **3639**: 0,9089 / 0,9089 / 0,9074 sobre 15.000
+archivos y 30 familias. **Solo faltan los `slurm-*.out`.**
 
 ## 1. Identificación
 - **Título:** "Detección de familias de ransomware en base a archivos encriptados y notas de rescate"
@@ -500,7 +1063,14 @@ con el resultado de hiperparámetros, son **dos resultados negativos independien
 apuntan a lo mismo: el límite es la cantidad de plantillas del corpus. Escribirlo en el
 cap. 4 (subsección junto a §4.7.5) — documenta que se intentó la corrección obvia.
 
-## SPRINT 2 EN EJECUCIÓN (lanzado 2026-08-05)
+## SPRINT 2 — ✅ CERRADO (lanzado 2026-08-05, resultados incorporados)
+
+**Los dos trabajos volvieron y sus resultados ya están arriba en este documento.** El crítico,
+(a) generalización a tipos de archivo nunca vistos, dio **0,879 frente a 0,910: una caída de
+0,031**, muy por debajo del umbral de 0,10 que se había fijado ⇒ **el resultado principal
+queda confirmado**, no hay que matizar §4.5 ni §4.6. El gridsearch de estadísticas dio
+0,599–0,603, diferencia −0,000, y cerró el último hueco de optimización declarado.
+_(Se deja el texto original abajo como registro de lo que se había planificado.)_
 
 Dos trabajos en el clúster, pendientes de resultado:
 - `job_analisis_bytes.sh` → `analisis_bytes.py` (40-70 min). Cuatro análisis:
@@ -545,7 +1115,11 @@ queda como referencia conceptual de los 3 trabajos).
 Datos del entorno: SLURM (`sbatch`, scripts listos en `2_codigo/slurm/`), usar `python3.11`
 y `pip3.11`, trabajar en `/scratch/ralfonzo` (el HOME no tiene espacio), **sin acceso a
 Internet** (el código ya funciona sin `beautifulsoup4`, con fallback regex verificado),
-GPU disponible (no la usa sklearn), almacenamiento temporal (se borra 60 días después).
+GPU disponible (no la usa sklearn), almacenamiento declarado como temporal.
+> ⚠️ **CORREGIDO 2026-08-17:** el reglamento dice que `/scratch` se borra a los 60 días
+> del fin de uso, pero **en la práctica no se limpia** — Romina tiene ahí archivos de
+> más de un año. Bajar los resultados igual, por respaldo, pero **no usar el borrado
+> como argumento de urgencia**.
 ⚠️ Faltan en el dataset del cluster: `BLACKBASTA-small` y `Z-Safe` (benignos) → hay 29 de
 30 familias; el Exp. 2 corre igual con 29, declarándolo. Preguntar si están en otro lado.
 ⚠️ **OBLIGACIÓN DEL REGLAMENTO:** mencionar el uso del cluster del NIDTEC en la tesis
@@ -573,9 +1147,12 @@ multiclase — que NO deben sobrevivir a la reescritura final.)
 **Bloque D — Reunión con Cappo (cuando A+B estén):** mostrar cap. 4 nuevo, hallazgo de
 plantillas (su pedido de variabilidad del 02/05/24 respondido), P1/P2, comparación vs
 ID Ransomware con Pruebas.xlsx como experimento propio (su pedido del 08/05/24).
-Preguntarle: (a) ¿acepta notas por OCR/transcripción como fuente? (pendiente de
-notas_familias_criticas.md); (b) ¿mapear objetivos específicos a capítulos? (su pedido
-del 08/05/24); (c) ¿experimento transformer con GPU como sección extra o trabajo futuro?
+Preguntarle: (a) ✅ **RESUELTA — el tutor autorizó OCR/transcripción e incluso la ampliación
+sintética** (punto 4 textual de la reunión 2026-08-12: «se puede generar datos sintéticos si es
+necesario»; confirmado por Romina 2026-08-16). Sigue vigente el caveat propio: si se generan
+sintéticas, evaluar SOLO contra notas reales; (b) ¿mapear objetivos específicos a capítulos?
+(su pedido del 08/05/24); (c) ¿experimento transformer con GPU como sección extra o trabajo
+futuro?
 
 **Bloque E — Cierre final (AL FINAL, una sola pasada):** **CONCLUSIÓN completa** (recién acá;
 corregir las cifras superadas 100 %/15,4 %), resumen/abstract, carátulas, dedicatoria,
@@ -587,6 +1164,527 @@ abstract sin escribir, dedicatoria "blah blah"), bibliografía (entrada lee2022 
 incorporar Davies 2022 ×2 / Gómez Hernández 2023 / Pont 2023 / Sokolova & Lapalme), auditar
 las 37 notas "NapierOne/varios" del manifiesto, y Fase 3 (expandir corpus con URLs pcrisk ya
 listadas, GridSearch en servidor, advanced_features para blindar Exp. 2).
+
+## ▶ RETOMAR ACÁ — 2026-08-17: job 3639 verificado; falta bajar TODO del cluster
+
+| Job | Qué es | Estado | Salida a bajar |
+|---|---|---|---|
+| 3630 | Ablación de ventana extendida + bloque del medio | ✅ 192,4 min | `resultados_ablacion_extendida/` |
+| 3633 | Exp. 2c sobre 30 familias (con los 12 JPEG de CERBER) | ✅ · ⚠ CSV pisados por el 3639 | solo queda `slurm-bytes-3633.out` |
+| 3632 | Exp. 2b estructural sobre 30 | ⚠ superado por 3638 | — |
+| 3638 | Exp. 2b con detector corregido (sin `.pdf`, muestreo aleatorio, 2 criterios) | ✅ 53 s | `resultados_estructural/` |
+| **3639** | **Exp. 2c sin los 12 JPEG en claro de CERBER** | ✅ 45 min (17-08 00:22) | `resultados_bytes/` |
+| **3648** | **A.2: Exp. 2c sobre 10 semillas (0-9), desvío del frente de archivos** | ⏳ lanzado 17-08 | `resultados_bytes_multisemilla_job3648/` |
+| — | Detector, semilla 1 (costo del parpadeo) — `srun`, 30 fam. | ✅ 17-08 | `resultados_estructural_s1_job*/` |
+
+### ✅ Job 3639 (2026-08-17) — la contaminación de CERBER no sostenía el resultado
+
+`exactitud 0,909 | balanced 0,909 | macro-F1 0,907` — 30 familias × 500 = 15.000 archivos,
+mismos hiperparámetros elegidos por la búsqueda anidada (300 / prof. 20 / hoja 2 / 0,3).
+Contra el job 3633 (0,9105 / 0,9105 / 0,9097): **diferencia −0,002 a −0,003, muy por debajo
+del umbral de 0,005 fijado** ⇒ queda verificado y escribible que los 12 archivos sin cifrar
+no sostenían el resultado. **CERBER da precisión 1,00 / recall 1,00 / F1 1,00** (antes
+1,00/0,99): la firma de 64 bytes alcanza sola; la cabecera JFIF no era la muleta.
+Del extracto visible (A–C): AVOSLOCKER 1,00 · BADRABBIT 0,98 · BLACKBASTA 1,00 ·
+BLACKCAT 1,00 · BLACKMATTER 0,99 · CERBER 1,00 — consistente con el 3633.
+
+**⚠ Confirmado (ls del 17-08): el 3639 PISÓ los CSV del 3633.** `resultados_bytes/` contiene
+solo los tres archivos del 17-08 01:22 (`bytes_resumen.csv`, `bytes_por_familia.txt`,
+`bytes_manifiesto.json`), todos de la corrida sin JPEG. Las cifras del 3633 sobreviven en
+`slurm-bytes-3633.out` (bajarlo) y en las secciones de este documento, pero su reporte por
+familia completo se perdió (el log solo imprime el extracto A–C). Causa: `clasificador_bytes.py`
+escribe siempre en la misma carpeta; para futuras verificaciones, renombrar la carpeta de
+salida antes de relanzar.
+
+**PROPUESTA (decidir Romina):** tratar el **3639 como corrida canónica del Exp. 2c** — es la
+del corpus verificado sin archivos en claro y la única con CSV conservados — y citar el 3633
+como control de robustez («incluir los 12 archivos mueve las métricas menos de 0,003»).
+El 3639 corrió con los 12 `.jpg` movidos a `CERBER-small/_sin_cifrar/` (exclusión reversible).
+
+**✅ DESCARGA HECHA (17-08 22:04) Y AUDITADA — ver la sección de auditoría más abajo.**
+Faltan SOLO los logs `slurm-*.out` (en particular `slurm-bytes-3633.out`, única traza del
+job 3633 desde que el 3639 pisó sus CSV). Comando en el cluster y bajar con WinSCP:
+
+```bash
+cd /scratch/ralfonzo/tesis && tar czf logs_slurm_2026-08-17.tgz slurm-*.out
+```
+
+## ★ AUDITORÍA DE LA DESCARGA (2026-08-17, subagente de verificación)
+
+**43 de 43 cifras de referencia CONFIRMADAS contra los CSV/JSON bajados; 15 CSV + 5 JSON +
+2 PNG íntegros, ninguno vacío ni corrupto.** Los archivos locales son desde ahora la fuente
+canónica de todas las tablas del cap. 4.
+
+**Las seis difíciles del 3639 (de `bytes_por_familia.txt`, corpus limpio):** NOTPETYA 0,33 ·
+JIGSAW 0,44 · CRYPTOLOCKER 0,59 · DARKSIDE 0,59 · WASTEDLOCKER 0,63 · SUNCRYPT 0,72.
+**Mismas seis**, con la séptima peor (BADRABBIT 0,98) a 0,26 de distancia — el grupo está
+nítidamente separado. ⚠ Dirección: cinco de las seis BAJARON hasta −0,03 respecto del 3633 ⇒
+escribir «excluir los JPEG no altera los resultados», nunca «mejora».
+
+**Hallazgo científico nuevo (corrige la hipótesis registrada en la sección de la ablación):**
+la importancia por posición NO se concentra «entre los bytes 128 y 512»: se concentra en los
+**últimos ~16 bytes del archivo** (27,2 % de toda la importancia; cola total 79,6 % contra
+cabecera 20,4 %; los 12 offsets más importantes son todos de cola: −5, −133, −1, −2, −3, −6,
+−4, −10, −100, −168…). Existe un **pico secundario real en la cola entre −130 y −170**
+(la banda 128–255 de la cola acumula 21,5 %), y ese pico es lo que explica el salto de la
+curva de ventana entre 128 y 512. Formulación para la tesis: *«la señal dominante está pegada
+al final del archivo; ampliar la ventana de 128 a 512 incorpora un pico secundario en
+−130/−170 que aporta el resto»*. Converge con: 15 de las 16 firmas del 2b son sufijos, y
+`solo cola` 0,756 contra `solo cabecera` 0,338. Fuente: `b_importancia_por_posicion.csv`
+(1.024 filas, importancias suman 1,0) + `fig_importancia_por_posicion.png`.
+
+**Diagnóstico de las seis difíciles (`d_familias_dificiles.csv`), listo para §4.5.3:**
+el **97–99 % de sus errores son confusiones entre ellas mismas** (cluster cerrado, no ruido
+difuso). Entropía de cabecera 7,51–7,59 contra 7,03 del resto: sus cabeceras son MÁS
+aleatorias que el promedio — no hay marca que aprender. Excepciones informativas: SUNCRYPT
+tiene cola de baja entropía (4,78) y NOTPETYA 6,58 — algo estructurado al final, coherente
+con que alcancen F1 0,72 y 0,33 sin tener firma detectable.
+
+**Hallazgos que piden acción (en orden):**
+1. **`generar_figuras_cap4.py` tiene cifras hardcodeadas VIEJAS**: su dict de F1 es de 29
+   familias (falta BLACKBASTA) y de una corrida anterior al 3639; su Exp. 2b es el
+   pre-corrección (15 firmas, 4 sin marca — BADRABBIT y JIGSAW pintados mal); su figura de
+   progresión usa 0,517/0,533/0,828 superados por 0,5333/0,5413/0,8667. **Si se regeneran las
+   figuras hoy, salen con números superados.** → Reescribirlo para que LEA los CSV bajados
+   (regla: ninguna cifra tipeada a mano) antes de tocar el cap. 4.
+2. **La exclusión de los 12 JPEG de CERBER no quedó registrada en ningún artefacto**: el
+   manifiesto del 3639 no la menciona y el script solo filtra `.pdf`. Se hizo moviendo los 12
+   a `CERBER-small/_sin_cifrar/` en el cluster (los scripts solo toman archivos del nivel de
+   la carpeta de familia). → Declararla explícitamente en el cap. 4 y en el apéndice de
+   reproducibilidad; el manifiesto por sí solo no la prueba.
+3. **Dos CSV del detector VIEJO venían mezclados en `resultados_estructural/`**
+   (`marcas_por_familia.csv` y `clasificacion_loo.csv`, sin sufijo de criterio = job 3632
+   pre-corrección, con BADRABBIT/JIGSAW «sin marca»). → **Movidos el 2026-08-17 a
+   `4_resultados/_historico/resultados_estructural_job3632_precorreccion/`** para que nadie
+   los cite por error. Los válidos son los `*_umbral_90.csv` / `*_unanimidad.csv`.
+4. **El bloque `comparacion` de `bytes_manifiesto.json` está hardcodeado en el código fuente**
+   (`clasificador_bytes.py:279-281`) y trae los valores del 2b pre-corrección (0,533/0,828).
+   NO citarlo como medición del job 3639.
+5. **Unanimidad y umbral 0,90 dieron CSV byte-idénticos (verificado por hash), pero por suerte
+   del muestreo**: los archivos anómalos de JIGSAW no cayeron en la muestra de 50
+   (probabilidad 0,6968). Fraseo para la tesis: el umbral sigue siendo necesario en general;
+   que acá coincida es evidencia de que no se eligió por conveniencia, no de que dé igual.
+   ✅ **RESUELTO 2026-08-17 con 10 semillas: la unanimidad falla en 1 de 10, el umbral en 0 de
+   10.** El fraseo se mantiene y ahora está respaldado por medición, no solo por el cálculo.
+6. **Al citar la ablación extendida: el CSV de referencia es `accuracy`, la figura grafica
+   macro-F1.** Ambas columnas están en `a_curva_ablacion.csv`; aclarar cuál se usa en cada
+   tabla/figura. El control «sin relleno» va +0,0037…+0,0053 por encima (media +0,0047):
+   decir «~0,005», no «0,005 uniforme». El subconjunto sin relleno es constante en los 7
+   puntos (n=14.783 = archivos ≥8.192 B, según `0_tamanos.csv`).
+7. **Ningún manifiesto guarda el job ID de SLURM**, y el de la ablación tampoco registra
+   pliegues/semilla de la CV (están solo en el código: `ablacion_ventana_extendida.py:117-121`,
+   StratifiedKFold(3), semilla 42). Para la tesis se declara desde el código; para scripts
+   futuros, agregar `SLURM_JOB_ID` y la CV al manifiesto.
+
+Nota: también bajó `resultados_gridsearch/` (el de notas NLP del 2026-08-05, 144 notas) —
+íntegro, sin novedades. En `c_ablacion_ventana.csv` (29 familias) el tramo 64→128 BAJA
+(0,7946→0,7932) mientras que sobre 30 familias sube (0,7959→0,7980): ese tramo es ruido,
+describirlo como «sin ganancia», sin asignarle dirección.
+
+**Pendiente de escribir, ya medido:** el Exp. 2b sobre 30 familias (incluida la corroboración
+cruzada con `Pruebas.xlsx`), la ablación extendida y el Exp. 2c sobre 30.
+
+**Siguiente experimento a preparar:** Sprint B.1 (curva de aprendizaje de notas) **junto con
+B.3 (grafo de marcadores compartidos → protocolo P3)** — mismos datos, sin cluster; diseño
+completo fijado el 2026-08-16 en `PLAN_MEJORAS.md` (B.3, C.bis y protocolo de sintéticas).
+En paralelo, ya autorizado por el tutor: recolección pcrisk/OCR con lote chico (1-2 familias)
+midiendo rendimiento por hora.
+
+## ✅ ABLACIÓN DE VENTANA EXTENDIDA + BLOQUE DEL MEDIO (job 3630, 2026-08-16)
+
+`ablacion_ventana_extendida.py` con `--por-familia 500` sobre `Napierone-small`:
+**15.000 archivos, 30 familias**, 8 núcleos, 192,4 min. Validación cruzada de 3 pliegues,
+**una sola semilla** (por eso no trae desvío: el A.2 del plan sigue pendiente). Hiperparámetros
+del Exp. 2c, ajustados para 512+512 y dejados sin tocar para que las cifras sean comparables —
+es una limitación a declarar, no un error.
+
+### (0) El riesgo de relleno era chico, y el control salió limpio igual
+
+Tamaños: **mínimo 1.040 · mediana 80.929 · máximo 32.155.703 bytes**.
+
+| Ventana | Archivos más cortos que la ventana |
+|---|---|
+| 64+64 … **512+512** | **0 (0,0 %)** |
+| 1024+1024 | 84 (0,6 %) |
+| 2048+2048 | 143 (1,0 %) |
+| 4096+4096 | 217 (1,4 %) |
+
+**Hasta 512+512 —donde está el máximo— ningún archivo se rellena con ceros**, así que la
+sospecha que motivó el control no aplica al punto que importa. El subconjunto limpio
+(≥ 8.192 bytes) son **14.783 archivos y las 30 familias conservan ≥ 30 ejemplares**, o sea que
+el control se hace sobre el 98,6 % del corpus y sin perder familias. Escribir el control
+igual: el argumento es más fuerte cuando se muestra que se buscó el artefacto y no estaba.
+
+### (a) La curva SATURA en 512+512 — contestado el reclamo del tutor
+
+| Ventana | Bytes | Corpus completo | Solo archivos sin relleno |
+|---|---|---|---|
+| 64+64 | 128 | 0,796 | 0,801 |
+| 128+128 | 256 | 0,798 | 0,803 |
+| 256+256 | 512 | 0,851 | 0,856 |
+| **512+512** | **1024** | **0,904** | **0,909** |
+| 1024+1024 | 2048 | 0,903 | 0,907 |
+| 2048+2048 | 4096 | 0,902 | 0,907 |
+| 4096+4096 | 8192 | 0,901 | 0,905 |
+
+- **El máximo está en 512+512 y a partir de ahí la curva baja levemente** (−0,003 al octuplicar
+  los bytes). La figura ya muestra saturación: era exactamente lo que el tutor marcó como
+  crítica válida el 12-08.
+- **El control sin relleno se comporta igual** y va sistemáticamente ~0,005 por encima. Como
+  hasta 512 no hay relleno posible, esa diferencia constante **no es el relleno**: son los
+  archivos chicos, que son intrínsecamente más difíciles. La forma de la curva es la misma en
+  las dos vistas ⇒ el salto de 256 a 512 es señal real.
+- **La curva tiene un escalón, no una rampa:** plana entre 64 y 128 (0,796 → 0,798), salta en
+  256 (0,851) y otra vez en 512 (0,904). **VERIFICADO 2026-08-17 contra
+  `b_importancia_por_posicion.csv`: la hipótesis «la información decisiva está entre los bytes
+  128 y 512» era INCORRECTA tal como estaba enunciada.** La señal dominante está en los
+  **últimos ~16 bytes** (27,2 % de la importancia; cola 79,6 % vs cabecera 20,4 %); lo que
+  explica el salto 128→512 es un **pico secundario en la cola entre −130 y −170**. La pista de
+  RYUK («HERMES» a offset lejano) sigue abierta pero ya no como explicación principal.
+  Detalle en la sección «AUDITORÍA DE LA DESCARGA».
+- **Reproducibilidad:** la ablación previa sobre 29 familias daba 64→0,795 · 128→0,793 ·
+  256→0,852 · 512→0,908. Sobre 30 familias y otro muestreo: 0,796 · 0,798 · 0,851 · 0,904.
+  Coinciden dentro de ±0,005 — es una comprobación de estabilidad citable.
+- **Consecuencia práctica:** 1.024 bytes por archivo bastan. Leer 8 veces más no aporta y cuesta
+  8 veces más — argumento de costo computacional utilizable en la tesis.
+- La leve caída con ventanas grandes es coherente con la maldición de la dimensionalidad ya
+  observada en las 275 características estadísticas (0,592 contra 0,603 con 19).
+
+### (b) Los bytes del medio no llevan casi información — contestada la otra pregunta
+
+| Configuración | Bytes | Exactitud | macro-F1 |
+|---|---|---|---|
+| Solo medio | 1024 | **0,056** | 0,058 |
+| Solo cabecera | 512 | 0,338 | 0,348 |
+| Solo cola | 512 | **0,756** | 0,746 |
+| Cabecera + cola | 1024 | **0,904** | 0,905 |
+| Cabecera + cola + medio | 2048 | 0,902 | 0,903 |
+
+- **El medio da 0,056 con azar en 0,033**: apenas por encima del azar, y agregarlo a los
+  extremos no mejora nada (0,902 contra 0,904). Es la respuesta empírica a «¿por qué no se
+  revisan los bytes del medio?»: porque ahí el cifrado sí es indistinguible. Refuerza la
+  reformulación del Objetivo 2 en vez de contradecirla.
+- **La cola vale más del doble que la cabecera** (0,756 contra 0,338) y **converge con el
+  Exp. 2b**, que encontró 11 sufijos y solo 4 prefijos. Dos métodos independientes vuelven a
+  decir lo mismo: la marca la escribe el ransomware al final, después de cifrar.
+- Ninguno de los dos extremos por separado se acerca a la combinación (0,904): son
+  complementarios, no redundantes.
+
+## ✅ EXP. 2c RE-CORRIDO SOBRE 30 FAMILIAS (job 3633, 2026-08-16)
+
+`clasificador_bytes.py` sobre **30 familias × 500 archivos = 15.000** (antes 29 × 500 = 14.500).
+**El resultado principal de la tesis no se mueve al sumar BLACKBASTA:**
+
+| | 29 familias (job 3557) | **30 familias (job 3633)** |
+|---|---|---|
+| Exactitud | 0,910 | **0,9105** |
+| Balanced accuracy | — | **0,9105** |
+| macro-F1 | 0,908 | **0,9097** |
+
+Mismos hiperparámetros elegidos por la búsqueda anidada: `n_estimators=300, max_depth=20,
+min_samples_leaf=2, max_features=0.3`. 568 s de ajuste final. Sigue **sin usar nombre ni
+extensión**.
+
+### Comparación de representaciones (etapa de búsqueda, 6.000 archivos)
+
+| Configuración | Exactitud | macro-F1 |
+|---|---|---|
+| **Posicional + RandomForest** | **0,8990** | **0,8986** |
+| N-gramas de bytes + LogReg | 0,8602 | 0,8639 |
+| N-gramas de bytes + LinearSVC | 0,8498 | 0,8472 |
+| **FINAL: posicional + RF, 15.000 archivos** | **0,9105** | **0,9097** |
+
+Fuente: `resultados_bytes/bytes_resumen.csv`. **La representación posicional vuelve a ganar**
+sobre los n-gramas por ~0,04, igual que con 29 familias ⇒ las marcas están en offsets fijos.
+Contraste metodológico con las notas, donde ganan los n-gramas de caracteres.
+
+### Reporte por familia — las seis difíciles son EXACTAMENTE las mismas
+
+Fuente: `resultados_bytes/bytes_por_familia.txt`. Promedios macro: precisión 0,93 · recall 0,91.
+
+**24 familias con F1 ≥ 0,98** (antes eran 23 sobre 29): AVOSLOCKER, BADRABBIT 0,98, BLACKBASTA,
+BLACKCAT, BLACKMATTER 0,99, CERBER, CHIMERA, CLOP, CONTI, CUBA, DHARMA, GANDCRAB,
+HELLOKITTY 0,99, LOCKBIT, LORENZ 0,99, MAZE, MEDUZALOCKER, NETWALKER, PHOBOS, RANSOMEXX, RYUK,
+SODINOKIBI, TESLACRYPT, WANNACRY (las no anotadas dan 1,00).
+**BLACKBASTA entra con F1 = 1,00** (precisión 1,00 / recall 0,99) pese a no tener firma binaria
+en el Exp. 2b: solo aportaba la extensión `.basta`, que este clasificador no usa.
+
+| Familia difícil | Precisión | Recall | F1 (30 fam.) | F1 antes (29 fam.) |
+|---|---|---|---|---|
+| SUNCRYPT | 0,77 | 0,69 | 0,73 | 0,75 |
+| WASTEDLOCKER | 0,74 | 0,56 | 0,64 | 0,64 |
+| CRYPTOLOCKER | 0,84 | 0,47 | 0,60 | 0,61 |
+| DARKSIDE | 0,45 | 0,84 | 0,59 | 0,60 |
+| JIGSAW | 0,37 | 0,58 | 0,45 | 0,44 |
+| NOTPETYA | 0,77 | 0,24 | 0,36 | 0,38 |
+
+**Las seis son las mismas y las cifras se mueven ±0,02.** Sumar una familia entera no cambia el
+cuadro: es la mejor evidencia de que el grupo de confusión es una propiedad de esas familias y
+no del muestreo. Escribirlo así.
+
+**El mecanismo del grupo de confusión se ve en precisión/recall, y hay dos roles:**
+- **Imanes** (precisión baja, recall alto): DARKSIDE 0,45/0,84 y JIGSAW 0,37/0,58 absorben los
+  archivos ambiguos de las otras.
+- **Absorbidas** (precisión alta, recall bajo): NOTPETYA 0,77/0,24, CRYPTOLOCKER 0,84/0,47 y
+  WASTEDLOCKER 0,74/0,56 — cuando el modelo dice «NOTPETYA» casi siempre acierta, pero
+  reconoce apenas una cuarta parte de sus archivos.
+
+Esto es más informativo que el F1 solo y **hay que reportarlo con las tres cifras**: el error no
+es ruido difuso, es un intercambio dentro de un grupo cerrado de familias que cifran sin dejar
+estructura. Es el mismo grupo que el Exp. 2b marca sin firma (BADRABBIT es la excepción:
+sin marca en 2b pero F1 0,98 acá).
+
+**Los dos frentes ya están sobre 30 familias.** Desaparece la asimetría 30/29 que había que
+explicar en cada tabla del capítulo 4; el azar del frente de archivos pasa a 0,033.
+
+### Hallazgo lateral verificado 2026-08-16 — dos familias renombran el archivo entero
+
+Los 505 nombres no canónicos del log de la ablación (499 `desconocido` + 6 con basura tipo
+`081baaun`) **no son de BLACKBASTA**, que sí sigue la convención (`0001-doc.doc.basta`). Conteo
+de nombres que no matchean `^\d+-[a-z0-9]` por carpeta:
+
+| Familia | Archivos con nombre no canónico | Ejemplos |
+|---|---|---|
+| **CERBER** | **981** | `002PWX5w8Z.bed4`, `-00CAjTujp.bed4` |
+| **BLACKMATTER** | **13** | `00n0P97.HpWl7Oyll`, `01EPRnN.HpWl7Oyll` |
+| WASTEDLOCKER / WANNACRY / TESLACRYPT | 1 cada una | — |
+
+**CERBER y BLACKMATTER reemplazan el nombre base por una cadena aleatoria**, no solo agregan
+extensión. Es comportamiento del ransomware, no un defecto del dataset, y es **dato utilizable
+en la tesis**: refuerza por qué la comparación honesta con ID Ransomware es la del nombre
+cambiado (9 de 30 familias) y toca la decisión D.2 del plan (nombre de archivo como
+característica) — para estas familias el nombre original directamente no existe.
+
+### ⚠️ CONSTATACIÓN: 12 archivos sin cifrar dentro de CERBER-small
+
+Verificado con volcado hexadecimal el 2026-08-16. `CERBER-small` tiene **988 `.bed4` + 12 `.jpg`
++ 1 `.pdf`**. Los 12 `.jpg` conservan nombre y extensión originales (`0045-jpg-fromweb.jpg`) y
+los tres inspeccionados **empiezan con `ffd8ffe0 0010 4a46 4946` = cabecera JPEG/JFIF**: son
+**imágenes en claro, sin cifrar** (falta pasar el volcado por los 12 antes de moverlos).
+(Los 26 nombres «canónicos» contados antes son 12 `.jpg` sin cifrar + 14 `.bed4` a los que
+CERBER cifró sin renombrar la base.)
+
+- **No atribuir la causa.** «Error de etiquetado» es una lectura; la otra es que CERBER no los
+  cifró (varias familias saltan archivos por tamaño o ubicación). Con estos datos no se puede
+  decidir. En la tesis va como constatación: 12 archivos sin cifrar, verificado por magic bytes.
+- **Magnitud:** 12 sobre 1.001 archivos de CERBER (1,2 %); en la muestra de 500 por familia caen
+  ~6, o sea 0,04 % del corpus de 15.000.
+- **Pero no es solo cosmético:** son archivos en claro etiquetados como CERBER, así que el
+  clasificador de bytes puede aprender «cabecera JPEG válida ⇒ CERBER». CERBER da precisión
+  1,00 / recall 0,99, compatible con eso.
+- **Conecta con el pliegue de jpg** del análisis de generalización: CERBER es una de las 28
+  familias presentes ahí **precisamente por estos archivos**, y ese pliegue tiene el macro-F1
+  más bajo de los siete (0,811).
+- **DECISIÓN (chat padre, 2026-08-16): excluirlos y re-correr el Exp. 2c**, para poder escribir
+  que se verificó que el 0,9105 no se mueve. Exclusión: mover los 12 a un subdirectorio
+  `_sin_cifrar/` dentro de `CERBER-small` (los tres scripts filtran con `is_file()`, así que un
+  subdirectorio queda fuera automáticamente; reversible y visible).
+
+### INVENTARIO DE EXTENSIONES POR FAMILIA (2026-08-16) — explica el frente entero
+
+Conteo de extensiones finales en cada carpeta de `Napierone-small`. **Es el material que
+faltaba para explicar *por qué* unas familias dejan marca y otras no**, en vez de solo
+constatarlo. Cuatro comportamientos distintos:
+
+| Comportamiento | Familias | Extensiones observadas |
+|---|---|---|
+| **Extensión fija** (26) | AVOSLOCKER, BLACKBASTA, BLACKCAT, BLACKMATTER, CERBER, CHIMERA, CLOP, CONTI, CRYPTOLOCKER, CUBA, DARKSIDE, DHARMA, GANDCRAB, HELLOKITTY, LOCKBIT, LORENZ, MEDUZALOCKER, NETWALKER, PHOBOS, RANSOMEXX, RYUK, SODINOKIBI, TESLACRYPT, WANNACRY, WASTEDLOCKER, **JIGSAW** | 1.000 archivos con la misma |
+| **No cambia la extensión** | **BADRABBIT** (144 pdf, 143 xls, 143 pptx…), **NOTPETYA** (168 pdf, 167 pptx, 167 docx…) | las originales |
+| **Extensión aleatoria por lote** | **MAZE** | `.TPjsq`, `.jaUH`, `.bJ3jUCt`… 5 archivos cada una |
+| **Extensión aleatoria por archivo** | **SUNCRYPT** | cadenas hexadecimales de 64 caracteres, únicas |
+
+**Esto cierra el círculo con el Exp. 2b y con el Exp. 2c:** las familias sin marca de extensión
+son exactamente las que no la cambian (BADRABBIT, NOTPETYA) o la aleatorizan (MAZE, SUNCRYPT), y
+tres de ellas están entre las seis difíciles del Exp. 2c. MAZE se salva porque sí deja sufijo
+binario. **Es explicación mecánica, no correlación** — va al capítulo 4.
+
+**Además: cada familia tiene exactamente 1 archivo `.pdf`**, casi con seguridad documentación de
+NapierOne y no una muestra cifrada. `clasificador_bytes.py:101` y la ablación **ya lo excluyen**
+(`p.suffix.lower() != ".pdf"`); `deteccion_estructural.py` **no**.
+⚠️ Efecto colateral de esa exclusión: a BADRABBIT y NOTPETYA, que conservan las extensiones
+originales, se les descartan también sus ~144 y ~168 archivos **realmente cifrados** con
+extensión `.pdf`. No invalida nada (se muestrean 500 de ~850), pero hay que saberlo.
+
+### ⚠ Discrepancia a resolver: JIGSAW SÍ tiene extensión fija (`.fun`)
+
+El Exp. 2b lo reporta entre las **cuatro sin marca estructural**, pero el inventario muestra
+**990 archivos `.fun`** (+ 7 `.pptx` + 3 `.pdf`). La causa probable está en el código, no en los
+datos: `deteccion_estructural.py:87` exige que la extensión sea común a **todos** los archivos
+de la muestra (`c[1] == len(exts)`), y la muestra son los **primeros 50 en orden alfabético**
+sin barajar ni excluir `.pdf` (`deteccion_estructural.py:98`). Un solo archivo distinto entre
+esos 50 anula la extensión de toda la familia.
+
+**CONFIRMADO 2026-08-16.** Los primeros 50 archivos de JIGSAW son **47 `.fun` + 1 `.doc` +
+1 `.pdf` + 1 `.pptx`**: tres archivos rompen la unanimidad y el detector descarta `.fun` para
+toda la familia. **No es que JIGSAW no deje marca: es que la regla es demasiado estricta.**
+
+Con la extensión detectada, la cifra correcta pasa a **27 de 30 familias con marca**, y las que
+realmente no dejan ninguna quedan en **BADRABBIT, NOTPETYA y SUNCRYPT** — exactamente las tres
+que el inventario predice (dos no renombran, una aleatoriza por archivo). El cuadro se vuelve
+coherente de punta a punta.
+
+**Dato que además muestra lo frágil que es el muestreo:** los primeros 50 de CERBER son
+38 `.bed4` + 12 `.jpg`, o sea que ahí la unanimidad **también** debería fallar — y sin embargo
+el Exp. 2b sí le asignó `.bed4`. La explicación es que `ls` y el `sorted()` de Python no ordenan
+igual: Python compara por código de carácter y los nombres que empiezan con `-`
+(`-00CAjTujp.bed4`) le caen primero, de modo que su muestra de 50 no es la misma que la de `ls`.
+**Confirmar con `LC_ALL=C sort`, que sí reproduce el orden de Python.**
+
+**DECISIÓN TOMADA (chat padre, 2026-08-16): opción 1, con parche ya hecho y probado.**
+`deteccion_estructural.py` corregido:
+1. **Excluye el `.pdf`** de cada carpeta — el argumento principal no es JIGSAW sino la
+   consistencia: `clasificador_bytes.py` y `ablacion_ventana_extendida.py` ya lo filtraban y el
+   estructural no. Inconsistencia entre scripts propios, no cambio de criterio.
+2. **Umbral de mayoría** en la extensión, expuesto como `--umbral` (default 0,90) y guardado en
+   el manifiesto. No opcional: con 990/1000 `.fun`, la probabilidad de que 50 archivos al azar
+   sean todos `.fun` es 0,99⁵⁰ ≈ 0,6 — ni muestreando al azar la unanimidad es estable,
+   dependería de la semilla.
+3. **Muestreo aleatorio con semilla fija** (`--semilla`, default 42) en vez de los primeros 50
+   alfabéticos. Corrige el sesgo de CERBER: Python ordena por código de carácter y `-` (0x2D)
+   va antes que los dígitos, así que la muestra real eran archivos que empiezan con `-`.
+4. **Reporta LAS DOS cifras en una sola corrida** — unanimidad y umbral 0,90 sobre la misma
+   muestra, con CSV separados por criterio (`marcas_por_familia_<criterio>.csv`,
+   `clasificacion_loo_<criterio>.csv`). Si solo apareciera el número nuevo, se leería como que
+   se eligió el criterio que daba mejor. El umbral se declara en el capítulo.
+
+**Smoke test local (2026-08-16) con dataset sintético de 3 familias** (una con prefijo+extensión,
+una con el caso JIGSAW 18 `.fun`+1 `.pptx`+1 `.pdf`, una sin marca): la unanimidad pierde
+`.fun`, el umbral 0,90 lo recupera, el `.pdf` queda excluido, las dos cifras salen juntas.
+Funciona. `job_estructural.sh` actualizado con `--nodelist=c2`.
+**✅ RESUELTO — corrido como job 3638 el 2026-08-16; resultados en la sección
+«EXP. 2b CORREGIDO» más arriba.** Cifras nuevas: 0,867 / 0,533 / **0,933** (cobertura 0,941),
+28/30 con marca, y firma nueva de BADRABBIT (sufijo UTF-16LE «encrypted»).
+
+### ⚠️ Límite del análisis de «generalización a tipos de archivo nunca vistos»
+
+Consecuencia directa de lo anterior, sobre un resultado **ya escrito** en el plan como
+«0,879 frente a 0,910, caída de 0,031». El CSV `resultados_analisis_bytes/a_generalizacion_tipos.csv`:
+
+| Tipo excluido | n prueba | **n familias** | Exactitud | macro-F1 |
+|---|---|---|---|---|
+| doc | 1.991 | 27 | 0,8890 | 0,8812 |
+| docx | 1.978 | 27 | 0,8868 | 0,8774 |
+| jpg | 2.397 | **28** | 0,8736 | 0,8110 |
+| pdf | 1.798 | **25** | 0,8626 | 0,8361 |
+| pptx | 1.926 | 27 | 0,8666 | 0,8644 |
+| xls | 1.948 | 27 | 0,8891 | 0,8825 |
+| xlsx | 1.962 | 27 | 0,8838 | 0,8724 |
+
+**Ningún pliegue cubre las 29 familias: cubren entre 25 y 28.** La razón es la misma — las
+familias que renombran el archivo no tienen tipo de documento reconocible, así que **CERBER
+queda fuera de casi todos los pliegues** (aparece solo en el de jpg, el único con 28). El 0,879
+es el promedio de esa columna y **la conclusión se sostiene** (la caída sigue siendo chica),
+pero hay que enunciarlo con la cobertura real: *«entre 25 y 28 de las 29 familias según el
+tipo excluido»*, no «las 29». Es exactamente el tipo de detalle que el tutor puede preguntar.
+Del extracto por familia visible en el log: AVOSLOCKER 1,00 · BADRABBIT 0,98 · **BLACKBASTA
+1,00** · BLACKCAT 1,00 · BLACKMATTER 0,99 · CERBER 1,00. Falta el reporte completo (el CSV) para
+confirmar si las **seis difíciles** siguen siendo las mismas — dato necesario antes de reescribir
+§4.5.3.
+
+## ★ EXP. 2b CORREGIDO (job 3638, 2026-08-16) — REEMPLAZA al job 3632
+
+Corrida con el detector parcheado (sin `.pdf`, muestreo aleatorio semilla 42, dos criterios de
+extensión sobre la misma muestra de 1.500 archivos / 30 familias). **Las cifras del job 3632,
+ya escritas en el cap. 4, quedan superadas.** 53 segundos.
+
+| Modo | Job 3632 (viejo) | **Job 3638 (corregido)** | Cobertura nueva |
+|---|---|---|---|
+| Solo extensión | 0,833 | **0,867** (1300/1500) | 0,867 |
+| Solo firmas binarias | 0,500 | **0,533** (800/1500) | 0,541 |
+| Combinado | 0,866 | **0,933** (1400/1500) | **0,941** |
+
+**28 de 30 familias con marca** (antes 26). Sin marca quedan solo **NOTPETYA y SUNCRYPT**.
+Firmas binarias: **16** (4 prefijos: CUBA, LORENZ, TESLACRYPT, WANNACRY; **12 sufijos**, antes 11).
+
+### Hallazgo nuevo: BADRABBIT SÍ deja firma — y resuelve una anomalía registrada
+> ⚠️ **MATIZADO el 2026-08-17: la firma NO es universal.** Con la semilla 1 el detector deja a
+> BADRABBIT **sin marca**. La firma es reproducible con la semilla 42 pero no está en todos sus
+> archivos, así que hay que escribirla como «detectada en la muestra de la semilla 42», nunca
+> como «BADRABBIT deja firma». Detalle y consecuencias en el bloque de los dos defectos, al
+> principio de este documento.
+
+El detector corregido encuentra en BADRABBIT un **sufijo de 18 bytes**:
+`65006e006300720079007000740065006400` = **«encrypted» en UTF-16LE — CONFIRMADO byte por byte**
+el 2026-08-16 contra `marcas_por_familia_umbral_90.csv` (fila: prefijo 0, sufijo 18 B, sin
+extensión común, marca detectable). Es del mismo tipo que el «WANACRY!» de WannaCry: una
+cadena legible que el ransomware escribe deliberadamente.
+**Pendiente solo la fuente citable** sobre el marcador de BadRabbit para el related work
+(el hallazgo propio ya es reportable por sí mismo; una cita externa lo convertiría en la
+séptima corroboración independiente, junto a las seis de `Pruebas.xlsx`).
+
+Antes no aparecía porque el `.pdf` de documentación integraba la muestra y rompía el sufijo
+común. **Esto explica la excepción anotada en el Exp. 2c** («BADRABBIT: sin marca en 2b pero
+F1 0,98») — no era que el ML viera algo invisible: la marca existía y el detector viejo no la
+encontraba. La convergencia entre 2b y 2c queda ahora limpia:
+
+| Familia | Marca en 2b corregido | F1 en 2c |
+|---|---|---|
+| NOTPETYA | ninguna | 0,36 |
+| SUNCRYPT | ninguna | 0,73 |
+| JIGSAW | solo extensión (2c no la usa) | 0,44 |
+| CRYPTOLOCKER / DARKSIDE / WASTEDLOCKER | solo extensión (2c no la usa) | 0,60 / 0,59 / 0,64 |
+| BADRABBIT | **sufijo «encrypted»** | **0,98** |
+
+Las seis difíciles del 2c son exactamente las familias sin firma *en el contenido*; las que solo
+tienen extensión siguen difíciles para el 2c porque el 2c no usa la extensión. Sin excepciones.
+
+### Los dos criterios dieron IDÉNTICO — pero el umbral sigue siendo necesario
+
+Unanimidad y umbral 0,90 produjeron el mismo resultado en esta muestra: con semilla 42, los 50
+archivos muestreados de JIGSAW salieron todos `.fun`. **Es suerte del sorteo**: la probabilidad
+es **0,6968** (hipergeométrica exacta sobre 990 `.fun` de 997 archivos sin `.pdf`), o sea que con
+otra semilla la unanimidad falla ~3 de cada 10 veces.
+El criterio que se declara en el capítulo es **umbral 0,90**; que la unanimidad coincida acá se
+reporta como evidencia de que el umbral no se eligió por conveniencia (los CSV de ambos
+criterios quedan guardados).
+
+> ✅ **COMPROBADO EMPÍRICAMENTE el 2026-08-17 (10 semillas):** bajo unanimidad, JIGSAW pierde la
+> extensión `.fun` en la semilla 1 y la conserva en las otras nueve; bajo umbral 0,90 la conserva
+> en las diez. **El criterio de unanimidad parpadea y el umbral no.** Detalle, cifras y caveat
+> sobre la tasa observada (1/10 frente a 0,30 esperado) en el bloque «DOS DEFECTOS HALLADOS AL
+> AUDITAR LOS CSV» al principio de este documento.
+
+**Caveat del filtro `.pdf` a declarar:** también excluye los `.pdf` *genuinamente cifrados* de
+BADRABBIT y NOTPETYA (conservan la extensión original). Sus muestras salen de los demás tipos;
+no afecta las conclusiones, pero decirlo.
+
+## ✅ EXP. 2b RE-CORRIDO SOBRE 30 FAMILIAS (job 3632, 2026-08-15) — ⚠ SUPERADO por el job 3638
+
+BLACKBASTA ya está en el cluster. `deteccion_estructural.py` sobre **1.500 archivos, 30
+familias, 50 por familia**. **Ninguna conclusión cambia** — es el resultado que se buscaba.
+
+| Modo | Antes (29 fam.) | Ahora (30 fam.) | Cobertura | Acierto donde hay marca |
+|---|---|---|---|---|
+| Solo extensión | 0,828 | **0,833** | 0,833 | **100,0 %** (1250/1250) |
+| Solo firmas binarias | 0,517 | **0,500** | 0,516 | 96,9 % (750/774) |
+| Combinado | 0,862 | **0,866** | 0,882 | 98,2 % (1299/1323) |
+
+- **26 de 30** familias dejan marca detectable (antes 25 de 29).
+- **BLACKBASTA aporta extensión `.basta` pero ninguna firma binaria.** Por eso el conteo de
+  firmas se mantiene en **15** (4 prefijos: CUBA, LORENZ, TESLACRYPT, WANNACRY; 11 sufijos).
+- **Las cuatro sin marca son las mismas de siempre:** BADRABBIT, JIGSAW, NOTPETYA, SUNCRYPT.
+
+### Corroboración independiente con `Pruebas.xlsx` (fuerte, escribirlo en el cap. 4)
+Cuatro firmas halladas por el script coinciden **exactamente** con los `sample_bytes` que
+ID Ransomware reporta por su cuenta, sin que ninguno de los dos supiera del otro:
+
+| Familia | Nuestro detector | ID Ransomware (`Pruebas.xlsx`) |
+|---|---|---|
+| WANNACRY | prefijo `57414e4143525921` | `[0x00-0x08] 0x57414E4143525921` («WANACRY!») |
+| LORENZ | prefijo `2e737a3430` | `[0x00-0x05] 0x2E737A3430` («.sz40») |
+| MAZE | sufijo `0000000066116166` | `[0x58771-0x58779] 0x0000000066116166` |
+| GANDCRAB | sufijo `1829899381820300` | `[0x43614-0x4361C] 0x1829899381820300` |
+
+Más CUBA `464944454c2e4341` = «FIDEL.CA» y PHOBOS `4c4f434b3936` = «LOCK96». Dos métodos
+independientes llegan a las mismas marcas: es validación externa del Experimento 2b.
+
+### ⚠ Pista abierta: RYUK
+`Pruebas.xlsx` registra para RYUK `[0x584D0-0x58792] 0x4845524D4553` = **«HERMES»** (Ryuk
+deriva de Hermes). Nuestro detector **no la encuentra**: RYUK aparece solo con extensión
+`.ryk`. Hipótesis a verificar —no afirmar sin comprobar— que el marcador no está a distancia
+fija del final porque después va un blob de clave de longitud variable, y el detector solo
+mira 128 bytes de cada extremo. Se comprueba con un volcado hexadecimal, y conecta con la
+pregunta del tutor sobre los bytes del medio.
 
 ## ★ REUNIÓN CON EL TUTOR 2026-08-12 — «Revisión de resultados»
 
@@ -608,7 +1706,7 @@ Manda sobre la hoja de ruta previa. Resumen de lo accionable:
   frentes, lo que choca con la decisión de mantenerlos independientes — y no hay muestras
   pareadas para evaluarlo. Detalle en el archivo de la reunión, sección D.
 
-## FUENTE RECUPERADA 2026-08-13 — `Pruebas.xlsx`: comparación con herramientas públicas
+## FUENTE RECUPERADA 2026-08-15 — `Pruebas.xlsx`: comparación con herramientas públicas
 
 **Ubicación:** `7_compartido_carlos/Tesis Carlos y Romina/Pruebas.xlsx`. Cuatro hojas. Es el
 registro de las pruebas manuales contra ID Ransomware y Crypto Sheriff, y **el origen del
@@ -666,7 +1764,7 @@ Individuales **0,036–0,086**; el máximo de toda la hoja es **0,228** (MLP, co
 Es el punto de partida de la progresión del cap. 4 (0,228 → 0,603 estadísticas regionales →
 0,910 bytes posicionales).
 
-**Procedencia verificada 2026-08-13** leyendo los notebooks
+**Procedencia verificada 2026-08-15** leyendo los notebooks
 `Notebooks/Pruebas multiclasificación/{Multiclass with multiple features, MulticlassDecisionTree}.ipynb`:
 
 - **El dataset es NapierOne Tiny.** Las 30 carpetas de familia se llaman literalmente
