@@ -82,3 +82,4 @@ desktop.ini
 # Respaldos y paquetes de resultados (regenerables o bajados del cluster)
 *.bak
 4_resultados/*.tgz
+4_resultados/resumen_capitulo4/
