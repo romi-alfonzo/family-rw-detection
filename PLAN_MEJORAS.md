@@ -151,22 +151,64 @@ que **no tocarlos hasta que el 2b esté escrito con las cifras de A.4**.
 
 **Este es el sprint que destraba todo lo demás. Corre en paralelo al A; son frentes distintos.**
 
-### B.1 Curva de aprendizaje de notas
-Rendimiento P1 y P2 contra cantidad de plantillas disponibles por familia. Contesta con un
-número el pedido textual del tutor: *«ver el porcentaje de error para saber la cantidad de
-notas a necesitar»*. Absorbe y mejora lo que era el Sprint 3.1(a): en vez de reportar el
-desempeño estratificado, se reporta la curva completa.
+### B.1 Curva de aprendizaje de notas — ✅ **CERRADO** (2026-08-19, local, 100 repeticiones)
+`2_codigo/curva_aprendizaje_notas.py` · agregados `resumen_para_capitulo4.py --solo b1`.
+Contesta con un número el pedido textual del tutor (*«ver el porcentaje de error para saber la
+cantidad de notas a necesitar»*) y absorbe lo que era el Sprint 3.1(a).
 
-**Por qué va antes que salir a buscar notas:** el plan anterior ponía la recolección manual
-primero. Es al revés — se pueden perder días recolectando para descubrir que no movía la
-aguja. La curva dice si vale la pena y cuánto falta.
+**Respuesta: 4 textos distintos por familia ⇒ 33 plantillas nuevas en 19 familias.** El paso
+3→4 aporta **+0,0297 de macro-F1** (IC 95 % [+0,0039; +0,0554]) y el 4→5 **+0,0006**
+(IC 95 % [−0,0207; +0,0219], no significativo), medido sobre las 5 familias con ≥ 5 plantillas.
+Todas las cifras, las tres curvas (30 / 11 / 5 familias, azar macro-F1 0,033 / 0,091 / 0,200),
+las diferencias pareadas y **los cinco límites declarados** están en `ESTADO_TESIS.md`.
+
+- **Control de corrección:** el punto k=«todo el corpus» reproduce el evaluador canónico con
+  diferencia **0,00e+00** en P1 y P2; el script aborta si no coincide.
+- **Base 144 notas.** Las 2 notas en cuarentena cuestan 0,0096 de macro-F1 en P1 y 0,0143 en
+  P2, por debajo del desvío entre semillas ⇒ **el capítulo 4 no se toca** y la cifra oficial
+  sigue siendo la de 146 notas (P1 0,760 ± 0,029 · P2 0,435 ± 0,057 de macro-F1).
+- **No confundir protocolos:** P2ret (retención de una plantilla, hasta n−1 en entrenamiento)
+  da macro-F1 0,6164 ± 0,0450 sobre 30 familias y **no reemplaza** al P2 canónico de 2
+  pliegues, que da 0,4210 ± 0,0508 sobre las mismas 144 notas.
+- **Falta:** agregar la curva bajo **P3** cuando B.3 entregue el grafo (el script ya está
+  cableado para recibir otro criterio de agrupamiento).
+
+### B.1.bis Volver a correr la curva después de cada lote de recolección
+La curva es el medidor de si la recolección rinde, y ahora se regenera con un comando. No es
+un experimento nuevo: es el instrumento de control del Sprint C.
 
 ### B.2 Auditar las 37 notas de procedencia «NapierOne/varios»
 Pista confirmada: el repositorio `kipziptie` que aparece en `Pruebas.xlsx`, junto con
 threatlabz y el `RansomNoteFiles` de Lemmou. Necesario para que la sección de procedencia del
 capítulo 3 sea verificable.
 
-### B.3 Grafo de marcadores compartidos entre plantillas *(diseño fijado 2026-08-16)*
+### B.3 Grafo de marcadores compartidos entre plantillas — ✅ **CORRIDO** (2026-08-19, local)
+`2_codigo/grafo_marcadores.py` · salidas en `4_resultados/resultados_grafo_marcadores/`.
+Todas las cifras y los límites, en `ESTADO_TESIS.md`, sección «B.3». Tres resultados:
+
+1. **Lo que predice el F1 de una familia es cuánto se parecen sus plantillas entre sí
+   (Spearman ρ +0,704, p = 2·10⁻⁵), NO cuántas plantillas tiene (ρ −0,108, p = 0,58).**
+   No contradice a B.1 —B.1 quitó plantillas y midió la caída, es causal— pero reordena la
+   recolección: sumar un texto no convierte a una familia de cohesión baja en una de cohesión
+   alta. **CHIMERA es la peor apuesta de la lista** (cohesión 0,1538, la más baja de las 30,
+   y un solo marcador). Contraejemplo a declarar: SUNCRYPT, cohesión 0,4529 y cero
+   marcadores, F1 por familia 1,000.
+2. **El macro-F1 de P2 NO viene de reconocer IOCs repetidos.** Con el control de azar:
+   P2 0,4210 · azar con el mismo perfil de tamaños 0,2290 ± 0,0209 · P3 real 0,2293. La caída
+   de 0,1917 es **0,1920 de agrupamiento grueso y −0,0003 de continuidad de IOCs.** Es la
+   respuesta, con número y control, a la objeción «tu 0,435 es búsqueda de IOCs disfrazada».
+   **P3 no reemplaza a P2:** se reporta P2, y P3 entra como el control.
+3. **Sin filtrar los valores de infraestructura común el grafo colapsa** (una componente de
+   39 nodos de 97, 13 familias inevaluables). Corre en cuatro variantes y reporta las cuatro.
+
+**Pendiente de B.3:** (a) auditar a mano `b3_valores_excluidos.csv` antes de citar que el
+criterio de circularidad elimina 21 de 146 aristas dentro de familia (15-18 %) — el criterio
+es subcadena y «conti» está dentro de «continue»; (b) revisar las 7 aristas entre familias que
+sobreviven al filtro, para ver si reencuentran BLACKBASTA/CONTI y DHARMA/PHOBOS; (c) el
+control de azar solo está corrido sobre la variante más estricta.
+
+<details>
+<summary>Planteo original de B.3 (registro)</summary>
 Corre JUNTO con B.1: mismos datos, sin cluster, y su salida es insumo de B.1. Contesta el
 elemento de acción 1 del tutor («hallar algún patrón entre plantillas para detectar una no
 conocida») y es **diagnóstico** de C.bis: si las plantillas de una misma familia casi no
@@ -188,22 +230,57 @@ escribirla.
   reportar ambos** — habilita una afirmación cuantitativa sobre el 181/182 de Lemmou, cuya
   lista de keywords incluye el nombre de familia.
 
+> ⚠️ **Corrección al diseño, medida el 2026-08-19:** la frase «la diferencia P2 − P3 dice
+> cuánto aportaba la continuidad de IOCs» **es falsa tal como está escrita**. Bajo P3 los
+> grupos bajan de 95 a 65 y eso solo ya empeora el resultado, por dos vías que no tienen nada
+> que ver con IOCs: 7 familias quedan enteras en un pliegue (F1 = 0 por construcción) y cada
+> pliegue entrena con menos unidades independientes. **Hace falta el control de azar** —
+> agrupamientos aleatorios con el mismo perfil de tamaños— y ese control mostró que el aporte
+> de la continuidad de IOCs es **−0,0003 de macro-F1**, o sea nulo. El diseño original habría
+> llevado a afirmar que casi la mitad del 0,4210 era búsqueda de IOCs. Ya está implementado en
+> `grafo_marcadores.py` (`--repeticiones-azar`).
+
+</details>
+
 ---
 
-## SPRINT C — Bifurca según lo que diga B.1
+## SPRINT C — ✅ **BIFURCACIÓN RESUELTA POR B.1 (2026-08-19): SE RECOLECTA**
 
-**Si la curva sigue subiendo** → ampliar el corpus de forma oportunista. URLs ya identificadas
-en `6_notas_trabajo/mas_notas_descarga.md` para 14 familias. Si para algunas no aparecen
-plantillas nuevas, ese hecho se documenta como resultado, no como tarea incumplida.
+> **La curva NO está plana.** Sobre las 5 familias con ≥ 5 plantillas, la diferencia pareada de
+> macro-F1 es significativa hasta el paso 3→4 (**+0,0297**, IC 95 % [+0,0039; +0,0554]) y deja
+> de serlo en 4→5 (**+0,0006**, IC 95 % [−0,0207; +0,0219]). Sobre las 11 con ≥ 4 plantillas
+> sigue subiendo hasta el final (3→todo **+0,0385**, IC 95 % [+0,0206; +0,0565]).
+>
+> **Objetivo acotado y finito: 4 textos distintos por familia = 33 plantillas nuevas en 19
+> familias**, o sea al menos 33 notas nuevas, cada una de contenido distinto. Detalle,
+> métricas y límites en `ESTADO_TESIS.md`, sección «B.1 CERRADO».
+>
+> **La chatura de la curva de 30 familias era AGOTAMIENTO del corpus, no saturación del
+> aprendizaje** (`n_fam_bajo_tope` cae de 16,8 en k=1 a 5,0 en k=3 y a 0,0 en k=7). No usar
+> esa chatura como argumento contra la recolección.
+>
+> **Regla de presupuesto, medida:** contar **textos distintos**, no notas. Al mismo número de
+> plantillas por familia las dos formas de recolectar dan el mismo macro-F1 dentro de 0,0109
+> (contra ± 0,0486 de desvío típico), y una nota que repite un contenido ya presente no mueve
+> la métrica de forma medible.
+
+**Qué se recolecta:** ampliar el corpus de forma oportunista, priorizando **las 19 familias que
+están por debajo de 4 plantillas** (la lista sale de `4_resultados/resumen_capitulo4/`
++ `manifiesto_b1.json`). URLs ya identificadas en `6_notas_trabajo/mas_notas_descarga.md` para
+14 familias. Si para algunas no aparecen plantillas nuevas, ese hecho se documenta como
+resultado, no como tarea incumplida.
 
 > **Ajuste 2026-08-16:** la recolección pcrisk/OCR **arranca YA en paralelo** (autorizada por
 > el tutor; consume tiempo de reloj de Romina y no bloquea nada), pero con un lote chico —
 > una o dos familias — midiendo el rendimiento por hora. Con ese dato, B.1 decide si escalar.
 > Salir a recolectar todo de una es lo que el plan viejo hacía mal.
+> **Actualización 2026-08-19:** B.1 ya dio el dato, y el lote objetivo es chico (33 textos).
+> Al terminar cada lote, **re-correr `curva_aprendizaje_notas.py`**: la curva es el medidor de
+> si la recolección está rindiendo, y ahora es reproducible con un comando.
 
-**Si la curva está plana** → documentar el límite y pasar a aprendizaje **few-shot** para las
-familias con una o dos plantillas. Es la única vía metodológica cuando la recolección no puede
-aportar más ejemplos. Paper sugerido por Cappo el 06/06/2024 (arXiv 1908.06750).
+**Few-shot** (paper sugerido por Cappo el 06/06/2024, arXiv 1908.06750) **deja de ser la única
+salida y pasa a ser el complemento** para las familias donde la recolección no consiga llegar a
+4 plantillas. Sigue en el plan; ya no es la rama principal.
 
 **Notas sintéticas** (punto 4 del tutor): **AUTORIZADAS por el tutor** («se puede generar
 datos sintéticos si es necesario», reunión 2026-08-12; OCR/transcripción también autorizado —

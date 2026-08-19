@@ -17,6 +17,370 @@ _Última actualización: 2026-08-17_
 
 ---
 
+## ★★★ B.3 — EL GRAFO YA DIO EL DIAGNÓSTICO CLAVE (2026-08-19, local, `--solo-grafo`)
+
+`2_codigo/grafo_marcadores.py` · salidas en `4_resultados/resultados_grafo_marcadores/`.
+**Falta correr P1/P2/P3 completo** (va al clúster, `slurm/job_grafo_marcadores.sh`); lo
+que sigue es la parte del grafo y la cohesión, que ya corrió local en segundos.
+
+Base: 144 notas · 30 familias · **97 nodos** (el nodo es el par familia#plantilla, no la
+plantilla sola, porque dos componentes de casi-duplicados contienen notas de dos familias
+distintas: grupo 6 = BLACKBASTA + CONTI, grupo 55 = DHARMA + PHOBOS).
+
+Marcadores hallados: **URL 159 · ONION 106 · EMAIL 74 · CLAVE 37 · ID 9 · BTC 5.**
+**11 de 97 plantillas no tienen ningún marcador** — dato relevante para C.bis: para esas
+plantillas una vista de marcadores no tiene nada que mirar.
+
+### ★★★ P3 CORRIDO, Y EL CONTROL DE AZAR DA VUELTA LA LECTURA (2026-08-19)
+
+`b3_protocolos.csv`. Combinado + LinearSVC, 2 pliegues, 10 semillas, mismo corpus de 144
+notas. **Todos los números son macro-F1 sobre 30 familias (azar 0,033).**
+
+| Protocolo | Grupos | macro-F1 | Exactitud | Exactitud balanceada |
+|---|---|---|---|---|
+| P1 «plantilla conocida» | 95 | 0,7501 ± 0,0267 | 0,8139 | 0,7738 |
+| **P2 «variante nunca vista»** | **95** | **0,4210 ± 0,0508** | 0,5569 | 0,4754 |
+| P3 sin exclusión, sin filtro | 43 | 0,1129 ± 0,0353 | 0,1465 | 0,1483 |
+| P3 sin exclusión, filtro ≤2 fam. | 58 | 0,1741 ± 0,0665 | 0,2333 | 0,2080 |
+| P3 con exclusión, sin filtro | 48 | 0,1583 ± 0,0382 | 0,2035 | 0,1944 |
+| **P3 con exclusión, filtro ≤2 fam.** | **65** | **0,2293 ± 0,0535** | 0,2806 | 0,2731 |
+
+### El control de azar, que es lo que hace reportable el número
+
+La lectura ingenua sería: «P3 cae 0,1917 respecto de P2 ⇒ casi la mitad del 0,4210 venía de
+reconocer IOCs repetidos y no de entender el texto». **Esa lectura es FALSA**, y hacía falta
+un control para saberlo, porque bajo P3 hay una segunda causa mezclada: los grupos bajan de
+95 a 65, con lo cual **7 familias quedan enteras en un solo pliegue** (contra 4,2 en P2 —su
+F1 es 0 por construcción) y cada pliegue entrena con menos unidades independientes.
+
+**El control:** agrupamientos al azar con el **mismo perfil de tamaños por familia** que las
+componentes reales —misma cantidad de bloques y del mismo porte en cada familia— pero
+eligiendo al azar qué plantillas caen juntas. Aísla «cuántas plantillas se fusionaron» de
+«se fusionaron JUSTO las que comparten IOCs».
+
+| | macro-F1 |
+|---|---|
+| P2 | 0,4210 |
+| **Azar, mismo perfil de tamaños (n = 20)** | **0,2251 ± 0,0149** · IC 95 % de la media [0,2186; 0,2316] · rango 0,2039–0,2543 |
+| P3 real | 0,2293 |
+
+**Descomposición de la caída total de 0,1917** (n = 20 agrupamientos al azar):
+- **agrupamiento más grueso: 0,1959**
+- **continuidad de IOCs: −0,0042** — y el signo es **negativo**: agrupar por IOCs lastima
+  **menos** que un agrupamiento al azar del mismo porte, que es lo contrario de lo que
+  predice la objeción.
+
+**El P3 real cae en el percentil 65 de la nube de azar** (13 de 20 valores por debajo);
+prueba t de una muestra t = −1,26, **p = 0,223**: indistinguible. Con n = 5 la primera
+corrida había dado azar 0,2290 ± 0,0209 y una diferencia de −0,0003; con n = 20 la
+conclusión no cambia y el intervalo se aprieta a la mitad.
+
+> **CONCLUSIÓN, y es un resultado FUERTE a favor de la tesis: el macro-F1 de 0,4210 en P2 NO
+> viene de reconocer IOCs repetidos.** Agrupar por componente conexa no lastima porque le
+> quite al modelo una muleta de IOCs; lastima **solo** porque el agrupamiento es más grueso.
+> El azar con el mismo perfil de tamaños da 0,2290 y el P3 real 0,2293: indistinguibles.
+
+**Por qué importa para la defensa.** Es exactamente la objeción que el tutor —que conoce a
+Lemmou— puede plantear: «tu 0,435 es búsqueda de IOCs disfrazada de clasificación». La
+respuesta ahora es un número y un control, no un argumento. Y refuerza la diferencia con
+Lemmou et al. (2021), cuyo método de identificación de familia **sí** es búsqueda de
+casi-duplicados por reglas y marcadores.
+
+**Consecuencia metodológica: P3 no reemplaza a P2 ni lo mejora.** No es un protocolo más
+informativo, es el mismo protocolo con un agrupamiento más grueso y por lo tanto más ruidoso.
+**El protocolo que se reporta en la tesis sigue siendo P2**; P3 entra como el control que
+descarta la contaminación por IOCs. Escribirlo así y no como «tenemos un tercer protocolo».
+
+**Límites de este control:**
+1. ✅ **Resuelto: n = 20 agrupamientos al azar** (la primera corrida fue con n = 5 y dio lo
+   mismo). Desvío ± 0,0149, error estándar de la media 0,0033. La conclusión aguanta y la
+   cifra es citable.
+2. **Simplificación declarada:** las pocas componentes que cruzan familias se reparten dentro
+   de cada familia por separado en el control. Son 7 aristas entre familias de 105, así que
+   el efecto es menor, pero está declarado.
+3. El control usa la variante **con exclusión de nombre de familia y filtro ≤2 familias**, que
+   es la más estricta y la más defendible. Las otras tres variantes no tienen control de azar
+   corrido: no citarlas sin él.
+
+### ▶ EL HALLAZGO QUE REORDENA EL PLAN DE RECOLECCIÓN
+
+Correlación de Spearman contra el **F1 por familia** (de B.1: 30 familias · P2ret ·
+k=todo · 144 notas · 100 repeticiones), n = 29 familias (WASTEDLOCKER queda afuera: con
+una sola plantilla no tiene cohesión definible):
+
+| Predictor | Spearman ρ | p |
+|---|---|---|
+| **Cohesión interna** (coseno medio entre plantillas de la familia) | **+0,704** | 2,0·10⁻⁵ |
+| **Margen** (cohesión interna − parecido máximo a plantilla ajena) | **+0,674** | 6,1·10⁻⁵ |
+| Fracción de pares de la familia unidos por un marcador compartido | +0,425 | 0,022 |
+| Parecido máximo a una plantilla de otra familia | −0,140 | 0,47 (no signif.) |
+| **Cantidad de plantillas de la familia** | **−0,108** | **0,58 (no signif.)** |
+
+> **Cuánto se parecen entre sí las plantillas de una familia explica su desempeño
+> (ρ +0,704). Cuántas plantillas tiene NO explica nada (ρ −0,108, p = 0,58).**
+
+**Esto NO contradice a B.1, y la distinción hay que escribirla con cuidado:**
+- B.1 es **causal**: se quitaron plantillas y se midió la caída. Agregar plantillas a una
+  familia **sí** mejora (paso 3→4: +0,0297 de macro-F1, IC 95 % [+0,0039; +0,0554]).
+- B.3 es **correlacional entre familias**: lo que explica que una familia ande bien o mal
+  **no** es su cantidad de plantillas, es cuánto se parecen entre sí.
+- Las dos cosas conviven: sumar un texto ayuda un poco a cualquier familia, pero **no
+  convierte a una familia de cohesión baja en una de cohesión alta**, porque el texto
+  nuevo probablemente tampoco se parezca a los que ya están.
+
+### Cohesión por familia — la tabla que ordena la recolección
+
+`b3_cohesion_por_familia.csv`. Coseno char 3-5 entre centroides de plantilla; por
+construcción todos **por debajo de 0,90**, que es el umbral de casi-duplicado.
+
+**Las 9 familias de margen positivo tienen F1 por familia medio 0,919** (mínimo 0,670):
+JIGSAW, NOTPETYA, AVOSLOCKER, CUBA, TESLACRYPT, BADRABBIT, BLACKMATTER, DARKSIDE,
+NETWALKER. **Las 20 de margen negativo, 0,511** (mínimo 0,000).
+
+Cohesión interna de las familias de la lista de recolección de B.1, ordenadas de peor a
+mejor: **CHIMERA 0,1538** (la más baja de las 30) · CRYPTOLOCKER 0,3564 · MAZE 0,4114 ·
+RYUK 0,4388 · WANNACRY 0,4449 · MEDUZALOCKER 0,4317 · JIGSAW 0,5075 · NOTPETYA 0,8169.
+Para comparar, las que aciertan con solo 2 plantillas: DARKSIDE 0,8723 · BLACKMATTER
+0,8715 · NETWALKER 0,8053 · CUBA 0,7641.
+
+**CHIMERA es el caso límite y conviene citarlo:** sus dos plantillas tienen coseno 0,1538
+entre sí y **un solo marcador en total**. Es la familia con menos cohesión del corpus y su
+F1 por familia es 0,000. Recolectarle un tercer texto es lo que menos probabilidad tiene
+de servir de toda la lista.
+
+**Contraejemplo que hay que declarar, para no vender el predictor como una regla:**
+**SUNCRYPT tiene cohesión interna 0,4529 y margen −0,1275, pero F1 por familia 1,000**, y
+cero marcadores. Se acierta por vocabulario propio, no por parecerse a sí misma. La
+correlación es una tendencia fuerte, **no** una ley: dentro del grupo de margen negativo
+el F1 va de 0,000 a 1,000.
+
+### El grafo: cuatro variantes, y el filtro de valores genéricos no es opcional
+
+`b3_variantes.csv`. Nodos 97 en todas.
+
+| Variante | Aristas | dentro de familia | entre familias | Componentes | Mayor | Familias inevaluables bajo P3 |
+|---|---|---|---|---|---|---|
+| sin exclusión, sin filtro | 279 | 146 | 133 | 43 | **39** | **13** |
+| sin exclusión, filtro ≤2 familias | 126 | 119 | 7 | 58 | 8 | 10 |
+| con exclusión, sin filtro | 258 | 125 | 133 | 48 | 24 | 9 |
+| **con exclusión, filtro ≤2 familias** | **105** | **98** | **7** | **65** | **8** | **7** |
+
+- **Sin el filtro de valores genéricos el grafo colapsa:** una componente de **39 nodos de
+  97** y 13 familias que quedan inevaluables bajo P3. Es exactamente el riesgo que se
+  anticipó: valores de infraestructura común (tipo torproject.org) unen todo. `b3_valores_
+  compartidos.csv` está ordenado por número de familias para auditar quién pesa.
+- **El criterio de circularidad elimina 21 aristas dentro de familia** (146 → 125 sin
+  filtro; 119 → 98 con filtro), o sea que **cerca del 15-18 % de la continuidad de IOCs
+  dentro de una familia viene de valores que llevan el nombre de la familia adentro.** Ese
+  es el número que habilita la afirmación cuantitativa sobre el 181/182 de Lemmou.
+  ⚠️ Antes de citarlo hay que **auditar a mano `b3_valores_excluidos.csv`**: el criterio es
+  subcadena en cualquier posición y «conti» está dentro de «continue», «cerber» dentro de
+  «cerberus». Puede haber exclusiones espurias.
+- **Las aristas entre familias caen de 133 a 7 con el filtro.** Las 133 eran casi todas
+  infraestructura compartida; las 7 que sobreviven son las candidatas a parentesco real.
+
+### Lo que falta de B.3
+
+1. **Correr P1/P2/P3 completo** (4 variantes de P3 × 2 pliegues × 10 semillas). Va al
+   clúster con `slurm/job_grafo_marcadores.sh`. La diferencia P2 − P3 es lo que dice cuánto
+   del macro-F1 venía de la continuidad de IOCs.
+2. **Auditar `b3_valores_excluidos.csv`** a mano, antes de citar el 15-18 %.
+3. **Revisar las 7 aristas entre familias** que sobreviven al filtro: si reencuentran
+   BLACKBASTA/CONTI y DHARMA/PHOBOS, es una validación cruzada del hallazgo por contenido.
+
+## ★★★ B.1 CERRADO — CURVA DE APRENDIZAJE DE NOTAS (2026-08-19, local, 100 repeticiones)
+
+`2_codigo/curva_aprendizaje_notas.py` · agregados con `resumen_para_capitulo4.py --solo b1`
+· salidas en `4_resultados/resultados_curva_notas/` y `4_resultados/resumen_capitulo4/`
+(`b1_curva.csv`, `b1_deltas_pareados.csv`, `b1_extrapolacion.csv`,
+`b1_costo_recoleccion.csv`, `fig_b1_curva_notas.png`).
+Base: **144 notas · 95 plantillas · 30 familias**. Control de corrección: diferencia
+**0,00e+00** contra el evaluador canónico en los dos protocolos.
+
+### ▶ LA RESPUESTA AL PEDIDO DEL TUTOR, EN UN NÚMERO
+
+> **Hacen falta 4 textos distintos (plantillas) por familia. Eso cuesta 33 plantillas
+> nuevas repartidas en 19 familias — es decir, al menos 33 notas nuevas, cada una de
+> contenido distinto. De 4 a 5 la ganancia es +0,0006 de macro-F1, con IC 95 %
+> [−0,0207; +0,0219]: indistinguible de cero.**
+
+El corte en 4 no es una impresión, es el último paso que mueve la aguja de forma
+medible. Sobre las **5 familias que tienen ≥ 5 plantillas** (conjunto de clases
+constante, azar macro-F1 0,200), diferencias **pareadas** de macro-F1 con IC 95 %:
+
+| Paso | Δ macro-F1 | IC 95 % | ¿Aporta? |
+|---|---|---|---|
+| 1 → 2 plantillas | **+0,1626** | [+0,1240; +0,2012] | sí |
+| 2 → 3 | **+0,0454** | [+0,0123; +0,0786] | sí |
+| 3 → 4 | **+0,0297** | [+0,0039; +0,0554] | sí |
+| **4 → 5** | **+0,0006** | **[−0,0207; +0,0219]** | **NO** |
+
+Y sobre las **11 familias con ≥ 4 plantillas** (azar macro-F1 0,091) la curva **sigue
+subiendo** hasta el final: 1→2 **+0,1254** [+0,1009; +0,1499] · 2→3 **+0,0426**
+[+0,0242; +0,0611] · 3→todo (3,87 de media) **+0,0385** [+0,0206; +0,0565], las tres
+significativas. Las dos curvas concuerdan: **el techo está en 4, no antes.**
+
+### ⚠️ CORRECCIÓN A LO QUE SE SUPUSO ANTES DE MEDIR
+
+Antes de correr se anticipó que la curva saldría plana y que la conclusión sería
+«documentar el límite y pasar a few-shot». **Es al revés, y el error tiene un mecanismo
+identificado.** La curva de las 30 familias efectivamente se aplana (de k=3 en adelante
+quedan +0,012 de macro-F1 en cuatro pasos), pero esa chatura es **agotamiento del corpus,
+no saturación del aprendizaje**: la columna `n_fam_bajo_tope` de `b1_curva.csv` cae de
+16,8 familias en k=1 a 5,0 en k=3 y a 0,0 en k=7. A partir de k=3 casi ninguna familia
+puede aportar una plantilla más, así que el tope deja de morder y la curva se aplana
+**por falta de material, no porque el modelo dejara de aprender**. En los subconjuntos
+donde sí hay material (11 y 5 familias) la curva sigue subiendo.
+
+**Consecuencia para el Sprint C: la rama que se activa es RECOLECTAR, con un objetivo
+acotado y finito (33 notas de contenido distinto en 19 familias), no «recolectar
+indefinidamente». Few-shot deja de ser la única salida y pasa a ser el complemento para
+las familias donde la recolección no alcance.**
+
+### El hallazgo metodológico: la moneda son los textos distintos, no las notas
+
+Se corrió cada curva con **dos formas de recolectar**: tope por *plantillas* (las notas
+que se suman son textos distintos) y tope por *notas* (notas al azar, que muchas veces
+repiten un texto ya presente). Mirando el **mismo dato sobre dos ejes** (paneles (a) y (b)
+de la figura), sobre 30 familias y P2ret:
+
+- **Sobre el eje de plantillas las dos curvas se superponen**: diferencia absoluta media
+  **0,0052** de macro-F1, máxima **0,0109** — un orden de magnitud por debajo del desvío
+  típico de la métrica (± 0,0486).
+- **Sobre el eje de notas se separan**: hasta **0,0351** de macro-F1 en el punto más bajo.
+- El mismo macro-F1 se alcanza por dos caminos con muy distinto gasto de notas:
+  **1,53 plantillas/familia con 2,11 notas/familia → macro-F1 0,5973**, contra
+  **1,46 plantillas/familia con 1,61 notas/familia → macro-F1 0,6005**. Mismo resultado,
+  **24 % menos notas**, porque el primer camino arrastra copias dentro de cada plantilla.
+
+**Regla práctica para la recolección, y es citable:** al presupuestar, contar **textos
+distintos**. Una nota que repite un contenido ya presente en el corpus no mueve el
+macro-F1 de forma medible. Esto conecta con el Sprint 1.1 y con el hallazgo de que 146
+notas son solo 95 plantillas: la profundidad del corpus está en la diversidad.
+
+### Las curvas, completas
+
+**30 familias · P2ret (una plantilla retenida por familia, 100 repeticiones) · tope por
+plantillas** — azar macro-F1 0,033:
+
+| Plantillas/fam (tope k) | macro-F1 | Exactitud | Notas train/fam | Familias que aún pueden dar más |
+|---|---|---|---|---|
+| 1 | 0,5405 ± 0,0619 | 0,5721 ± 0,0804 | 1,31 | 16,8 |
+| 2 | 0,5973 ± 0,0571 | 0,6132 ± 0,0754 | 2,11 | 10,6 |
+| 3 | 0,6043 ± 0,0504 | 0,6166 ± 0,0769 | 2,65 | 5,0 |
+| 4 | 0,6121 ± 0,0474 | 0,6240 ± 0,0750 | 2,95 | 2,9 |
+| 5 | 0,6141 ± 0,0458 | 0,6269 ± 0,0754 | 3,15 | 1,0 |
+| 6 | 0,6140 ± 0,0439 | 0,6279 ± 0,0736 | 3,21 | 1,0 |
+| 7 = todo | 0,6164 ± 0,0450 | 0,6285 ± 0,0734 | 3,28 | 0,0 |
+
+**11 familias con ≥ 4 plantillas** (BLACKBASTA, BLACKCAT, CERBER, CLOP, DHARMA, GANDCRAB,
+HELLOKITTY, LOCKBIT, PHOBOS, RANSOMEXX, TESLACRYPT) · P2ret · azar macro-F1 0,091:
+k=1 **0,5438 ± 0,1368** · k=2 **0,6692 ± 0,1404** · k=3 **0,7118 ± 0,1303** ·
+todo (3,87) **0,7504 ± 0,1111**.
+
+**5 familias con ≥ 5 plantillas** (CERBER, DHARMA, GANDCRAB, HELLOKITTY, LOCKBIT) · P2ret
+· azar macro-F1 0,200: k=1 **0,5713 ± 0,1978** · k=2 **0,7339 ± 0,1990** ·
+k=3 **0,7793 ± 0,1881** · k=4 **0,8089 ± 0,1789** · todo (5) **0,8095 ± 0,1727**.
+
+> **Los tres conjuntos NO son comparables entre sí** (30, 11 y 5 clases; azar macro-F1
+> 0,033 / 0,091 / 0,200) y **P2ret no es el P2 canónico**: la retención deja hasta n−1
+> plantillas del lado de entrenamiento y evalúa contra una plantilla por familia, así
+> que su macro-F1 de 0,6164 sobre 30 familias **no reemplaza** al 0,4210 ± 0,0508 del P2
+> de 2 pliegues sobre las mismas 144 notas, ni al **0,4353 ± 0,0565 oficial** sobre 146.
+
+**Bajo el P2 canónico de 2 pliegues** la curva se aplana igual y antes: k=1 0,3933 ±
+0,0533 · k=2 0,4167 ± 0,0572 · k=3 **0,4301 ± 0,0570** · k=4 0,4232 ± 0,0568 · todo
+0,4210 ± 0,0508. **El máximo de la curva está en k=3 y es 0,4301**, apenas 0,009 por
+encima del corpus completo. Bajo **P1**: k=1 0,6412 ± 0,0238 · k=2 0,7335 ± 0,0279 ·
+k=3 0,7447 ± 0,0324 · k=4 0,7543 ± 0,0379 · todo 0,7501 ± 0,0267; de k=3 en adelante
+nada es significativo.
+
+### Costo de recolección (aritmética sobre el corpus, sin modelo)
+
+De `b1_costo_recoleccion.csv`. Cada plantilla nueva exige **al menos** una nota nueva, y
+tiene que ser de contenido distinto:
+
+| Objetivo (plantillas/familia) | Plantillas nuevas | Familias a completar |
+|---|---|---|
+| 3 | **14** | 13 |
+| **4 (el objetivo medido)** | **33** | **19** |
+| 5 | 58 | 25 |
+| 6 | 85 | 27 |
+| 8 | 143 | 29 |
+
+### ★ LISTA DE RECOLECCIÓN, Y EL REFINAMIENTO QUE LA CORTA A LA MITAD (2026-08-19)
+
+`4_resultados/resumen_capitulo4/b1_familias_a_recolectar.csv`, regenerable con
+`resumen_para_capitulo4.py --solo b1`. **La cifra de la columna F1 es F1 POR FAMILIA**
+(30 familias · P2ret · k=todo · 144 notas · 100 repeticiones), **no** el macro-F1, que es
+el promedio de las 30 y vale 0,6164 ± 0,0450 en ese mismo protocolo.
+
+**El objetivo de 33 textos nuevos en 19 familias es correcto pero grueso: al cruzarlo con
+el F1 por familia, la mitad de ese esfuerzo iría a familias que ya aciertan perfecto.**
+
+**PRIORIDAD REAL — 9 familias, 17 textos nuevos.** Son las que necesitan textos *y* hoy
+andan mal (F1 por familia < 0,70):
+
+| Familia | Plantillas hoy | Faltan para 4 | F1 por familia hoy |
+|---|---|---|---|
+| WASTEDLOCKER | 1 | **3** | 0,000 ± 0,000 |
+| CHIMERA | 2 | 2 | 0,000 ± 0,000 |
+| MAZE | 2 | 2 | 0,000 ± 0,000 |
+| MEDUZALOCKER | 3 | 1 | 0,000 ± 0,000 |
+| WANNACRY | 2 | 2 | 0,010 ± 0,100 |
+| RYUK | 2 | 2 | 0,032 ± 0,160 |
+| CRYPTOLOCKER | 3 | 1 | 0,410 ± 0,456 |
+| JIGSAW | 2 | 2 | 0,670 ± 0,451 |
+| NOTPETYA | 2 | 2 | 0,695 ± 0,114 |
+| **TOTAL** | | **17** | |
+
+**LO QUE NO HAY QUE PRIORIZAR — 10 familias, 16 textos.** Necesitan textos para llegar a 4,
+pero **ya aciertan casi o totalmente** con 2 o 3 plantillas: DARKSIDE, NETWALKER y SUNCRYPT
+dan **F1 por familia 1,000 ± 0,000**; BLACKMATTER 0,992 ± 0,060 · BADRABBIT 0,983 ± 0,073 ·
+CUBA 0,975 ± 0,086 · AVOSLOCKER 0,973 ± 0,091 · SODINOKIBI 0,863 ± 0,179 · CONTI 0,846 ±
+0,157 · LORENZ 0,807 ± 0,367. Sumarles plantillas no puede mejorar lo que ya está en 1,000.
+
+**Y las 11 que ya tienen 4 o más no entran en la lista:** BLACKBASTA, BLACKCAT, CERBER, CLOP,
+DHARMA, GANDCRAB, HELLOKITTY, LOCKBIT, PHOBOS, RANSOMEXX, TESLACRYPT.
+
+**Consecuencia para el Sprint C: el lote objetivo baja de 33 a 17 textos distintos en 9
+familias.** Es el plan de recolección concreto, y explica de paso por qué el macro-F1 global
+está en 0,4210 ± 0,0508 bajo el P2 canónico: **cuatro familias tienen F1 por familia
+exactamente 0,000** (WASTEDLOCKER, CHIMERA, MAZE, MEDUZALOCKER) y dos más están por debajo
+de 0,05 (WANNACRY, RYUK). Seis familias en cero o casi arrastran el promedio de treinta.
+
+> ⚠️ **Contraste que hay que escribir en el capítulo, porque es contraintuitivo:** tener
+> pocas plantillas **no** condena a una familia. DARKSIDE, NETWALKER y SUNCRYPT tienen 2
+> plantillas cada una y dan F1 por familia 1,000 ± 0,000; CHIMERA y MAZE tienen también 2 y
+> dan 0,000 ± 0,000. **La cantidad de plantillas no explica sola el desempeño por familia:
+> lo que importa es cuánto se parecen entre sí las plantillas de la familia.** Eso es
+> justamente lo que va a medir B.3, y es el elemento de acción 1 del tutor.
+
+### Lo que NO se puede afirmar con esto — límites declarados
+
+1. **El techo extrapolado no es reportable.** El ajuste de ley de potencia inversa sobre
+   las 11 familias da techo macro-F1 0,803 pero con **IC 95 % [0,724; 1,698]**, y sobre
+   las 5 familias 0,873 con **IC 95 % [0,794; 1,214]**: los límites superiores pasan de
+   1, que es imposible para un F1. Con 3 y 4 puntos el ajuste tiene tantos parámetros
+   como datos. **Se reportan las diferencias pareadas observadas, no el techo ajustado.**
+   Los objetivos altos lo confirman: para macro-F1 0,80 el ajuste de las 11 familias pide
+   97,6 plantillas/familia con IC [5,0; 103,8] y solo alcanzable en el 54 % del bootstrap
+   — o sea, sin información.
+2. **Las líneas «NO ALCANZABLE» de las 30 familias en `b1_extrapolacion.csv` NO dicen que
+   recolectar no sirva.** Dicen que *ningún recorte del corpus actual* pasa de macro-F1
+   0,430 en P2 (IC 95 % [0,399; 0,469]) ni de 0,622 en P2ret. Es agotamiento del material,
+   no una cota sobre lo que daría un corpus más diverso. **No citarlas como argumento
+   contra la recolección.**
+3. **Supuesto que no se puede verificar:** que las plantillas nuevas se comporten como las
+   existentes. Puede que una familia tenga pocas plantillas *porque* varía poco, y en ese
+   caso sumarle textos rendiría menos que lo que predice la curva de las 11.
+4. **WASTEDLOCKER tiene una sola plantilla**, así que en P2ret queda siempre sin
+   entrenamiento (`n_fam_sin_train = 1,0` en toda la curva de 30 familias) y su F1 es 0
+   por construcción. Bajo el P2 canónico son 4,2 familias las que quedan así.
+5. **Base 144 notas**, no 146. Las dos notas en cuarentena cuestan 0,0096 de macro-F1 en
+   P1 y 0,0143 en P2 (medido, ver la sección siguiente), las dos por debajo del desvío
+   entre semillas.
+
 ## ★ B.1/B.3 — VERIFICACIONES PREVIAS AL DISEÑO DE LA CURVA (2026-08-18)
 
 Todo lo de esta sección se verificó **abriendo los archivos y recorriendo el corpus**, no de
@@ -62,6 +426,57 @@ relación conocida entre familias — es material para el capítulo, no un defec
   semillas, según `manifiesto_corrida.json`. **F1 por familia: BLACKBASTA 0,215 · DHARMA 0,483**
   (entre las más bajas de las 30) frente a **PHOBOS 0,637 · CONTI 0,786**. La confusión que se
   sospechaba tiene ahora un mecanismo verificado.
+
+### 2.bis Cuánto cuestan las dos notas en cuarentena — MEDIDO (2026-08-18)
+
+Se resolvió la duda «¿hay que rehacer la corrida canónica sobre 144?». **No hace falta.**
+Corriendo `evaluar()` de `clasificador_notas_v2.py` sobre el corpus de hoy, con la misma
+configuración ganadora de cada protocolo (P1 = caracteres + LinearSVC · P2 = combinado +
+LinearSVC, 2 pliegues, 10 semillas):
+
+| Protocolo | 146 notas (cifra oficial de la tesis) | 144 notas (corpus de hoy) | Costo de las 2 notas |
+|---|---|---|---|
+| P1 «plantilla conocida», macro-F1 | 0,7597 ± 0,0289 | **0,7501 ± 0,0267** | **0,0096** |
+| P2 «variante nunca vista», macro-F1 | 0,4353 ± 0,0565 | **0,4210 ± 0,0508** | **0,0143** |
+
+**Las dos pérdidas son bastante menores que el desvío entre semillas** (0,0096 contra ± 0,0267
+en P1; 0,0143 contra ± 0,0508 en P2). Conclusión operativa: **el capítulo 4 no se toca y la
+cifra oficial sigue siendo la de 146 notas.** B.1 corre sobre 144 y lo declara. Restaurar los
+dos `.hta` sigue siendo deseable por integridad del corpus, pero **ya no bloquea ni cambia
+ninguna conclusión**.
+
+### 2.ter El script de B.1 y su control de corrección
+
+`2_codigo/curva_aprendizaje_notas.py` (nuevo, local, sin cluster). Corre con `--validar`,
+`--rapido` o completo. Salidas en `4_resultados/resultados_curva_notas/`: una fila **por
+repetición y por punto**; los promedios los calcula `resumen_para_capitulo4.py --solo b1`
+(función `resumen_b1()`), nunca a mano.
+
+**Control de corrección, y pasó exacto:** el punto k = «todo el corpus» de la curva tiene que
+dar lo mismo que `evaluar()` del script canónico sobre el mismo corpus. **Diferencia 0,00e+00
+en los dos protocolos.** El script aborta si no coincide, así que ninguna cifra de la curva
+puede salir de un camino de código distinto al canónico.
+
+**Tres decisiones de diseño que hay que declarar en la tesis:**
+1. **Dos unidades en el eje x, y la diferencia entre ellas es el resultado.** Tope por
+   *plantillas* = las notas que se agregan son textos distintos (**diversidad**, caro); tope
+   por *notas* = notas al azar, que muchas veces repiten un texto ya presente (**volumen**,
+   barato). Las dos curvas se miran sobre el mismo eje de notas de entrenamiento por familia:
+   la separación entre ambas es cuánto vale la diversidad, medido.
+2. **Tres conjuntos de familias, NO comparables entre sí** — 30 familias (azar macro-F1 0,033),
+   las 11 con ≥ 4 plantillas (azar 0,091) y las 5 con ≥ 5 plantillas (azar 0,200). Con las 30
+   la curva satura por agotamiento; con las 11 el conjunto de clases es constante de punta a
+   punta y es la única extrapolable. **Toda tabla lleva el azar de su conjunto pegado.**
+3. **Protocolo P2ret (retención de una plantilla por familia, repetido).** Bajo el P2 canónico
+   de 2 pliegues una familia de 2 plantillas aporta 1 sola al entrenamiento, así que el tope k
+   casi no muerde y la curva no tendría alcance. La retención deja hasta n−1 plantillas del
+   lado de entrenamiento y es exactamente la pregunta de despliegue. Se reporta aparte de P2.
+
+**Anidamiento y estadística:** el orden de plantillas/notas de cada familia se sortea una vez
+por repetición y k toma el prefijo, así que el entrenamiento de k está contenido en el de k+1.
+Los puntos quedan **pareados** y el aporte de cada paso se calcula como diferencia por
+repetición con IC 95 %, no restando dos medias independientes: con ± 0,05 de desvío en el
+macro-F1 de P2, restar medias sueltas no distingue nada.
 
 ### 3. Cuántos puntos admite realmente el eje x
 Familias que pueden aportar al menos k plantillas: **k≥1: 30 · k≥2: 29 · k≥3: 17 · k≥4: 11 ·
