@@ -16,8 +16,11 @@ No repite el contenido de los otros documentos: dice qué leer y qué no hacer n
 ## Reglas que no se negocian
 
 - **Nunca agregar `Co-Authored-By` de Claude a un commit.** Es trabajo académico de Romina.
-- **Cada cambio de código se commitea a `develop` y se pushea en el momento**, con una
-  descripción breve en español y sin coautoría. No esperar a que Romina lo pida.
+- **Cada cambio de CÓDIGO se commitea a `develop` y se pushea en el momento**, con una
+  descripción breve en español y sin coautoría, sin esperar a que Romina lo pida. **Solo el
+  código** (`2_codigo/`, jobs de SLURM): los documentos de estado (`ESTADO_TESIS.md`,
+  `PLAN_MEJORAS.md`, notas de trabajo, informes) y el LaTeX de la tesis se commitean
+  únicamente cuando Romina lo pide.
 - **Nunca commitear datos.** El corpus son notas de rescate y archivos cifrados auténticos
   (malware real). Publicarlos infringe los términos de GitHub. Al repositorio va el **código**
   y el **documento**, nada más.
@@ -27,7 +30,12 @@ No repite el contenido de los otros documentos: dice qué leer y qué no hacer n
 - **Los dos frentes —notas y archivos— van separados.** No hay clasificador combinado.
   (El tutor pidió evaluar *majority voting*; está como decisión abierta en `PLAN_MEJORAS.md`,
   sin resolver.)
-- **Solo las 30 familias de NapierOne.** No ampliar el número de familias.
+- **El núcleo canónico son las 30 familias de NapierOne** — es lo que empareja los dos
+  frentes y todas las cifras del cap. 4. **Decisión 2026-08-20 (pedido del tutor):** el frente
+  de notas PUEDE extenderse a más familias, como **experimento de extensión que se AGREGA**,
+  con su propia base declarada (p. ej. «sobre 40 familias»). Lo ya escrito sobre 30 no se
+  corrige ni se reescribe: no tiene errores, tiene otra base. En archivos no hay extensión
+  posible: no existen archivos cifrados públicos fuera de NapierOne.
 - **Toda cifra que vaya a la tesis necesita fuente verificable y citable**, y hay que dejar
   registrado de dónde salió.
 - **Antivirus y configuración de Windows los toca Romina, no Claude.**

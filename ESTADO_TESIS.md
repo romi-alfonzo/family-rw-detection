@@ -17,6 +17,607 @@ _Última actualización: 2026-08-17_
 
 ---
 
+## ★ SPRINT C / RECOLECCIÓN — HERRAMIENTA DE VERIFICACIÓN Y PRIMER DICTAMEN (2026-08-19)
+
+Plan operativo: `6_notas_trabajo/plan_recoleccion_notas_2026-08-19.md`. Objetivo del lote:
+**17 textos distintos en 9 familias** (prioridad 1 de B.1).
+
+### ★★★ LOTE 1 RECOLECTADO — 6 TEXTOS NUEVOS VERIFICADOS (2026-08-19)
+
+> **▶ PARA CONTINUAR EN OTRO CHAT: `6_notas_trabajo/HANDOFF_recoleccion_2026-08-19.md`** —
+> resumen operativo con las URLs para descargar a mano, el tema Defender (excluir, no evadir),
+> y los 4 problemas de integridad del corpus.
+> **Tablero de seguimiento por familia, con lo agotado y lo pendiente:**
+> `6_notas_trabajo/lista_recoleccion_por_familia.md`. Se trabaja una familia hasta cerrarla.
+> Ese archivo también fija las **reglas de fuentes** y la lista blanca de dominios.
+
+> 🔧 **ACTUALIZACIÓN 2026-08-19 (tarde): 3 notas mal etiquetadas retiradas del corpus.**
+> Decisión de Romina (se resolvió el problema de integridad §5-1 y §5-3 en su parte de
+> «familia equivocada»). Se **movieron** —no se borraron— a `3_datos/descartados_integridad/`
+> (con README que documenta motivo y fuente; reversible):
+> `note_threatlabz_!!!READ_ME_MEDUSA!!!.txt` y `_2.txt` (son de **Medusa**, FBI/CISA AA25-071A,
+> no MedusaLocker) y `lm_Crypt0l0cker_HOW_TO_RESTORE_FILES.html` (es **Crypt0l0cker =
+> TorrentLocker**). **MEDUZALOCKER 6→4** (sigue cerrada, 4 legítimas), **CRYPTOLOCKER 4→3**.
+> **Corpus 150→147; manifiesto 152→149 filas.** `chimera_note2.txt` (sin fuente) se dejó en su
+> familia: es problema de «falta URL», no de familia equivocada. Al re-medir en otro chat
+> cambia la base: re-correr `curva_aprendizaje_notas.py` y `resumen_para_capitulo4.py --solo b1`.
+
+> 🧩 **ACTUALIZACIÓN 2026-08-19 (tarde): CHIMERA +1 texto nuevo (la nota alemana).** Se completó
+> el OCR de `hns_chimera_03112015.jpg` (Help Net Security, Zeljka Zorz, 2015-11-03). tesseract dio
+> el cuerpo pero perdió los valores en rojo; un subagente leyó la imagen en su contexto y recuperó
+> el verbatim completo: dir BTC `1GaVKrVT17DN4dnWbTqGB9qG3rQrk1JBe9`, monto `2,45267544 Bitcoins`
+> (coincide con lo ya documentado en el traspaso → corroborado), URL `https://mega.nz/ChimeraDecrypter`.
+> `verificar_nota_nueva.py`: **TEXTO NUEVO** (vecina `chimera_note1.txt`, coseno 0,785; la distingue
+> mega.nz frente al `.onion`). Copiada como `corpus_v2/CHIMERA/hns_chimera_aleman.txt`, `.txt` con
+> `extension_original=.html` documentada (NO se recreó el HTML: sería fabricar el artefacto). La nota
+> inglesa de Malwarebytes salió **COPIA** de la de pcrisk (coseno 0,943), no aporta. **Corpus 147→148;
+> manifiesto 149→150** (150 = 148 en disco + 2 filas fantasma de DHARMA Info__3/__13). ⚠️ La dir BTC y
+> la URL exacta vienen de OCR de visión: conviene un vistazo humano final contra la imagen antes de
+> citarlas textualmente (el monto ya está corroborado). CHIMERA queda en 3 textos citables (techo
+> realista: el texto está agotado).
+
+> 🧩 **ACTUALIZACIÓN 2026-08-20: MAZE +1 texto nuevo → CERRADA (4).** Nota de la etapa **ChaCha**
+> (mayo 2019, precursora de Maze) desde `id-ransomware.blogspot.com` (Amigo-A / Andrew Ivanov,
+> 2019-05-13, fuente whitelist SANS). Es la nota `DECRYPT-FILES.html` con título «0010 SYSTEM FAILURE
+> 0010» y contacto `getmyfilesback@airmail.cc` — distinta de las notas Maze del corpus.
+> `verificar_nota_nueva.py`: **TEXTO NUEVO** (vecina `pcrisk_maze_1.txt`, coseno 0,698). Guardada como
+> `corpus_v2/MAZE/idr_maze_chacha_2019.txt`, `.txt` con `extension_original=.html` documentada; el blob
+> base64 aparece **truncado con `***`** en la fuente y se transcribió tal cual (declararlo). **Corpus
+> 150→151; manifiesto 151; coinciden 1:1.** Con esto las **4 familias accionables por texto están
+> cerradas** (MEDUZALOCKER, JIGSAW, CHIMERA por techo, MAZE); el resto está agotado en texto (RYUK,
+> NOTPETYA, WANNACRY → solo OCR/muestra viva) o bloqueado (CRYPTOLOCKER, WASTEDLOCKER).
+
+> 🔍 **DHARMA — origen de las 2 `.hta` perdidas, identificado por hash (2026-08-19):** `Info__3.hta`
+> e `Info__13.hta` son los `Info.hta` de las variantes **abibo** y **cmb** del repo Lemmou
+> (`3_datos/fuentes_notas/RansomNoteFiles/Dharma/`). Prueba: las 9 `.hta` que sobreviven en el corpus
+> calzan MD5 con 9 de las 11 variantes del repo (4k, Arrow, bip, bkp, brrr, manpecame, monro, skynet,
+> stopencrypt); las 2 que no mapean son abibo (carpeta vacía) y cmb (le queda solo `FILES ENCRYPTED.txt`).
+> Defender las puso en cuarentena **en el corpus Y en el repo de origen**, por eso no hay copia local.
+> **✅ RESUELTO el 2026-08-20 (opción recuperar):** los 2 `.hta` estaban en el **git local** del repo
+> (commit `5c4455e`), así que se restauraron **sin descargar**, con los bytes originales (MD5 verificado:
+> abibo `687c8592…` → `Info__3.hta`; cmb `01d6de95…` → `Info__13.hta`; ambos distintos de los 9 previos).
+> Se repusieron también en el repo de origen (`RansomNoteFiles/Dharma/abibo|cmb/Info.hta`). Cierra el gap
+> 144-vs-146. **DHARMA 17→19; corpus 148→150; manifiesto y disco ahora coinciden 1:1 (150=150), sin filas
+> fantasma** (verificado con cross-check). Nota: qué variante era originalmente `Info__3` vs `Info__13` se
+> había perdido, así que esa asignación de números es arbitraria (abibo→3, cmb→13). Dharma es molde rígido
+> → no cambia resultados.
+
+> ⛔ **INCIDENTE DE FUENTE, anotarlo para no repetirlo:** `malwiki.org`, que aparece en
+> búsquedas como fuente de notas de rescate, **responde 301 y redirige a
+> `mufasatotoamanah.com`**, dominio sin relación con seguridad informática (parece dominio
+> expirado y recomprado). **No se siguió el redirect y no se consultó.** En todo el chat se
+> leyó **solo texto**: no se descargó ninguna muestra, binario, `.zip` ni imagen. Se
+> descartaron por esta regla el `.zip` de las 28 notas de WannaCry alojado en `transfer.sh` y
+> dos repos de muestras vivas de Jigsaw.
+
+**Corpus: 144 → 150 notas.** Manifiesto actualizado (`3_datos/manifiesto_corpus_v2.csv`,
+152 filas). Carpeta de aterrizaje con todo lo recolectado, incluidas las candidatas
+descartadas: `3_datos/recoleccion_2026-08/<FAMILIA>/` (dentro de `3_datos/`, o sea ignorada
+por git — confirmado con `git check-ignore`).
+
+| Familia | Textos antes | Nuevos | Ahora | Objetivo B.1 |
+|---|---|---|---|---|
+| **MEDUZALOCKER** | 3 (1 de ellos de otra familia, ver abajo) | **+2** | 5 nominales / **4 legítimos** | ✅ 4 |
+| **JIGSAW** | 2 | **+2** | **4** | ✅ 4 |
+| **CHIMERA** | 2 (1 sin fuente rastreable, ver abajo) | **+1** | 3 nominales / **2 citables** | ✗ falta 1 |
+| **MAZE** | 2 | **+1** | **3** | ✗ falta 1 |
+
+**Lo incorporado, con procedencia citable:**
+
+| Archivo | Familia | Fuente | Coseno con su vecina más cercana |
+|---|---|---|---|
+| `pcrisk_medusalocker_chip.txt` | MEDUZALOCKER | pcrisk · Tomas Meskauskas · 12-05-2026 · guía 34945 · nota `Recovery_README.html` | 0,781 |
+| `pcrisk_medusalocker_rapid.txt` | MEDUZALOCKER | pcrisk · Tomas Meskauskas · 28-03-2024 · guía 28682 · nota `How_to_back_files.html` | 0,856 |
+| `pcrisk_jigsaw_aleman.txt` | JIGSAW | pcrisk · Meskauskas · guía 9942 · variante alemana `.AFD` (actualización 06-06-2016) | 0,611 |
+| `pcrisk_jigsaw_frances.txt` | JIGSAW | pcrisk · Meskauskas · guía 9942 · variante «Anti-Capitalist Jigsaw» `.fun` | 0,484 |
+| `pcrisk_chimera_ingles_autentico.txt` | CHIMERA | pcrisk · Meskauskas · guía 9542 · nota `YOUR_FILES_ARE_ENCRYPTED.HTML` | 0,502 |
+| `pcrisk_maze_wallpaper.txt` | MAZE | pcrisk · Meskauskas · guía 16145 «Maze 2019» · **fondo de escritorio** | 0,430 |
+
+⚠️ **Criterio de alcance que se fijó al aceptar el wallpaper de MAZE, y hay que declararlo:**
+entra lo que el malware **muestra o deja en la máquina de la víctima** (archivo, ventana
+emergente, fondo de escritorio); **no entra el sitio web del atacante.** Por eso se aceptó el
+wallpaper —el corpus ya tiene mensajes en pantalla: `wannacry_note1.txt` es la ventana de Wana
+Decrypt0r y las 2 notas nuevas de JIGSAW son ventanas emergentes— y **se descartó** el tercer
+bloque de la guía 16145, que es la página del sitio Tor de pago.
+
+### ★★★ EL OCR NO DIO TEXTOS NUEVOS PERO SÍ ALGO MEJOR: VALIDÓ EL CORPUS
+
+**Corrección a lo que se dijo antes en este chat:** se había escrito que el OCR estaba bloqueado
+por falta de `tesseract`. **Es falso: las imágenes se pueden leer y transcribir directamente,
+con mejor precisión que tesseract**, y sin instalar nada. Se hizo con las 2 imágenes relevantes
+que **ya estaban en disco** (`3_datos/fuentes_notas/imagenes_notas/`), sin descargar nada.
+
+**1) `mbr-ransom-note.jpg` (NotPetya, pantalla de arranque MBR) → NO aporta texto, pero valida.**
+La transcripción completa resultó **COPIA de `notpetya_note1.txt`, coseno 0,925.** O sea:
+
+- ✅ **`notpetya_note1.txt` queda CONFIRMADA como auténtica** contra una imagen independiente.
+  Es la primera nota `corpus-existente` del proyecto con respaldo visual.
+- ⚠️ **`notpetya_note2.txt` tiene un párrafo que NO está en la imagen:** «IMPORTANT: Do not
+  attempt to remove the encryption software or modify any encrypted files. This will permanently
+  destroy your data.» Y el resto es la misma nota reescrita en prosa más suelta.
+
+**2) `Wana_Decrypt0r_screenshot.png` → corrobora `wannacry_note1.txt`** (el texto de la ventana
+coincide) **y aporta evidencia visual directa de la localización**: en la esquina superior
+derecha de la ventana **se ve el desplegable de idioma con «English» seleccionado**, que es
+justamente el mecanismo de los 28 `msg/m_*.wnry`. **No se transcribió como nota nueva** porque
+el panel tiene scroll y el texto está cortado abajo — y transcribir un texto cortado es
+exactamente la trampa medida más arriba (el truncado da falso «texto nuevo»).
+
+### ⛔⛔ Y ASÍ APARECIÓ EL PATRÓN: EL «SEGUNDO TEXTO» SIN FUENTE SE REPITE
+
+**Dos familias, el mismo patrón, las dos con `tipo = corpus-existente` y fuente
+«NapierOne/varios»:**
+
+| Familia | note1 | note2 |
+|---|---|---|
+| NOTPETYA | ✅ auténtica (coseno 0,925 con la imagen) | ⚠️ reescritura + párrafo «IMPORTANT» que no está en la imagen |
+| CHIMERA | ✅ auténtica (alemán, la nota era bilingüe) | ⚠️ reescritura del alemán + contenido agregado; coseno 0,502 con el inglés de pcrisk |
+
+**Cuantificado sobre el manifiesto completo (152 filas):**
+
+| `tipo` | Notas | Fuente citable |
+|---|---|---|
+| `bruto` | 96 | ✅ archivo de repositorio |
+| `transcripcion` | 19 | ✅ URL + autor + fecha |
+| **`corpus-existente`** | **37** | ⛔ **solo «NapierOne/varios», sin URL** |
+
+**37 de 152 notas —el 24 % del corpus— no tienen fuente rastreable**, y se concentran justo en
+las familias problemáticas: CRYPTOLOCKER 3 · WASTEDLOCKER 3 · MEDUZALOCKER 3 · LOCKBIT 4 ·
+NOTPETYA, WANNACRY, CHIMERA, RYUK, JIGSAW, BADRABBIT, PHOBOS, AVOSLOCKER, HELLOKITTY 2 c/u.
+
+> **Esto choca de frente con la regla del proyecto de que toda cifra que va a la tesis necesita
+> fuente verificable y citable.** No es que las 37 sean falsas —`notpetya_note1.txt` acaba de
+> quedar confirmada— pero **hoy no se puede citar su procedencia una por una.** Es un tema de
+> metodología que hay que llevarle al tutor, y el camino de validación ya está probado: **OCR de
+> una imagen independiente y verificación con el umbral de 0,90.**
+>
+> **Prioridad sugerida para validar:** las de las familias que se reportan con F1 por familia
+> 0,000 (WASTEDLOCKER, CHIMERA, MEDUZALOCKER) y CRYPTOLOCKER, que además tiene el problema de
+> homonimia. Son 11 notas.
+
+⚠️ **OCR con tesseract (para el pipeline automático, no para esto):** `extractor_notas.py` hace OCR de
+imágenes y PDF escaneado con **pytesseract**, pero en esta máquina **no está instalado
+`tesseract`** ni están `pytesseract`/`cv2`/`easyocr` (solo `PIL`). Sin eso, **una imagen puesta
+en `corpus_v2` no rompe: se omite con ADVERTENCIA y la nota no cuenta.** Lo instala Romina
+(`winget install --id UB-Mannheim.TesseractOCR` y `pip install pytesseract opencv-python`).
+Desbloquea CHIMERA (3 capturas identificadas) y NOTPETYA (imagen ya en disco).
+
+Las cuatro son **transcripciones** (`tipo = transcripcion`), autorizadas por el tutor
+(reunión 2026-08-12 punto 4, confirmado el 2026-08-16). **Se transcribió tal como lo publica
+la fuente, sin corregir nada:** eso incluye el defanging de pcrisk (`hxxps://`), los
+marcadores tapados (`-`) y, en la francesa, las etiquetas de los botones de la ventana
+(`[View encrypted files]`), porque Jigsaw muestra su mensaje en una ventana y pcrisk rotula
+el bloque como «Text presented in a pop-up window». **Declararlo así en la tesis.**
+
+**ESTADO DE LAS 9 FAMILIAS DE LA LISTA, AL CERRAR ESTE LOTE:**
+
+| Familia | Textos | Falta | Situación |
+|---|---|---|---|
+| MEDUZALOCKER | 4 legítimos | ✅ 0 | **cerrada** (y 2 notas de Medusa a sacar) |
+| JIGSAW | 4 | ✅ 0 | **cerrada** (efecto incierto, ver el choque con B.3) |
+| CHIMERA | 2 citables | 2 | 1 recolectada; `chimera_note2.txt` a resolver |
+| MAZE | 2 | 2 | búsqueda en curso, sin resultado todavía |
+| RYUK | 2 | 2 | búsqueda en curso, sin resultado todavía |
+| WANNACRY | 2 | 2 | 🔻 **agotada en fuentes citables** (ver abajo) |
+| NOTPETYA | 2 | 2 | sin explorar en este chat; solo vía OCR |
+| CRYPTOLOCKER | 3 (1 dudosa) | 1 | ⛔ **no existe archivo de nota** (ver abajo) |
+| WASTEDLOCKER | 1 | 3 | ⛔ molde rígido, 4 notas → 1 plantilla |
+
+**Lo que queda para el próximo chat de recolección:** MAZE y RYUK (las dos con F1 bajo y con
+bruto público, son las de mejor pronóstico), NOTPETYA por OCR de la imagen que ya está en
+`3_datos/fuentes_notas/imagenes_notas/`, y el segundo texto de CHIMERA.
+
+**⛔ NO SE CORRIÓ NINGUNA MEDICIÓN.** Decisión de Romina en este chat: el trabajo es solo
+recolección. `curva_aprendizaje_notas.py` y `resumen_para_capitulo4.py --solo b1` **quedan
+pendientes para otro chat**, así que **todavía no se sabe cuánto movió el macro-F1**. Las
+salidas de B.1 sobre la base de 144 notas quedaron respaldadas en
+`4_resultados/_respaldo_b1_144notas_2026-08-19/` (8 archivos) para no perder la base citable
+al regenerarlas. Esa carpeta figura como no rastreada en git: **no commitearla**.
+
+### ⚠️ EL CONTEO DE TEXTOS DISTINTOS NO ES PERFECTAMENTE ESTABLE
+
+Al incorporar las 2 notas de MEDUZALOCKER el conteo pasó de **95 a 98** textos distintos,
+no a 97. La diferencia de 1 **no es una nota**: es que el IDF del TF-IDF se ajusta sobre el
+corpus, y al crecer el corpus un par que estaba al borde de 0,90 cambió de lado (el grupo de
+5 notas de CERBER se parte en 2 + 3). Corre para los dos lados: agregar las candidatas de
+JIGSAW llevaba los grupos del corpus de 98 a 97.
+
+**Consecuencia práctica:** el número de textos distintos hay que **recalcularlo sobre el
+corpus** después de cada lote, y tiene un ruido de ±1 por pares al borde del umbral. No
+sumar aritméticamente «textos anteriores + nuevos». El verificador ya cuenta el aporte como
+«grupos formados solo por candidatas», que es inmune a esta deriva, y avisa aparte cuando
+detecta el corrimiento.
+
+### ✅ CORRECCIÓN A LO QUE SE PREVIÓ EN ESTE MISMO CHAT: MEDUZALOCKER SÍ RINDE
+
+Antes de medir se anticipó que MedusaLocker sería como WASTEDLOCKER, porque **las 10
+variantes revisadas en pcrisk** (Rapid, Stolen, Chip, LockLock, Karma, Protect, Infected,
+Crypto, Luck, End) **usan el mismo molde** «/!\ YOUR COMPANY NETWORK HAS BEEN PENETRATED /!\».
+**La previsión era equivocada:** el molde varía lo suficiente para cruzar el umbral. De 5
+candidatas salieron **2 textos distintos**, a coseno 0,773-0,856 contra la nota que ya
+estaba — todas por debajo de 0,90. Los bloques que las separan son de contenido real, no de
+formato: la existente trae las 4 instrucciones de Tor; un grupo trae «* Tor-chat to always be
+in touch»; el otro agrega el párrafo «IMPORTANT! / middlemen / scams» y qTox.
+
+> **La lección es del método, no de MedusaLocker: la rigidez del molde se ve a ojo, pero el
+> umbral de 0,90 no. Hay que medir cada candidata, no descartar una familia por inspección.**
+> Con WASTEDLOCKER la inspección y la medición coinciden (4 notas de 3 víctimas y 2 fuentes
+> → 1 plantilla); con MEDUZALOCKER no coincidieron.
+
+### ▶ HALLAZGO PARA EL RESTO DE LA RECOLECCIÓN: EL EJE PRODUCTIVO ES EL IDIOMA
+
+Los 2 textos nuevos de JIGSAW no son variantes de contacto: son **la nota traducida a otro
+idioma** (alemán y francés), y por eso dan los cosenos más bajos de todo el lote (0,611 y
+0,484). Es el eje con más rendimiento por hora encontrado hasta ahora. pcrisk documenta para
+Jigsaw variantes adicionales en **turco** (`.ram`), **portugués** y **polaco**, y reskins con
+marca propia (Koolova, IT.Books, Ransomnix, «Different Jigsaw»).
+
+### ⛔⛔ PERO EL EJE DEL IDIOMA CHOCA CONTRA B.3, Y CHIMERA ES LA PRUEBA
+
+**No hay que salir a recolectar traducciones sin entender esto primero.** El eje que más
+rinde para *contar* textos distintos es exactamente el que más **baja la cohesión**, y B.3
+midió que la cohesión es el mejor predictor del F1 por familia (Spearman ρ **+0,704**,
+p = 2,0·10⁻⁵). Los dos efectos tiran para lados opuestos.
+
+**La prueba está en el corpus y no se había leído así.** Se abrieron las 2 notas de CHIMERA:
+
+- `chimera_note1.txt` está **en alemán** («Sie wurden Opfer der Chimera Malware…»)
+- `chimera_note2.txt` está **en inglés** («You became a victim of the Chimera malware…»)
+- **Es el MISMO mensaje en dos idiomas.**
+
+> **CHIMERA tiene la cohesión más baja de las 30 familias (0,1538) y F1 por familia
+> 0,000 ± 0,000, y ahora se sabe por qué: sus dos «plantillas» son una sola nota traducida.**
+> No es que Chimera varíe mucho su mensaje — es que el corpus guarda dos idiomas del mismo
+> texto. El caso límite que B.3 citaba como «la familia con menos cohesión del corpus» tiene
+> una explicación concreta, y es lingüística, no de comportamiento del malware.
+
+**Consecuencia inmediata y honesta sobre las 2 notas de JIGSAW que se acaban de incorporar:**
+son textos legítimos de la familia, verificados como distintos y con fuente citable, así que
+se dejan. Pero **su efecto sobre el F1 por familia de JIGSAW es genuinamente incierto y podría
+ser negativo**, porque replican la estructura que hundió a CHIMERA. Ya estaba anticipado en
+este documento: «sumar un texto ayuda un poco a cualquier familia, pero **no convierte a una
+familia de cohesión baja en una de cohesión alta**». **Lo resuelve la medición, que queda para
+el otro chat: hay que mirar el F1 por familia de JIGSAW y su cohesión, antes y después.**
+
+⚠️ **Y por eso NO se recolectaron más traducciones**, aunque pcrisk ofrece turco, portugués y
+polaco de Jigsaw y sería lo más rápido de juntar. Sumar tres idiomas más a una familia que ya
+llegó al objetivo de 4 arriesga empujarla hacia el patrón de CHIMERA sin ganancia medible
+(B.1: el paso 4→5 vale +0,0006 de macro-F1, IC 95 % [−0,0207; +0,0219], indistinguible de
+cero). **Decisión: frenar el eje idioma hasta que se mida el efecto de estas dos notas.**
+
+### ⛔⛔⛔ HALLAZGO DE INTEGRIDAD: `chimera_note2.txt` NO COINCIDE CON NINGUNA FUENTE
+
+Al abrir las notas de CHIMERA para entender su cohesión apareció algo peor que un problema de
+etiqueta. **El inglés auténtico de la nota de Chimera, tal como lo publica pcrisk (guía 9542,
+Tomas Meskauskas), está mal traducido del alemán:**
+
+> «**Your are** victim of the Chimera malware. Your private files are encrypted and can not be
+> restored without **a special edgy file**. Maybe some programs no longer function properly…
+> If you don't pay your private data, which include pictures and videos will be published on
+> the Internet **in relation on your name**.»
+
+«Your are», «a special edgy file», «in relation on your name»: es traducción automática del
+alemán, y por eso es creíble como artefacto real. **`chimera_note2.txt` del corpus dice otra
+cosa, en inglés perfectamente correcto**, y calca la nota alemana frase por frase:
+
+| `chimera_note1.txt` (alemán, en el corpus) | `chimera_note2.txt` (inglés, en el corpus) | pcrisk (inglés auténtico) |
+|---|---|---|
+| «Sie wurden Opfer der Chimera Malware.» | «You became a victim of the Chimera malware.» | «**Your are** victim of the Chimera malware.» |
+| «…ohne eine spezielle Schluessel-Datei nicht wiederherstellbar.» | «…are not recoverable without a special **key** file.» | «…can not be restored without a special **edgy** file.» |
+| «Moeglicherweise funktionieren einige Programme nicht mehr ordnungsgemaess!» | «Some programs may no longer function properly.» | «Maybe some programs no longer function properly:» |
+| «Ihr Transaktions-Schluessel:» | «Your transaction key:» | (no aparece) |
+
+Y además `chimera_note2.txt` **agrega contenido que no está en la nota alemana ni en pcrisk**:
+«All your personal data, business documents, photos, and credentials will be made publicly
+available. This includes data from browsers, email clients, and FTP applications», más
+«Payment required: 2.45 BTC» y «Payment deadline: 7 days».
+
+**Lo que se puede afirmar, sin sobreactuar:** `chimera_note2.txt` **no coincide con el texto
+que publica la fuente citable**, su procedencia en el manifiesto es solo `corpus-existente /
+NapierOne varios` (no rastreable a una URL), y su estructura es la de una **traducción del
+alemán con contenido agregado**. Coseno con el inglés auténtico: **0,502**. No se puede
+demostrar desde acá que sea fabricada, pero **no está en condiciones de respaldar una cifra de
+la tesis hasta que se le encuentre fuente.**
+
+**Y hay una pista documental fuerte a favor de la sospecha:** `6_notas_trabajo/descargas_pendientes.md`
+registra a **Chimera como «⬜ FALTA (sin texto aún)»** y la llama «la única familia sin nota»,
+mientras `notas_familias_criticas.md` guarda el texto auténtico de pcrisk como «✅ texto
+verbatim conseguido (alta confianza)» — **que nunca se incorporó**. O sea: el corpus terminó
+con dos notas de Chimera de origen no rastreable, y el texto citable que sí se había
+conseguido quedó afuera. **Eso último ya está corregido en este lote.**
+
+**Acción tomada:** se incorporó `pcrisk_chimera_ingles_autentico.txt` (texto nuevo verificado,
+coseno 0,502 con `chimera_note2.txt`). CHIMERA pasa de 2 a **3 textos**, de los cuales **2 con
+fuente citable**. **NO se tocó `chimera_note2.txt`** — sacarla es decisión de Romina y el
+tutor, y cambia las cifras del capítulo 4.
+
+#### ✅ CORRECCIÓN AL PÁRRAFO DE ARRIBA — ERA DEMASIADO DURO, Y LA FUENTE LO ACLARA
+
+Al seguir buscando aparecieron dos datos que **matizan la sospecha**, y corresponde dejarlos
+escritos con el mismo énfasis:
+
+1. **La nota de Chimera era bilingüe por diseño.** hasherezade, Malwarebytes Labs, 09-12-2015:
+   «there is an HTML file dropped… The HTML can be displayed in two languages – English and
+   German». O sea que tener una nota en alemán y otra en inglés **no es un artefacto del
+   corpus: es cómo venía el archivo.** El par alemán/inglés es legítimo.
+2. **El dato de «2.45 BTC» de `chimera_note2.txt` está documentado por vendors**, no inventado:
+   Help Net Security (Zeljka Zorz, 03-11-2015) y Trend Micro reportan el pedido de 2,45
+   bitcoin. Lo mismo el robo de credenciales y la amenaza de publicación.
+
+**Lo que sigue en pie:** `chimera_note2.txt` **no coincide con el inglés que publica pcrisk**
+(coseno 0,502) y su procedencia no es rastreable a una URL. Lo más probable es que sea una
+**traducción del alemán armada con datos de reportes de vendors**, no un artefacto capturado.
+**Sigue necesitando fuente antes de respaldar una cifra**, pero **ya no hay razón para
+sospechar que el contenido sea falso.**
+
+> ⚠️ **Y sobre B.3, la lectura correcta es esta:** la cohesión de CHIMERA de **0,1538, la más
+> baja de las 30**, y su F1 por familia **0,000 ± 0,000**, se explican porque sus dos plantillas
+> son **el mismo mensaje en dos idiomas** — y eso es una **propiedad real de la familia**, no un
+> error de corpus, porque el malware mandaba las dos. **CHIMERA sigue siendo citable como caso
+> límite de cohesión baja, pero hay que decir POR QUÉ es baja: es bilingüe.** Eso es un hallazgo
+> mejor y más defendible que «es la familia que menos se parece a sí misma», y conecta directo
+> con el choque idioma-vs-cohesión de más arriba.
+
+#### 🔻 CHIMERA: AGOTADA EN FUENTES CON TEXTO
+
+Revisadas todas las fuentes técnicas de la familia: **la única con texto seleccionable es
+pcrisk (guía 9542), y ya está incorporada.** Las demás publican la nota **solo como captura**:
+
+| Fuente | Autor · fecha | Formato |
+|---|---|---|
+| Malwarebytes Labs, «Inside Chimera Ransomware — the first doxingware in wild» | hasherezade · 09-12-2015 | 🖼️ captura (versión inglesa del HTML) |
+| SonicWall, «Chimera Ransomware uses Bitmessage over TOR» | 23-10-2015 | 🖼️ captura (Figura 6) |
+| Help Net Security | Zeljka Zorz · 03-11-2015 | 🖼️ captura |
+| Trend Micro | — | responde 403 a descarga automática |
+
+**Única vía restante para el 2º texto: OCR de esas capturas**, que el tutor autorizó (reunión
+2026-08-12 punto 4). **Requiere que Romina habilite la descarga de las imágenes** — en este
+chat solo se leyó texto, no se bajó ningún archivo.
+
+### 🔻 RESULTADO NEGATIVO DOCUMENTADO: WANNACRY
+
+WannaCry **sí** localiza su nota: la muestra trae **28 archivos** `msg/m_*.wnry` (m_bulgarian,
+m_chinese simplificado y tradicional, m_croatian, m_czech, m_danish, m_dutch, m_english,
+m_filipino, m_finnish, m_french, m_german, m_greek, m_indonesian, m_italian, m_japanese,
+m_korean, m_latvian, m_norwegian, m_polish, m_portuguese, m_romanian, m_russian, m_slovak,
+m_spanish, m_swedish, m_turkish, m_vietnamese). En principio sería la familia más rica del
+corpus, y con **archivos brutos**, no transcripciones.
+
+**No se pudo obtener ninguno, y la razón hay que declararla:**
+1. Los dos textos en inglés **ya están en el corpus**: `wannacry_note1.txt` es la ventana de
+   Wana Decrypt0r («What Happened to My Computer?») y `wannacry_note2.txt` es el
+   `@Please_Read_Me@.txt` («Ooops, your important files are encrypted»).
+2. **Ningún vendor publica las versiones traducidas como texto.** Se revisaron fuentes en
+   español y en alemán: todas describen la nota o la muestran en captura, ninguna transcribe
+   la versión localizada. Los sitios hermanos de pcrisk en otros idiomas (p. ej. `dieviren.de`)
+   traducen **el artículo**, no la nota: el bloque que publican sigue siendo el inglés.
+3. El repositorio `Ruddernation-Designs/WannaCry-Decompiled` **no** trae la carpeta `msg`
+   (solo `README.md`, `decryptor.c` y `worm.c`).
+4. El único enlace a las 28 notas que apareció es un **.zip en `transfer.sh`**, host
+   discontinuado, citado en un *factsheet* de terceros. **No se descargó**, y no por el enlace
+   roto: no se bajan comprimidos ni muestras de repositorios de malware. Se leyó **solo texto**
+   en todo el chat.
+
+> **Conclusión para la tesis: las 28 notas localizadas de WannaCry existen dentro de la
+> muestra pero no están disponibles como texto citable.** Para conseguirlas habría que
+> extraerlas de una muestra viva, que es una decisión de Romina y el tutor, no de este chat.
+> Mientras eso no pase, **WANNACRY queda en 2 textos y su F1 por familia de 0,010 ± 0,100 no
+> es un problema de esfuerzo de búsqueda.**
+
+### ⏸️ CANDIDATA EN ESPERA, POR ATRIBUCIÓN DÉBIL
+
+`3_datos/recoleccion_2026-08/JIGSAW/pcrisk_jigsaw_hacked.txt` (237 caracteres, «YOUR COMPUTER
+HAS BEEN ENCRYPTED YOU MUST PAY .25 BITCOINS…») **verifica como texto nuevo** (coseno 0,601
+con `jigsaw_note1.txt`) pero **NO se incorporó**: pcrisk la describe como «another ransomware
+infection **based on the source code of** jigsaw ransomware», que es atribución más débil que
+las otras dos, a las que llama «variant of Jigsaw ransomware». Es el mismo criterio que
+descarta las notas de Medusa: **hace falta que la fuente diga que es la familia, no que
+derive de su código.** Queda a decisión de Romina y el tutor.
+
+### `2_codigo/verificar_nota_nueva.py` — el filtro de entrada, ya funcionando
+
+Recibe una o varias notas candidatas y dictamina **TEXTO NUEVO** o **COPIA de plantilla
+existente** (y de cuál). Reusa `agrupar_neardups()` de `clasificador_notas_v2.py` con
+`UMBRAL_NEARDUP = 0,90` — el mismo criterio con el que se midió todo el frente de notas,
+sin criterio propio nuevo. Línea base verificada al correrlo: **144 notas → 95 textos
+distintos**, que es la cifra ya registrada. No toca el corpus ni el manifiesto: solo lee.
+
+**Detalle del criterio que hay que declarar** (lo detectó el propio script y se dejó
+avisado en la salida): el TF-IDF se reajusta con las candidatas adentro, así que el IDF se
+mueve y **pares del corpus al borde del umbral pueden cambiar de lado**. Con las dos
+candidatas de JIGSAW, el grupo de 5 notas de CERBER se partió en 2 + 3 y los grupos del
+corpus pasaron de 95 a 96 sin que ninguna candidata sea de CERBER. El script cuenta el
+aporte como «grupos formados solo por candidatas» —inmune a esa deriva— y reporta el
+corrimiento aparte. **La cifra oficial de textos distintos se recalcula sobre el corpus una
+vez incorporadas las notas, nunca se lee de esta salida.**
+
+### ▶ PRIMER DICTAMEN: de las 2 variantes de JIGSAW ya transcriptas, solo 1 aporta
+
+`6_notas_trabajo/notas_familias_criticas.md` traía texto verbatim para JIGSAW (fuente:
+BleepingComputer, «Jigsaw Ransomware Decrypted», 2016-04-11, notas de MalwareHunterTeam).
+Pasadas por el verificador contra el corpus de 144 notas:
+
+| Candidata | Veredicto | Coseno con la vecina |
+|---|---|---|
+| Variante 1 («Your computer files have been encrypted…») | **COPIA** de `JIGSAW/jigsaw_note1.txt` | **0,912** (> 0,90) |
+| Variante 2 («I want to play a game with you…») | **TEXTO NUEVO** | 0,595 con `JIGSAW/jigsaw_note2.txt` |
+
+**Aporte real: 1 texto nuevo, no 2.** La variante 1 ya está en el corpus: el archivo de
+trabajo la anotaba como conseguida sin haberla cruzado contra lo que ya había. Es
+exactamente el error que la regla de B.1 previene, y apareció en la primera candidata que
+se revisó.
+
+⚠️ **La variante 2 tampoco se incorpora, y por una razón distinta a la que se creyó primero.**
+El texto de `notas_familias_criticas.md` estaba cortado con «…» (191 caracteres, tres líneas),
+así que se buscó el verbatim completo en pcrisk antes de incorporarlo. **Con el texto completo
+resulta ser COPIA de `JIGSAW/jigsaw_note2.txt`, a coseno 0,965.** Ya estaba en el corpus.
+
+> ### ⚠️⚠️ TRAMPA METODOLÓGICA MEDIDA, Y VALE PARA TODA LA RECOLECCIÓN
+> **Un fragmento truncado puede dar un falso «texto nuevo».** El mismo contenido dio:
+>
+> | Qué se le pasó al verificador | Veredicto | Coseno con `jigsaw_note2.txt` |
+> |---|---|---|
+> | Fragmento de 191 caracteres | «TEXTO NUEVO» | 0,595 |
+> | **Texto completo de 920 caracteres** | **COPIA** | **0,965** |
+>
+> El verificador compara lo que se le da, no lo que la nota es. Truncar baja la similitud y
+> disfraza una copia de texto nuevo. **Regla: nunca verificar sobre un extracto. Conseguir
+> el verbatim completo primero, verificar después.** Las dos entradas de JIGSAW del archivo
+> de trabajo resultaron ser copias de lo que ya había — ninguna de las dos aportaba.
+
+### ★★★ RIGIDEZ DE PLANTILLA: EL CRITERIO QUE FALTABA PARA ORDENAR LA RECOLECCIÓN
+
+Sonda local sobre el corpus (mismo criterio canónico, char_wb 3-5, umbral 0,90): cómo
+agrupan hoy las notas de cada familia prioritaria y **cuánto se parecen las notas que la
+familia publica con distinto contenido variable**. Mide algo que ni B.1 ni B.3 miraban:
+**la probabilidad de que una nota nueva de esa familia colapse contra las que ya están.**
+
+| Familia | Notas | Plantillas | Coseno máx. entre plantillas | Largo (caracteres) | Colapso observado |
+|---|---|---|---|---|---|
+| **WASTEDLOCKER** | 4 | **1** | — | 230-277 | **4 → 1** (coseno mínimo del componente 0,894) |
+| CHIMERA | 2 | 2 | 0,154 | 610-730 | no |
+| MAZE | 3 | 2 | 0,413 | 1449-2023 | 2 → 1 a coseno 0,985 |
+| **MEDUZALOCKER** | 4 | **3** | 0,462 | 1391-3911 | 2 → 1 a coseno 0,943 |
+| WANNACRY | 2 | 2 | 0,445 | 516-1680 | no |
+| RYUK | 4 | 2 | 0,439 | 710-1981 | **3 → 1** a coseno 0,986 |
+| CRYPTOLOCKER | 4 | 3 | 0,440 | 920-943 | 2 → 1 a coseno 0,988 |
+| JIGSAW | 2 | 2 | 0,507 | 804-1000 | no |
+| NOTPETYA | 2 | 2 | **0,817** | 749-846 | no |
+
+> **WASTEDLOCKER usa UNA plantilla rígida y eso probablemente la vuelve irrecolectable.**
+> Sus 4 notas vienen de **3 víctimas distintas** (`BBA Aviation`, `RL Hudson`, y una con
+> correos `88828@PROTONMAIL.CH | 47266@AIRMAIL.CC`) y de **2 fuentes distintas** (pcrisk y
+> ThreatLabz), y **las 4 colapsan en una sola plantilla**. El molde es de ~250 caracteres
+> («YOUR NETWORK IS ENCRYPTED NOW / USE … TO GET THE PRICE FOR YOUR DATA / … THE FILE IS
+> ENCRYPTED WITH THE FOLLOWING KEY») y lo único que varía es el nombre de la víctima y los
+> correos. **Cualquier nota de WastedLocker que aparezca va a ser ese mismo molde y va a
+> colapsar.** Su F1 por familia 0,000 no es un problema de cantidad de material: es que la
+> familia no produce textos distintos.
+
+**Consecuencia, y da vuelta el orden del plan operativo.** El plan del 2026-08-19 pone a
+WASTEDLOCKER primera porque con 1 plantilla es inevaluable bajo P2ret (F1 0 por
+construcción, límite declarado 4 de B.1) y porque el tramo 1→2 es el más empinado de la
+curva (+0,1626 de macro-F1, IC 95 % [+0,1240; +0,2012], sobre el subconjunto de 5 familias;
++0,1254 [+0,1009; +0,1499] sobre el de 11 — **macro-F1 de subconjunto, no F1 por familia**).
+Ese razonamiento sigue siendo correcto en valor, pero **el valor por texto no sirve si el
+rendimiento por hora de búsqueda es cero.** WASTEDLOCKER pasa de primera a caso a documentar.
+
+⚠️ **Y hay una trampa a evitar en WASTEDLOCKER:** los textos realmente distintos que se le
+podrían atribuir pertenecen a los sucesores renombrados del mismo grupo (Evil Corp), no a
+WastedLocker. Meterlos sería etiquetar otra familia como WASTEDLOCKER — la misma trampa
+campaña-vs-familia del Exp. 2d. **Antes de escribir esto en la tesis hay que confirmar los
+nombres y las fechas con fuente citable; acá queda como hipótesis, no como dato.**
+
+### ▶ POR DÓNDE EMPEZAR: MEDUZALOCKER
+
+1. **Cierra con un solo texto** (tiene 3, el objetivo es 4).
+2. **Tiene margen para mejorar:** F1 por familia 0,000 ± 0,000 (P2ret, k=todo, 144 notas,
+   100 repeticiones). No es como DARKSIDE/NETWALKER/SUNCRYPT, que ya están en 1,000.
+3. **Verificado que la familia SÍ varía su texto:** 4 notas → 3 plantillas, coseno máximo
+   entre plantillas 0,462, y notas de 1391 a 3911 caracteres de prosa. Es el opuesto exacto
+   de WASTEDLOCKER: acá una nota nueva tiene chance real de no colapsar.
+4. **Sin OCR:** hay material bruto público (ThreatLabz ya aportó 2 de sus notas) y no
+   depende de transcribir capturas.
+
+**Orden propuesto detrás:** MAZE (2 textos, F1 0,000, notas largas, bruto público) → RYUK
+(2 textos, F1 0,032, pero su molde corto ya colapsó 3 notas: buscar versiones largas) →
+JIGSAW (ya hay 1 texto verificado como nuevo, solo falta completarlo contra la fuente) →
+CRYPTOLOCKER (1 texto, pero ver la advertencia de abajo) → WANNACRY y NOTPETYA (solo OCR;
+NOTPETYA además ya está en 0,695 y sus dos plantillas tienen coseno 0,817 entre sí) →
+CHIMERA última (cohesión 0,1538, la peor de las 30).
+
+### ⛔ HALLAZGO GRAVE: 1 DE LAS 3 PLANTILLAS DE MEDUZALOCKER ES DE OTRA FAMILIA
+
+Al ir a buscar material para MEDUZALOCKER apareció esto, y hay que resolverlo antes de
+sumarle un texto. **Verificado por hash MD5**, no por parecido de nombre:
+
+| Nota del corpus | MD5 (12) | De dónde salió realmente |
+|---|---|---|
+| `HOW_TO_RECOVER_DATA.html` | 47B66D8AC466 | ThreatLabz **`medusalocker/`** ✅ |
+| `note_pcrisk.txt` | 7072AD12C571 | pcrisk, texto «All your data are encrypted!» con correos `Folieloi@protonmail.com` / `Ctorsenoria@tutanota.com` ✅ |
+| `note_threatlabz_!!!READ_ME_MEDUSA!!!.txt` | 16CBE088F88F | ThreatLabz **`medusa/`** ⛔ |
+| `note_threatlabz_!!!READ_ME_MEDUSA!!!_2.txt` | F2248CE174E9 | ThreatLabz **`medusa/`** ⛔ |
+
+**El repo de ThreatLabz mantiene `medusa/` y `medusalocker/` como carpetas separadas**, y las
+dos notas `!!!READ_ME_MEDUSA!!!` salieron de `medusa/`. **Medusa y MedusaLocker son familias
+distintas**, y la fuente es de máxima autoridad:
+
+> «The Medusa ransomware variant is unrelated to the MedusaLocker variant and the Medusa
+> mobile malware variant per the FBI's investigation.»
+> — FBI / CISA / MS-ISAC, *#StopRansomware: Medusa Ransomware*, **AA25-071A**, 12-03-2025,
+> pág. 2. PDF primario accesible en `https://www.ic3.gov/CSA/2025/250312.pdf`
+> (la página de CISA responde 403 a descarga automática).
+
+Y el alias que usa la tesis ya está fijado en `PLAN_MEJORAS.md:234`: **MEDUZALOCKER =
+MedusaLocker**. O sea que las dos notas de Medusa **no corresponden a la familia**.
+
+**Efecto medido:** esas 2 notas colapsan entre sí en 1 plantilla (coseno 0,943), así que de
+las **3 plantillas de MEDUZALOCKER, 1 es de otra familia** — un tercio de la clase. Su F1 por
+familia 0,000 ± 0,000 (P2ret, k=todo, 144 notas, 100 repeticiones) tiene ahora una
+explicación candidata que **no es** falta de material: se le pide al modelo aprender una
+clase que contiene dos familias sin relación.
+
+**NO se toca en este chat.** Sacar esas 2 notas baja el corpus a 142 notas y cambia el conteo
+de plantillas, o sea todas las cifras del frente de notas y del capítulo 4. Es decisión de
+Romina y del tutor. Pero **cambia la recolección ahora mismo**: MEDUZALOCKER pasa de «le
+falta 1 texto para llegar a 4» a «tiene 2 plantillas legítimas y le faltan 2», y el material
+que se busque tiene que ser **MedusaLocker verificado por nombre en la fuente**, nunca Medusa.
+
+⚠️ **Y hay una trampa gemela para el resto de la búsqueda:** varios nombres de variante que
+figuran en `mas_notas_descarga.md` como «variantes de MedusaLocker» (Chip, Rapid) coinciden
+con nombres de familias **independientes y anteriores** que están en el repo de Lemmou como
+carpetas propias (`Chip/CHIP_FILES.txt`, `Rapid/DECRYPT.[].txt`). No se incorpora ninguna
+nota por coincidencia de nombre de variante: hace falta que la fuente diga **MedusaLocker**.
+
+### ⚠️ HALLAZGO COLATERAL A RESOLVER ANTES DE TOCAR CRYPTOLOCKER
+
+Una de las 3 plantillas de CRYPTOLOCKER es
+`lm_Crypt0l0cker_HOW_TO_RESTORE_FILES.html`, o sea **Crypt0l0cker, que es TorrentLocker y
+no el CryptoLocker original de 2013**. El propio plan operativo advierte «ojo: el original
+de 2013, no Crypt0l0cker», pero la nota ya está adentro del corpus contada como plantilla
+de CRYPTOLOCKER. Sumarle un 4º texto a esa familia es construir sobre una etiqueta dudosa.
+**No se toca en este chat** (mover una nota del corpus cambia las cifras del capítulo 4):
+queda anotado para decidirlo con el tutor, y explica parte de su F1 por familia de
+0,410 ± 0,456 — el desvío es enorme justamente porque las plantillas no son de la misma cosa.
+
+#### ⛔ Y HAY UNA RAZÓN ESTRUCTURAL: EL CRYPTOLOCKER ORIGINAL NO DEJABA ARCHIVO DE NOTA
+
+Verificado por mí en la fuente técnica primaria — **Keith Jarvis, Dell SecureWorks CTU,
+diciembre de 2013**, hoy alojado en `https://www.sophos.com/en-us/research/cryptolocker-ransomware`
+(el URL viejo de secureworks.com redirige ahí):
+
+- **El mensaje se mostraba en una ventana de la aplicación, no en un archivo**: «The victim is
+  presented with a splash screen containing instructions and an ominous countdown timer».
+- **La lista de archivos cifrados iba al registro de Windows**, no a un archivo de texto: «the
+  malware stores the location of every encrypted file in the Files subkey of the
+  HKCU\SOFTWARE\CryptoLocker (or CryptoLocker_0388) registry key».
+- El contenido cifrado **reemplaza el archivo original** en disco.
+
+> **Consecuencia dura para la recolección: para el CryptoLocker original de 2013 NO EXISTE
+> archivo bruto de nota, y no puede existir.** Cualquier «nota de CryptoLocker» que aparezca
+> como `.txt` o `.html` en un repositorio es, por construcción, de un homónimo. La única vía
+> es la transcripción de la ventana, y hay que **declarar en la tesis que la fuente es una
+> transcripción de GUI y no un archivo de nota.** Esto va más allá de «no tiene bruto
+> público» (ESTADO_TESIS.md, lista de 5 familias): es que el artefacto no existe.
+
+Las dos fuentes con texto seleccionable de esa ventana, para cuando se decida transcribirla:
+`https://id-ransomware.blogspot.com/2020/12/cryptolocker.html` (Amigo-A / Andrew Ivanov,
+distingue explícitamente el original de los homónimos — la más confiable) y
+`https://www.pcrisk.com/removal-guides/7327-cryptolocker` (⚠️ esta le atribuye al original la
+extensión `.encrypted`, lo que sugiere contaminación con un homónimo: **no usarla sola**).
+Las demás fuentes revisadas publican la ventana **solo como captura**: BleepingComputer
+(Lawrence Abrams, 14-10-2013), Sophos/SecureWorks, Softpanorama.
+
+⚠️ **PREGUNTA ABIERTA QUE NO ME CORRESPONDE RESOLVER EN ESTE CHAT, pero que no puedo dejar
+sin anotar.** El frente de archivos cifrados (cerrado) lista a **CRYPTOLOCKER entre las 26
+familias con «extensión fija»** (ver la tabla más abajo en este documento). Si el original de
+2013 reemplazaba el archivo sin agregar extensión, entonces o los archivos de CRYPTOLOCKER de
+NapierOne son de un homónimo, o el comportamiento de extensión del original es distinto de lo
+que se supone. **Ojo: la fuente de SecureWorks NO afirma explícitamente que no agregara
+extensión** —eso apareció en la búsqueda secundaria y NO lo pude confirmar en fuente
+primaria—, así que esto queda como **pregunta a verificar**, no como hallazgo. No toqué nada
+del frente de archivos. Es para Romina y el tutor.
+
 ## ★★★ B.3 — EL GRAFO YA DIO EL DIAGNÓSTICO CLAVE (2026-08-19, local, `--solo-grafo`)
 
 `2_codigo/grafo_marcadores.py` · salidas en `4_resultados/resultados_grafo_marcadores/`.
@@ -1045,7 +1646,23 @@ frase «el grafo reencuentra los parentescos» **no debe escribirse**: la única
 BLACKBASTA↔CONTI que sobrevive es una grafía peculiar de una URL pública, consistente con la
 plantilla copiada pero no un IOC compartido.
 
-## 1. Identificación## 1. Identificación
+## ★ DECISIÓN 2026-08-20 — EXTENSIÓN DE FAMILIAS EN EL FRENTE DE NOTAS
+
+El tutor pidió agregar más familias. Resolución de Romina: **el núcleo de 30 familias queda
+intacto y registrado tal como se midió; la extensión entra como experimento nuevo que se
+AGREGA al capítulo, con su base declarada.** Nada de lo escrito sobre 30 se corrige, porque
+no está mal: está medido sobre otra base. Reglas de la extensión:
+
+- Solo frente de **notas** (en archivos no existe dato público fuera de NapierOne — límite
+  externo, citable).
+- Las familias nuevas se etiquetan como extensión en el manifiesto y sus cifras se reportan
+  **por separado** del núcleo, cada una con su azar y su conteo de familias.
+- Umbral de admisión que sale de B.1: una familia nueva necesita **≥ 2 plantillas** para ser
+  evaluable en P2 y **~4 para rendir**; sumar familias de 1 nota solo arrastra el macro-F1
+  hacia abajo sin aportar información.
+- Fuente principal ya identificada: ThreatLabz (209 familias / 345 archivos registrados en §6).
+
+## 1. Identificación
 - **Título:** "Detección de familias de ransomware en base a archivos encriptados y notas de rescate"
 - **Autores:** Romina Alfonzo, Carlos Urdapilleta
 - **Tutor:** Cristian Cappo — Universidad Nacional de Asunción (FP-UNA)
