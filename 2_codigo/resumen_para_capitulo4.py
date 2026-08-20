@@ -191,7 +191,8 @@ def _k_para_objetivo(fit, objetivo):
     return float((fit["a"] / (fit["F_inf"] - objetivo)) ** (1.0 / fit["b"]))
 
 
-def resumen_b1(objetivos=(0.50, 0.60, 0.70, 0.80), n_bootstrap=2000, semilla=7):
+def resumen_b1(objetivos=(0.50, 0.60, 0.70, 0.80), n_bootstrap=2000, semilla=7,
+               curva_dir=None):
     try:
         import numpy as np
         import pandas as pd
@@ -199,13 +200,14 @@ def resumen_b1(objetivos=(0.50, 0.60, 0.70, 0.80), n_bootstrap=2000, semilla=7):
     except Exception as e:
         print(f"  (B.1 omitido: falta una dependencia — {e})")
         return
-    f = RES / "resultados_curva_notas" / "b1_curva_por_repeticion.csv"
+    curva_dir = Path(curva_dir) if curva_dir else (RES / "resultados_curva_notas")
+    f = curva_dir / "b1_curva_por_repeticion.csv"
     if not f.exists():
         print(f"  (falta {f.name}: correr primero curva_aprendizaje_notas.py)")
         return
     df = pd.read_csv(f)
     df["k_num"] = df["k"].map(_k_num)
-    man_p = RES / "resultados_curva_notas" / "manifiesto_b1.json"
+    man_p = curva_dir / "manifiesto_b1.json"
     man = json.loads(man_p.read_text(encoding="utf-8")) if man_p.exists() else {}
     OUT.mkdir(parents=True, exist_ok=True)
 
@@ -330,7 +332,7 @@ def resumen_b1(objetivos=(0.50, 0.60, 0.70, 0.80), n_bootstrap=2000, semilla=7):
     # sale de la MISMA corrida (30fam · P2ret · k=todo), no de la canónica, para que la
     # base sea la misma (144 notas) y el protocolo también.
     ppf = man.get("plantillas_por_familia") or {}
-    fpf = RES / "resultados_curva_notas" / "b1_curva_por_familia.csv"
+    fpf = curva_dir / "b1_curva_por_familia.csv"
     if ppf and fpf.exists():
         dfam = pd.read_csv(fpf)
         act = dfam[(dfam.curva == "30fam") & (dfam.protocolo == "P2ret")
@@ -448,13 +450,23 @@ def _figura_b1(tab, deltas):
 
 
 def main():
+    global OUT
     ap = argparse.ArgumentParser()
     ap.add_argument("--job-estructural", type=int, default=None,
                     help="job SLURM de la tanda del detector (por defecto, el mayor)")
     ap.add_argument("--umbral-f1", type=float, default=0.98)
     ap.add_argument("--solo", choices=["2b", "2c", "b1"], default=None,
                     help="correr solo un bloque (por defecto, los tres)")
+    ap.add_argument("--salida", type=Path, default=None,
+                    help="carpeta de salida (por defecto, 4_resultados/resumen_capitulo4). "
+                         "Usar una carpeta NUEVA para no pisar el resumen canonico.")
+    ap.add_argument("--curva-dir", type=Path, default=None,
+                    help="carpeta con los CSV de B.1 (por defecto, "
+                         "4_resultados/resultados_curva_notas). Apuntar a la salida NUEVA "
+                         "de curva_aprendizaje_notas.py al re-medir sobre otra base.")
     args = ap.parse_args()
+    if args.salida is not None:
+        OUT = args.salida
     if args.solo in (None, "2b"):
         print("=" * 74)
         print("  EXPERIMENTO 2b — ablación del detector estructural")
@@ -469,7 +481,7 @@ def main():
         print("\n" + "=" * 74)
         print("  B.1 — CURVA DE APRENDIZAJE DEL FRENTE DE NOTAS")
         print("=" * 74)
-        resumen_b1()
+        resumen_b1(curva_dir=args.curva_dir)
     print(f"\nSalidas en: {OUT}")
 
 

@@ -35,6 +35,7 @@ Uso:
 Salidas en .\resultados_canonicos\
 """
 
+import argparse
 import json
 import os
 import sys
@@ -229,7 +230,16 @@ def evaluar(textos, y, grupos, vista, nombre_modelo, protocolo, familias):
 
 
 def main():
-    OUT_DIR.mkdir(exist_ok=True)
+    global OUT_DIR
+    ap = argparse.ArgumentParser(
+        description="Corrida canónica del clasificador de notas de rescate.")
+    ap.add_argument("--salida", type=Path, default=None,
+                    help="carpeta de salida (por defecto, 4_resultados/resultados_canonicos). "
+                         "Usar una carpeta NUEVA para no pisar la corrida canónica.")
+    args = ap.parse_args()
+    if args.salida is not None:
+        OUT_DIR = args.salida
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
     print("=" * 70)
     print("  CORRIDA CANÓNICA — clasificador de notas v2")
     print("=" * 70)

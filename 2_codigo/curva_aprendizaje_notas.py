@@ -325,14 +325,20 @@ def validar(textos, y, grupos, familias):
 
 
 def main():
+    global OUT_DIR
     ap = argparse.ArgumentParser()
     ap.add_argument("--validar", action="store_true",
                     help="solo el control de correccion, sin correr las curvas")
     ap.add_argument("--rapido", action="store_true",
                     help=f"R={R_RAPIDO} en vez de {R_DEFECTO} (prueba de cableado)")
     ap.add_argument("--reps", type=int, default=None)
+    ap.add_argument("--salida", type=Path, default=None,
+                    help="carpeta de salida (por defecto, 4_resultados/resultados_curva_notas). "
+                         "Usar una carpeta NUEVA para no pisar la corrida canonica.")
     args = ap.parse_args()
     reps = args.reps or (R_RAPIDO if args.rapido else R_DEFECTO)
+    if args.salida is not None:
+        OUT_DIR = args.salida
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     print("=" * 78)
