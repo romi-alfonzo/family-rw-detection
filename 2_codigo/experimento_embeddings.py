@@ -56,6 +56,7 @@ from scipy.stats import t as t_dist
 from sklearn.metrics import (accuracy_score, balanced_accuracy_score, f1_score,
                              precision_recall_fscore_support)
 from sklearn.model_selection import StratifiedGroupKFold
+from sklearn.preprocessing import normalize
 
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -74,6 +75,7 @@ OUT_DIR_DEFAULT = (_AQUI.parent / "4_resultados" / "resultados_embeddings_155"
                    else _AQUI / "resultados_embeddings_155")
 
 MODELO_EMB = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+AGREGACION_EMB = "chunk_mean_pool_l2"  # debe coincidir con construir_embeddings_notas.py
 BASE_MACRO_F1 = 0.5265        # grupos+combinado+LinearSVC sobre 155 (control)
 BASE_MACRO_F1_STD = 0.0490
 TOL_BASE = 0.003              # el control debe reproducir la base dentro de esta tolerancia
@@ -96,8 +98,16 @@ def asegurar_embeddings(out_dir, archivos):
     en este proceso: el analisis usa solo numpy/scipy/sklearn (camino estable en Windows)."""
     npy = out_dir / "embeddings.npy"
     meta_p = out_dir / "embeddings_meta.json"
-    if not (npy.exists() and meta_p.exists()):
-        print("  (embeddings ausentes; generando en proceso aparte con torch)")
+    regen = not (npy.exists() and meta_p.exists())
+    if not regen:
+        meta_prev = json.loads(meta_p.read_text(encoding="utf-8"))
+        # Re-generar si el metodo de agregacion cambio (p. ej. se agrego el troceado) o si
+        # los embeddings guardados no corresponden al corpus actual: nunca reutilizar viejos.
+        if (meta_prev.get("aggregation") != AGREGACION_EMB
+                or list(meta_prev.get("archivos", [])) != list(archivos)):
+            regen = True
+    if regen:
+        print("  (embeddings ausentes/desactualizados; generando en proceso aparte con torch)")
         cmd = [sys.executable, str(_AQUI / "construir_embeddings_notas.py"),
                "--salida", str(out_dir)]
         subprocess.run(cmd, check=True)
@@ -108,8 +118,12 @@ def asegurar_embeddings(out_dir, archivos):
                  "(lista de archivos distinta). Borrar embeddings.npy y re-generar.")
     if emb.shape[0] != len(archivos):
         sys.exit(f"ABORTA: embeddings {emb.shape[0]} filas != {len(archivos)} notas.")
+    if meta.get("aggregation") != AGREGACION_EMB:
+        sys.exit(f"ABORTA: agregacion {meta.get('aggregation')} != {AGREGACION_EMB}.")
     versiones = {k: meta[k] for k in ("sentence_transformers", "torch", "transformers",
-                                      "dim", "max_seq_length", "normalize_embeddings")}
+                                      "dim", "max_seq_length", "normalize_embeddings",
+                                      "aggregation", "window_tokens", "stride_tokens",
+                                      "n_troceadas", "max_chunks")}
     return emb.astype(np.float32), versiones
 
 
@@ -124,11 +138,14 @@ def repr_fold(tipo, textos, emb, tr, te):
     if tipo == "base":
         return Xtr_t, Xte_t
     if tipo == "emb+tfidf":
-        # concatenacion cruda (sin reescalado): el bloque TF-IDF combinado tiene norma
-        # ~sqrt(2) y el bloque embedding norma 1. No se agrega escalado para no introducir
-        # una segunda variable ademas de la representacion.
-        Xtr = sparse.hstack([Xtr_t, sparse.csr_matrix(emb[tr])], format="csr")
-        Xte = sparse.hstack([Xte_t, sparse.csr_matrix(emb[te])], format="csr")
+        # NORMALIZACION L2 POR BLOQUE antes de concatenar: el bloque TF-IDF combinado son
+        # ~10.000 dims ralas (norma ~sqrt(2)) y el embedding 384 densas. Sin igualar la
+        # escala, el embedding queda enterrado y no se podria distinguir "no aporta" de
+        # "quedo aplastado". Se lleva cada bloque a norma 1 por fila y se concatena.
+        Xtr = sparse.hstack([normalize(Xtr_t), sparse.csr_matrix(normalize(emb[tr]))],
+                            format="csr")
+        Xte = sparse.hstack([normalize(Xte_t), sparse.csr_matrix(normalize(emb[te]))],
+                            format="csr")
         return Xtr, Xte
     raise ValueError(tipo)
 
@@ -329,6 +346,10 @@ def main():
         umbral_neardup=UMBRAL_NEARDUP, n_folds=N_FOLDS, n_semillas=N_SEMILLAS,
         protocolo="grupos (P2)", modelo_clasificador="LinearSVC(C=1.0, class_weight=balanced)",
         modelo_embedding=MODELO_EMB, embedding=versiones,
+        representaciones=dict(
+            base="combinado = FeatureUnion(word TF-IDF, char TF-IDF), ajustado por pliegue",
+            emb="embedding multilingue troceado (mean pooling), L2, EN LUGAR de TF-IDF",
+            emb_tfidf="L2 por bloque (TF-IDF combinado y embedding) y luego concatenacion"),
         base_a_batir=dict(fuente="resultados_extension_155/corrida_canonica_resumen.csv",
                           config="grupos+combinado+LinearSVC",
                           macro_f1=BASE_MACRO_F1, macro_f1_std=BASE_MACRO_F1_STD,
