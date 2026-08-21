@@ -258,13 +258,19 @@ def cohesion_por_familia(fams, plantillas, centroides, marcadores_por_plantilla,
 
 
 def main():
+    global OUT_DIR
     ap = argparse.ArgumentParser()
     ap.add_argument("--solo-grafo", action="store_true",
                     help="no evaluar P1/P2/P3, solo construir el grafo y la cohesion")
     ap.add_argument("--max-familias-valor", type=int, default=MAX_FAMILIAS_VALOR)
     ap.add_argument("--repeticiones-azar", type=int, default=5,
                     help="agrupamientos al azar del control (mismo perfil de tamanos)")
+    ap.add_argument("--salida", type=Path, default=None,
+                    help="carpeta de salida (por defecto, 4_resultados/resultados_grafo_marcadores). "
+                         "Usar una carpeta NUEVA para no pisar la corrida canonica.")
     args = ap.parse_args()
+    if args.salida is not None:
+        OUT_DIR = args.salida
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     print("=" * 78)
