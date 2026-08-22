@@ -73,27 +73,46 @@ ALIAS = {
     "WASTEDLOCKER": ["wastedlocker", "wasted"],
 }
 
+# Entradas que el barrido por alias NO captura pero que DEBEN estar en el mapeo como
+# controles documentados (verificación adversarial 2026-08-22). El caso clave es
+# TorrentLocker: `Crypt0L0cker` se escribe con ceros, así que no contiene la subcadena
+# `cryptolocker` — exactamente la trampa que la tesis ya resolvió en el corpus.
+EXTRAS = [
+    ("CRYPTOLOCKER", "TorrentLocker"),
+    ("CRYPTOLOCKER", "Crypt0L0cker"),
+    ("AVOSLOCKER", "Avos"),
+    ("NOTPETYA", "GoldenEye Ransomware"),
+    ("NOTPETYA", "PetrWrap Ransomware"),
+    ("LORENZ", "SZ40"),
+]
+
 # Dictámenes borrador, clave (FAMILIA, value exacto de la entrada MISP).
 # INCLUIR = la entrada ES la familia canónica; EXCLUIR = homónimo/imitador/falso positivo;
 # REVISAR = hace falta decisión humana (alcance o atribución dudosa).
+# Verificados adversarialmente contra el JSON completo el 2026-08-22 (subagente):
+# 74/76 resistieron; se corrigieron mailto (INCLUIR→REVISAR) y cerberimposter
+# (REVISAR→EXCLUIR), 4 motivos, y se agregaron las 6 entradas de EXTRAS.
 DICTAMENES = {
     ("AVOSLOCKER", "AvosLocker"): ("INCLUIR", "entrada canónica (advisory FBI/FinCEN); fn GET_YOUR_FILES_BACK.TXT"),
+    ("AVOSLOCKER", "Avos"): ("EXCLUIR", "entrada duplicada: el catálogo declara 'Avos' como synonym de AvosLocker y además existe como entrada propia vacía (solo un .onion); sin metadatos útiles"),
     ("BADRABBIT", "Bad Rabbit"): ("INCLUIR", "entrada canónica (Cisco Talos); sin fn/ext en MISP"),
     ("BLACKBASTA", "BlackBasta"): ("INCLUIR", "entrada canónica; fn readme.txt, ext .basta"),
     ("BLACKCAT", "BlackCat"): ("INCLUIR", "entrada canónica; syn ALPHV/Noberus; sin fn/ext en MISP"),
     ("BLACKMATTER", "Darkside"): ("EXCLUIR", "MISP fusiona BlackMatter como SINÓNIMO de Darkside; la tesis las trata como 2 familias — BLACKMATTER queda SIN entrada propia; usar la misma entrada para 2 clases induciría colisión artificial en M.2"),
     ("CERBER", "CerberTear Ransomware"): ("EXCLUIR", "imitador basado en HiddenTear que usa branding de Cerber; su ext .cerber es imitada"),
     ("CERBER", "Cerber"): ("INCLUIR", "entrada canónica; 12 fn, ext .cerber/.cerber2/.cerber3"),
-    ("CERBER", "Cerberos"): ("EXCLUIR", "sin metadatos ni descripción; nombre distinto; sin evidencia de ser la familia"),
+    ("CERBER", "Cerberos"): ("EXCLUIR", "descripción genérica ('Ransomware') y sin metadatos; nombre distinto; sin evidencia de ser la familia"),
     ("CERBER", "Fake Cerber"): ("EXCLUIR", "imitador declarado en el propio nombre"),
     ("CERBER", "cerbersyslock"): ("EXCLUIR", "la propia descripción lo llama 'cryptoransomware imposter' con branding estilo Cerber"),
-    ("CERBER", "cerberimposter"): ("REVISAR", "descripción contradictoria: el nombre dice imposter pero la desc dice 'rebrand of the Cerber family' post-2019; sin utilidad para M.2 (fn/ext distintos de los canónicos)"),
+    ("CERBER", "cerberimposter"): ("EXCLUIR", "la propia entrada lo resuelve: 'It does not reuse the original Cerber codebase; instead it borrows branding' — imitador de marca; fn __$$RECOVERY_README$$__.html y ext .locked, distintos de todos los canónicos"),
     ("CHIMERA", "Chimera"): ("INCLUIR", "fn YOUR_FILES_ARE_ENCRYPTED.HTML/TXT coincide con la nota pcrisk del corpus; OJO: syn 'Quimera Crypter'/'Pashka' son de atribución dudosa (Pashka es otra familia de 2020)"),
     ("CLOP", "Clop"): ("INCLUIR", "entrada canónica; 4 fn (ClopReadMe.txt...), 8 ext"),
-    ("CLOP", "clop torrents"): ("EXCLUIR", "sin metadatos; el nombre sugiere sitio de leaks, no la familia"),
+    ("CLOP", "clop torrents"): ("EXCLUIR", "artefacto de ransomlook: el sitio de leaks/torrents del propio grupo Clop como entrada aparte; duplicado sin metadatos útiles, no una familia distinta"),
     ("CLOP", "cyclops"): ("EXCLUIR", "FALSO POSITIVO de subcadena (cy-CLOP-s): Cyclops/Knight es familia sin relación"),
     ("CONTI", "Conti"): ("INCLUIR", "entrada canónica; ext .conti; MISP no trae nombre de nota para Conti"),
-    ("CRYPTOLOCKER", "CryptoLocker"): ("INCLUIR", "entrada del original 2013; ⚠️ sus ext .encrypted/.ENC CONTRADICEN la fuente primaria SecureWorks (el original reemplaza el archivo; ver pregunta abierta en ESTADO_TESIS) — NO citar esas extensiones sin verificación"),
+    ("CRYPTOLOCKER", "CryptoLocker"): ("INCLUIR", "entrada del original 2013; ⚠️ sus ext .encrypted/.ENC CONTRADICEN la fuente primaria SecureWorks (el original reemplaza el archivo; ver pregunta abierta en ESTADO_TESIS) y son casi idénticas a las de la entrada TorrentLocker (.Encrypted/.enc): sospecha de contaminación entre entradas del catálogo — NO citar esas extensiones sin verificación"),
+    ("CRYPTOLOCKER", "TorrentLocker"): ("EXCLUIR", "CONTROL de la decisión de la tesis: Crypt0L0cker = TorrentLocker ≠ CryptoLocker 2013 (syn Crypt0L0cker/CryptoFortress/Teerac); sus fn documentados incluyen HOW_TO_RESTORE_FILES.html — el nombre EXACTO de la nota retirada del corpus el 2026-08-19 (confirmación independiente de esa limpieza) — y DECRYPT_INSTRUCTIONS.html + 8 versiones multiidioma; el barrido por subcadena no la captura porque Crypt0L0cker se escribe con ceros"),
+    ("CRYPTOLOCKER", "Crypt0L0cker"): ("EXCLUIR", "entrada vacía duplicada de TorrentLocker (sin metadatos); mismo control que la anterior"),
     ("CRYPTOLOCKER", "CryptoLocker by NTK Ransomware"): ("EXCLUIR", "homónimo de 2017 sin relación con el original"),
     ("CRYPTOLOCKER", "DynA-Crypt Ransomware"): ("EXCLUIR", "homónimo (syn 'DynA CryptoLocker'); familia distinta de 2017"),
     ("CRYPTOLOCKER", "CryptoLocker3 Ransomware"): ("EXCLUIR", "homónimo auto-declarado: syn 'Fake CryptoLocker'"),
@@ -121,26 +140,29 @@ DICTAMENES = {
     ("HELLOKITTY", "HelloKitty"): ("INCLUIR", "entrada canónica; ⚠️ syn FiveHands (vendors lo tratan como sucesor/relacionado); sin fn/ext en MISP"),
     ("JIGSAW", "Jigsaw"): ("INCLUIR", "19 ext que incluyen .AFD y .fun (las variantes alemana y francesa del corpus); syn CryptoHitMan (reskin documentado); sin fn en MISP"),
     ("LOCKBIT", "LockBit"): ("INCLUIR", "entrada canónica; fn Restore-My-Files.txt, ext .abcd/.LockBit"),
-    ("LOCKBIT", "Lockbit3"): ("EXCLUIR", "entrada de versión sin ningún metadato; la familia ya está cubierta"),
+    ("LOCKBIT", "Lockbit3"): ("EXCLUIR", "entrada de versión sin metadatos útiles (solo refs); la familia ya está cubierta"),
     ("LOCKBIT", "lockbit4"): ("EXCLUIR", "ídem"),
     ("LOCKBIT", "lockbit5"): ("EXCLUIR", "ídem"),
     ("LORENZ", "Lorenz Ransomware"): ("INCLUIR", "entrada de la familia (doble extorsión desde 2021); sin fn/ext en MISP"),
     ("LORENZ", "lorenz"): ("INCLUIR", "entrada duplicada (desc Tesorion/NoMoreRansom); misma clase"),
+    ("LORENZ", "SZ40"): ("REVISAR", "entrada sin descripción, metadatos ni refs: el catálogo no alcanza para dictaminar; duda externa a verificar con fuente: el malware del grupo Lorenz se conoce como 'Lorenz.sZ40'"),
     ("MAZE", "Maze"): ("INCLUIR", "entrada canónica; la desc menciona nota en .txt y .htm pero MISP no estructura fn/ext"),
     ("MEDUZALOCKER", "MedusaLocker"): ("INCLUIR", "la entrada más rica del catálogo: 11 fn (incluye HOW_TO_RECOVER_DATA.html del corpus), 36 ext"),
     ("MEDUZALOCKER", "Ako"): ("REVISAR", "Ako/MedusaReborn: algunos vendors lo vinculan a MedusaLocker y otros lo tratan aparte; trae fn ako-readme.txt y 6 textos; NO incorporar sin fuente que diga MedusaLocker (misma regla que Medusa)"),
     ("MEDUZALOCKER", "medusa"): ("EXCLUIR", "TRAMPA DOCUMENTADA: Medusa ≠ MedusaLocker (FBI/CISA AA25-071A); su fn !!!READ_ME_MEDUSA!!!.txt es el de las 2 notas RETIRADAS del corpus el 2026-08-19 — control negativo del mapeo"),
     ("NETWALKER", "Netwalker"): ("INCLUIR", "entrada canónica; sin metadatos en MISP"),
-    ("NETWALKER", "mailto"): ("INCLUIR", "alias legítimo de NetWalker (mailto); sin metadatos"),
+    ("NETWALKER", "mailto"): ("REVISAR", "el catálogo NO dice en ningún lado que mailto = NetWalker (la entrada solo trae el ref ransomlook.io/group/mailto, sin desc ni synonyms); Mailto fue el nombre inicial de NetWalker según vendors, pero hace falta fuente citable — mismo rasero que Ako"),
     ("NOTPETYA", "Mischa"): ("EXCLUIR", "Petya+Mischa 2016: familia anterior, no NotPetya 2017"),
-    ("NOTPETYA", "Petya"): ("EXCLUIR", "es el Petya ORIGINAL 2016 (syn GoldenEye); NotPetya 2017 NO tiene entrada propia en el catálogo; su fn YOUR_FILES_ARE_ENCRYPTED.TXT es de Petya — la nota de NotPetya es README.TXT (fuente: CCN-CERT, ya registrada)"),
+    ("NOTPETYA", "Petya"): ("EXCLUIR", "es el Petya ORIGINAL 2016 (syn GoldenEye); NotPetya 2017 NO tiene entrada propia en el catálogo (verificado exhaustivamente: cero resultados para ExPetr/Nyetya/Petna/EternalPetya/PetrWrap/DiskCoder en value+synonyms de las 2135 entradas); su fn YOUR_FILES_ARE_ENCRYPTED.TXT es de Petya — la nota de NotPetya es README.TXT (fuente: CCN-CERT, ya registrada)"),
+    ("NOTPETYA", "GoldenEye Ransomware"): ("EXCLUIR", "linaje Petya 2016 (dic-2016), existe como entrada propia además del synonym de Petya; no es NotPetya"),
+    ("NOTPETYA", "PetrWrap Ransomware"): ("EXCLUIR", "PetrWrap original de marzo-2017 (refs securelist mar-2017), ANTERIOR a NotPetya; algunos vendors llamaron PetrWrap a NotPetya en jun-2017, pero esta entrada MISP no es eso"),
     ("PHOBOS", "Phobos"): ("INCLUIR", "entrada canónica; ext .phobos en la desc; sin fn estructurado"),
     ("PHOBOS", "PhobosImposter"): ("EXCLUIR", "imitador declarado en el propio nombre"),
     ("RANSOMEXX", "RansomEXX"): ("INCLUIR", "entrada canónica; syn Defray777; fn TXDOT_READ_ME!.Txt y <empresa>_READ_ME!.txt (nota nombrada por víctima), 6 ext"),
     ("RANSOMEXX", "Defray (Glushkov)"): ("EXCLUIR", "Defray 2017 original, linaje anterior; sin metadatos; RansomEXX ya cubierto por su entrada"),
     ("RYUK", "Ryuk ransomware"): ("INCLUIR", "entrada canónica (el value trae 'ransomware' pegado); fn RyukReadMe.txt; la desc conecta con Hermes (→ Exp. A.5a)"),
     ("SODINOKIBI", "Sodinokibi"): ("INCLUIR", "entrada canónica; syn REvil; sin fn/ext en MISP"),
-    ("SUNCRYPT", "SunCrypt"): ("INCLUIR", "⚠️ su fn YOUR_FILES_ARE_ENCRYPTED.HTML es EL MISMO nombre de nota que CHIMERA (y que Mischa): colisión real entre familias a declarar en M.2 — el nombre de nota no es unívoco"),
+    ("SUNCRYPT", "SunCrypt"): ("INCLUIR", "⚠️ colisión real de nombre de nota a declarar en M.2: YOUR_FILES_ARE_ENCRYPTED.* aparece en CUATRO entradas — Chimera (.HTML y .TXT), SunCrypt (.HTML), Mischa (.HTML) y Petya (.TXT) — el nombre de nota no es unívoco entre familias"),
     ("TESLACRYPT", "TeslaCrypt 0.x - 2.2.0"): ("INCLUIR", "entrada versionada de la familia; syn AlphaCrypt; 2 fn, 8 ext"),
     ("TESLACRYPT", "TeslaCrypt 3.0+"): ("INCLUIR", "entrada versionada; 4 ext (.micro/.xxx/.ttt/.mp3); '4.0+ no agrega extensión'"),
     ("TESLACRYPT", "TeslaCrypt 4.1A"): ("INCLUIR", "entrada versionada; 17 fn (patrones RECOVER/RESTORE con aleatorios)"),
@@ -163,6 +185,9 @@ def norm(s: str) -> str:
 
 def buscar_candidatas(valores):
     """Devuelve filas (familia, tipo_match, entrada) para las 30 familias."""
+    por_value = {}
+    for v in valores:
+        por_value.setdefault(v["value"], v)
     filas = []
     for familia, alias in ALIAS.items():
         for v in valores:
@@ -175,6 +200,15 @@ def buscar_candidatas(valores):
                 tipo = "subcadena"
             if tipo:
                 filas.append((familia, tipo, v))
+    # Controles que el alias no captura (p. ej. Crypt0L0cker con ceros): entran a mano.
+    ya = {(f, v["value"]) for f, _, v in filas}
+    for familia, value in EXTRAS:
+        if (familia, value) in ya:
+            continue
+        if value in por_value:
+            filas.append((familia, "manual", por_value[value]))
+        else:
+            print(f"[!] EXTRAS: la entrada '{value}' no está en este catálogo, se omite")
     return filas
 
 
