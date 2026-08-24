@@ -189,11 +189,18 @@ def aplicar_regla(i, dicc, iocs, nombres_nota, usar_nombre):
 
 
 def main():
+    global SEMILLAS
     ap = argparse.ArgumentParser()
     ap.add_argument("--salida", type=Path, default=OUT_DEF)
+    ap.add_argument("--n-semillas", type=int, default=10,
+                    help="cuantas semillas correr (default 10). Con >10 sirve para medir la "
+                         "estabilidad de la base, que resulto sensible a la semilla.")
+    ap.add_argument("--semilla-inicial", type=int, default=100,
+                    help="primera semilla (default 100; M.1 uso 0-9)")
     args = ap.parse_args()
     OUT = args.salida
     OUT.mkdir(parents=True, exist_ok=True)
+    SEMILLAS = list(range(args.semilla_inicial, args.semilla_inicial + args.n_semillas))
 
     print("=" * 78)
     print("  M.6 -- CASCADA COMBINADA: IOCs PRIVADOS + NOMBRE GENUINO -> TEXTO")
