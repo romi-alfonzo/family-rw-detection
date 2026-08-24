@@ -101,13 +101,36 @@ def clasificar(familia: str, archivo: str, originales):
     return "sin_verificar", "", False, "no hay fuente en disco que permita verificar el nombre"
 
 
+def cargar_recuperados():
+    """Nombres recuperados de la fuente de CADA nota (workflow del 2026-08-23).
+
+    Son notas cuyo nombre el curador no preservo pero la fuente de esa nota SI declara
+    (rotulo de pcrisk «Text presented in ... text file ("X")», paginas de id-ransomware).
+    Cuentan como genuinos: el nombre sale de la fuente de ESA nota, no de una tabla de la
+    familia — asignar el nombre documentado de la familia a cada una de sus notas seria
+    convertir el nombre en una funcion de la etiqueta, o sea circularidad perfecta.
+    """
+    import json
+    js = SALIDA_DEF / "nombres_por_nota_2026-08-23.json"
+    rec = {}
+    if js.is_file():
+        with open(js, encoding="utf-8") as f:
+            for r in json.load(f):
+                nm = (r.get("nombre_archivo") or "").strip()
+                if r.get("encontrado") and nm and nm != "SIN_ARCHIVO":
+                    rec[(r["familia"], r["archivo_corpus"])] = (nm, r.get("url_usada", ""))
+    return rec
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[1])
     ap.add_argument("--salida", type=Path, default=SALIDA_DEF)
     args = ap.parse_args()
 
     repo, n_repo = indexar_repo(REPO_LEMMOU)
+    recuperados = cargar_recuperados()
     print(f"Repo Lemmou: {n_repo} archivos, {len(repo)} hashes distintos")
+    print(f"Nombres recuperados de la fuente de cada nota: {len(recuperados)}")
 
     manifiesto = {}
     with open(MANIFIESTO, encoding="utf-8-sig") as f:
@@ -121,9 +144,15 @@ def main():
             m = md5(nota)
             originales = repo.get(m, set())
             proc, genuino, circular, detalle = clasificar(familia, archivo, originales)
+            if proc in ("curador", "sin_verificar") and (familia, archivo) in recuperados:
+                nm, url = recuperados[(familia, archivo)]
+                proc, genuino, circular = "genuino_de_la_fuente", nm, False
+                detalle = (f"el curador no preservo el nombre, pero la fuente de ESTA nota lo "
+                           f"declara: «{nm}» ({url})")
             reg = manifiesto.get((familia, archivo), {})
             # ¿El nombre que se usaría en M.2 contiene el nombre de la familia?
-            usable = genuino if proc in ("genuino", "genuino_renombrado") else ""
+            usable = genuino if proc in ("genuino", "genuino_renombrado",
+                                         "genuino_de_la_fuente") else ""
             contiene_fam = bool(usable) and familia.lower()[:6] in re.sub(
                 r"[^a-z0-9]", "", usable.lower())
             filas.append({
@@ -164,10 +193,11 @@ def main():
         etiqueta = {
             "genuino": "✅ sí, tal cual",
             "genuino_renombrado": "✅ sí, con el nombre ORIGINAL del repo",
+            "genuino_de_la_fuente": "✅ sí, nombre declarado por la fuente de esa nota",
             "curador": "⛔ no (sería circular)",
             "sin_verificar": "⚠️ no hasta traer el nombre de la fuente",
         }
-        for k in ("genuino", "genuino_renombrado", "curador", "sin_verificar"):
+        for k in ("genuino", "genuino_renombrado", "genuino_de_la_fuente", "curador", "sin_verificar"):
             if cuenta.get(k):
                 f.write(f"| `{k}` | {cuenta[k]} | {etiqueta[k]} |\n")
         f.write(f"\n**Nombres usables en M.2: {len(usables)} de {len(filas)} notas "
