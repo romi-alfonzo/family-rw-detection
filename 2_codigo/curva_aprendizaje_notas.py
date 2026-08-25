@@ -24,11 +24,14 @@ adivinar, no porque el modelo aprenda. Las dos versiones enganan en direcciones
 opuestas, asi que se corren y se reportan las dos, por separado:
   - "30fam": las 30 familias, tope k. Se anota cuantas familias quedan efectivamente
              por debajo del tope, que es la fraccion del punto que es informacion nueva.
-  - "11fam": las 11 familias con >= 4 plantillas. Presentes en TODOS los puntos de la
+  - "11fam": las familias con >= 4 plantillas. Presentes en TODOS los puntos de la
              curva, de punta a punta. Es la unica extrapolable.
-  - "5fam":  las 5 con >= 5 plantillas. Un punto mas de alcance, mucho mas fragil.
-NO son comparables entre si: con 30 familias el azar da macro-F1 ~ 0,033; con 11, ~ 0,091;
-con 5, ~ 0,200. Declararlo en toda tabla.
+  - "5fam":  las que tienen >= 5 plantillas. Un punto mas de alcance, mucho mas fragil.
+Los nombres "11fam" y "5fam" son HISTORICOS, no un conteo: sobre 144 notas esos subconjuntos
+tenian 11 y 5 familias; sobre 149 tienen 15 y 3. Las tres curvas NO son comparables entre si,
+porque el azar es 1/n_familias del subconjunto y ese n cambia con el corpus: 30 familias dan
+~0,033, pero el de los subconjuntos hay que leerlo de manifiesto_b1.json -> azar_macro_f1
+(sobre 149: 0,067 y 0,333). Declarar cuantas familias y que azar en toda tabla.
 
 PROTOCOLOS
   P1     StratifiedKFold por nota (plantilla conocida). Canonico: 2 pliegues, 10 semillas.

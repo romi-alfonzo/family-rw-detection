@@ -216,7 +216,22 @@ def resumen_b1(objetivos=(0.50, 0.60, 0.70, 0.80), n_bootstrap=2000, semilla=7,
     print(f"  corpus: {man.get('n_notas', '?')} notas · {man.get('n_plantillas', '?')} "
           f"plantillas · {man.get('n_familias', '?')} familias | "
           f"R retención = {man.get('repeticiones_retencion', '?')}")
-    print("  azar (macro-F1): 30 familias 0,033 · 11 familias 0,091 · 5 familias 0,200")
+    # El azar de cada subconjunto depende de CUANTAS familias tiene ese subconjunto en
+    # ESTA corrida, y eso cambia con el corpus: las etiquetas "11fam" y "5fam" son
+    # historicas (sobre 144 notas eran 11 y 5 familias; sobre 149 son 15 y 3). Se lee del
+    # manifiesto en vez de escribirlo a mano, que es como se llego a imprimir 0,091 y
+    # 0,200 sobre un corpus donde el azar real era 0,067 y 0,333.
+    _azar = man.get("azar_macro_f1") or {}
+    _n4 = len(man.get("familias_4mas") or [])
+    _n5 = len(man.get("familias_5mas") or [])
+    print("  azar (macro-F1): 30 familias %s · subconjunto \"11fam\" = %d familias %s · "
+          "subconjunto \"5fam\" = %d familias %s"
+          % (("%.3f" % _azar["fam30"]).replace(".", ",") if "fam30" in _azar else "?",
+             _n4, ("%.3f" % _azar["fam11"]).replace(".", ",") if "fam11" in _azar else "?",
+             _n5, ("%.3f" % _azar["fam5"]).replace(".", ",") if "fam5" in _azar else "?"))
+    if _n4 != 11 or _n5 != 5:
+        print("     ⚠ los nombres 11fam/5fam ya no coinciden con la cantidad de familias: "
+              "al citar, decir cuantas familias tiene el subconjunto y su azar.")
 
     # ---- (1) la curva: media ± desvío por punto
     agg = {m: ["mean", "std"] for m in _METRICAS_B1}
