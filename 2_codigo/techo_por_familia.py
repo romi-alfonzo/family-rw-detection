@@ -63,9 +63,15 @@ OUT_DEF = RAIZ / "4_resultados" / "resultados_techo_por_familia"
 
 
 def main():
+    global M6
     ap = argparse.ArgumentParser()
     ap.add_argument("--salida", type=Path, default=OUT_DEF)
+    ap.add_argument("--m6", type=Path, default=None,
+                    help="m6_por_familia.csv del que se leen las columnas F1. OJO: tiene que "
+                         "ser el de la MISMA base que el corpus, o las columnas quedan viejas.")
     args = ap.parse_args()
+    if args.m6:
+        M6 = args.m6
     args.salida.mkdir(parents=True, exist_ok=True)
 
     textos, y, archivos, _ = cargar_corpus(CORPUS_DIR)
