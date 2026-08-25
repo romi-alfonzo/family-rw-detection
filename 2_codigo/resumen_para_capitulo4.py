@@ -143,8 +143,10 @@ def resumen_2c(umbral=0.98):
 # B.1 — CURVA DE APRENDIZAJE DEL FRENTE DE NOTAS
 # ============================================================
 # Nomenclatura, porque en este proyecto se confunde: PLANTILLA = contenido distinto
-# (componente de casi-duplicados, coseno char 3-5 > 0,90). El corpus tiene 144 notas
-# pero solo 95 plantillas. "unidad = plantillas" mide DIVERSIDAD (textos nuevos, caro);
+# (componente de casi-duplicados, coseno char 3-5 > 0,90). El corpus tiene bastante menos
+# plantillas que notas: el tamano real de la corrida sale del manifiesto, NO se escribe a
+# mano aca (sobre 144 eran 95 plantillas; sobre 149 son 99).
+# "unidad = plantillas" mide DIVERSIDAD (textos nuevos, caro);
 # "unidad = notas" mide VOLUMEN (notas al azar, que muchas veces repiten un texto ya
 # presente, barato). La separación entre las dos curvas al mismo número de notas de
 # entrenamiento es, medida, cuánto vale la diversidad.
@@ -307,15 +309,23 @@ def resumen_b1(objetivos=(0.50, 0.60, 0.70, 0.80), n_bootstrap=2000, semilla=7,
                 k_ic95_sup=(float(np.percentile(vv, 97.5)) if len(vv) else float("nan")),
                 prob_alcanzable=alcanzable))
     ee_df = pd.DataFrame(filas_e)
+    # Marca explicita en el CSV: un techo de macro-F1 > 1 no es interpretable.
+    ee_df["ajuste_valido"] = ee_df["techo_estimado"] <= 1.0
     ee_df.round(4).to_csv(OUT / "b1_extrapolacion.csv", index=False)
     print("\n  ── Extrapolación: cuántas unidades por familia harían falta")
     print("     (k_estimado en la MISMA unidad de la fila; 'no alcanzable' = el objetivo")
     print("      está por encima del techo que estima el ajuste)")
     for (cur, prot, uni), s in ee_df.groupby(_CLAVE_B1, sort=True):
         r0 = s.iloc[0]
+        # Un techo de macro-F1 por encima de 1 es imposible: el ajuste no convergio a
+        # algo interpretable (pasa con 3-4 puntos y curvas que todavia suben). Se marca
+        # para que la fila NO se cite como techo, en vez de dejarla pasar como numero.
+        degenerado = float(r0.techo_estimado) > 1.0
         print(f"    {cur} · {prot} · tope por {uni} — techo estimado de macro-F1 "
               f"{r0.techo_estimado:.3f} [IC 95 % {r0.techo_ic95_inf:.3f}; "
-              f"{r0.techo_ic95_sup:.3f}], {int(r0.puntos_ajustados)} puntos")
+              f"{r0.techo_ic95_sup:.3f}], {int(r0.puntos_ajustados)} puntos"
+              + ("   ⚠ AJUSTE NO VÁLIDO: techo > 1, NO CITAR (la curva aun sube; "
+                 "los k estimados de esta fila tampoco valen)" if degenerado else ""))
         for _, r in s.iterrows():
             if np.isnan(r.k_estimado):
                 print(f"        objetivo macro-F1 {r.objetivo_f1_macro:.2f}: "
@@ -330,7 +340,7 @@ def resumen_b1(objetivos=(0.50, 0.60, 0.70, 0.80), n_bootstrap=2000, semilla=7,
     # ---- (4.bis) la lista concreta: qué familia buscar y cuántos textos nuevos
     # Es la salida operativa de B.1: con esto se sale a recolectar. El F1 por familia
     # sale de la MISMA corrida (30fam · P2ret · k=todo), no de la canónica, para que la
-    # base sea la misma (144 notas) y el protocolo también.
+    # base sea la misma que la de la curva (cualquiera sea) y el protocolo también.
     ppf = man.get("plantillas_por_familia") or {}
     fpf = curva_dir / "b1_curva_por_familia.csv"
     if ppf and fpf.exists():
@@ -351,7 +361,8 @@ def resumen_b1(objetivos=(0.50, 0.60, 0.70, 0.80), n_bootstrap=2000, semilla=7,
             ["faltan_para_4", "f1_actual"], ascending=[False, True])
         dr.to_csv(OUT / "b1_familias_a_recolectar.csv", index=False)
         print("\n  ── LISTA DE RECOLECCIÓN: qué familia buscar y cuántos textos nuevos")
-        print("     (F1 por familia de la MISMA corrida: 30fam · P2ret · k=todo · 144 notas.")
+        print(f"     (F1 por familia de la MISMA corrida: 30fam · P2ret · k=todo · "
+              f"{man.get('n_notas', '?')} notas.")
         print("      Es F1 de una familia, NO el macro-F1, que es el promedio de las 30.)")
         print(f"    {'familia':<15} {'plantillas':>10} {'faltan→4':>9} {'faltan→3':>9} "
               f"{'F1 hoy':>16}")
