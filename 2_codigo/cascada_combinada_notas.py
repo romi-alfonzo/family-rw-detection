@@ -85,7 +85,11 @@ RAIZ = _AQUI.parent
 DIR_NOMBRES = RAIZ / "3_datos" / "nombres_notas"
 OUT_DEF = RAIZ / "4_resultados" / "resultados_cascada_combinada_155"
 
-BASE_MACRO_F1 = 0.5265          # base declarada (semillas 0-9)
+BASE_MACRO_F1 = 0.5265          # base declarada (semillas 0-9, corpus de 155)
+BASE_FUENTE = "escrita en el codigo: base de 155 notas, semillas 0-9"
+# Con OTRO corpus hay que pasarle la base de ESE corpus (--base-desde apunta a su
+# corrida_canonica_resumen.csv, o --base a mano). Si no, el control de sanidad compara
+# contra una base de otro corpus y el numero que imprime desorienta aunque no aborte.
 # El control NO exige reproducir 0,5265: con semillas nuevas la particion cambia por diseno.
 # Su unico proposito es detectar un error de implementacion (que la capa de texto se rompa).
 # La tolerancia inicial de 0,035 (~2 SE) resulto MAL FUNDADA: medido, el cambio de semillas
@@ -197,7 +201,26 @@ def main():
                          "estabilidad de la base, que resulto sensible a la semilla.")
     ap.add_argument("--semilla-inicial", type=int, default=100,
                     help="primera semilla (default 100; M.1 uso 0-9)")
+    ap.add_argument("--base-desde", type=Path, default=None,
+                    help="corrida_canonica_resumen.csv del MISMO corpus que se esta "
+                         "midiendo, de donde leer la base de referencia del control de "
+                         "sanidad (fila grupos/combinado/LinearSVC)")
+    ap.add_argument("--base", type=float, default=None,
+                    help="base de referencia declarada a mano; prioridad sobre --base-desde")
     args = ap.parse_args()
+
+    base_ref, base_fuente = BASE_MACRO_F1, BASE_FUENTE
+    if args.base_desde is not None:
+        _df = pd.read_csv(args.base_desde)
+        _fila = _df[(_df["protocolo"] == "grupos") & (_df["vista"] == "combinado")
+                    & (_df["modelo"] == "LinearSVC")]
+        if _fila.empty:
+            sys.exit(f"ABORTA: no hay fila grupos/combinado/LinearSVC en {args.base_desde}")
+        base_ref = float(_fila["f1_macro_mean"].iloc[0])
+        base_fuente = str(args.base_desde)
+    if args.base is not None:
+        base_ref = args.base
+        base_fuente = "declarada a mano en la linea de comandos (--base)"
     OUT = args.salida
     OUT.mkdir(parents=True, exist_ok=True)
     SEMILLAS = list(range(args.semilla_inicial, args.semilla_inicial + args.n_semillas))
@@ -299,10 +322,11 @@ def main():
               f"{f1_score(y, y_txt, average='macro', zero_division=0):.4f} | {resumen}")
 
     f1_txt = np.array([f1_score(y, p, average="macro", zero_division=0) for p in pred_txt])
-    dif = abs(f1_txt.mean() - BASE_MACRO_F1)
+    dif = abs(f1_txt.mean() - base_ref)
     print("\n" + "-" * 78)
     print(f"CONTROL DE SANIDAD: texto solo (semillas nuevas) {f1_txt.mean():.4f} +/- "
-          f"{f1_txt.std(ddof=1):.4f} vs base 0-9 {BASE_MACRO_F1:.4f} | dif {dif:.4f}")
+          f"{f1_txt.std(ddof=1):.4f} vs base de referencia {base_ref:.4f} | dif {dif:.4f}")
+    print(f"  referencia: {base_fuente}")
     if dif > TOL_BASE:
         sys.exit(f"ABORTA: la capa de texto se fue de {TOL_BASE} respecto de la base. "
                  f"Revisar antes de reportar cualquier cifra.")
