@@ -274,16 +274,27 @@ def resumen_b1(objetivos=(0.50, 0.60, 0.70, 0.80), n_bootstrap=2000, semilla=7,
                 continue
             ee = d.std(ddof=1) / np.sqrt(n)
             t = stats.t.ppf(0.975, n - 1)
+            inf, sup = d.mean() - t * ee, d.mean() + t * ee
+            # Tres casos, no dos: el IC puede excluir el cero POR DEBAJO. Antes se
+            # etiquetaba cualquier paso no-positivo como "indistinguible de cero", y eso
+            # escondia los pasos que BAJAN el macro-F1 de forma medible (pasado el punto
+            # de saturacion, sumar notas no es neutro: mide peor).
             filas_d.append(dict(curva=cur, protocolo=prot, unidad=uni,
                                 paso=f"{k1} → {k2}", n=n,
                                 delta_f1_macro=d.mean(), desvio=d.std(ddof=1),
-                                ic95_inf=d.mean() - t * ee, ic95_sup=d.mean() + t * ee,
-                                significativo=bool((d.mean() - t * ee) > 0)))
+                                ic95_inf=inf, ic95_sup=sup,
+                                significativo=bool(inf > 0),
+                                significativo_negativo=bool(sup < 0)))
     dd = pd.DataFrame(filas_d)
     dd.round(4).to_csv(OUT / "b1_deltas_pareados.csv", index=False)
     print("\n  ── Cuánto aporta cada paso (diferencia pareada de macro-F1, IC 95 %)")
     for _, r in dd.iterrows():
-        marca = "sí" if r.significativo else "NO — indistinguible de cero"
+        if r.significativo:
+            marca = "sí"
+        elif r.significativo_negativo:
+            marca = "BAJA — el IC 95 % excluye el cero POR DEBAJO"
+        else:
+            marca = "NO — indistinguible de cero"
         print(f"    {r.curva:<6} {r.protocolo:<6} {r.unidad:<10} {r.paso:<12} "
               f"{r.delta_f1_macro:+.4f}  [{r.ic95_inf:+.4f}; {r.ic95_sup:+.4f}]  {marca}")
 
