@@ -230,13 +230,26 @@ def evaluar(textos, y, grupos, vista, nombre_modelo, protocolo, familias):
 
 
 def main():
-    global OUT_DIR
+    global OUT_DIR, N_SEMILLAS
     ap = argparse.ArgumentParser(
         description="Corrida canónica del clasificador de notas de rescate.")
     ap.add_argument("--salida", type=Path, default=None,
                     help="carpeta de salida (por defecto, 4_resultados/resultados_canonicos). "
                          "Usar una carpeta NUEVA para no pisar la corrida canónica.")
+    ap.add_argument("--semillas", type=int, default=None,
+                    help=f"cuántas semillas correr (por defecto {N_SEMILLAS}). Subirlo sirve "
+                         "para separar una diferencia real del ruido de partición: con 2 "
+                         "pliegues y 30 clases, 10 semillas dejan un desvío de ~0,10 en P2.")
+    ap.add_argument("--solo-canonica", action="store_true",
+                    help="corre solo la configuración canónica (combinado + LinearSVC) en los "
+                         "dos protocolos, en vez de la rejilla de 24. Es lo que hace falta "
+                         "cuando se quiere MÁS semillas y no comparar modelos.")
     args = ap.parse_args()
+
+    if args.semillas is not None:
+        if args.semillas < 2:
+            sys.exit("ABORTA: --semillas tiene que ser 2 o más (el desvío necesita n>=2)")
+        N_SEMILLAS = args.semillas
     if args.salida is not None:
         OUT_DIR = args.salida
     OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -274,9 +287,14 @@ def main():
     # ---- Evaluación (C2..C5)
     filas_resumen = []
     mejor = None  # (f1_macro, protocolo, vista, modelo, porfam, conf)
+    vistas = ("combinado",) if args.solo_canonica else ("palabras", "caracteres", "combinado")
+    modelos = ["LinearSVC"] if args.solo_canonica else list(obtener_modelos(0))
+    print(f"\nRejilla: {len(vistas)} vista(s) x {len(modelos)} modelo(s) x 2 protocolos "
+          f"x {N_SEMILLAS} semillas"
+          + ("   [--solo-canonica]" if args.solo_canonica else ""))
     for protocolo in ("grupos", "estratificado"):
-        for vista in ("palabras", "caracteres", "combinado"):
-            for nombre_modelo in obtener_modelos(0):
+        for vista in vistas:
+            for nombre_modelo in modelos:
                 print(f"\n[{protocolo} | {vista} | {nombre_modelo}] ...", end="", flush=True)
                 resumen, porfam, conf = evaluar(
                     textos, y, grupos, vista, nombre_modelo, protocolo, familias)
