@@ -39,9 +39,13 @@ PROTOCOLO -- identico a la base, sin ninguna variacion
   MISMAS predicciones de texto, de modo que el Delta pareado por semilla es exacto.
 
 PUERTA DE ENTRADA (el script aborta si no se cumple)
-  La capa de texto sola debe reproducir la base declarada: macro-F1 0,5265 +/- 0,0490
-  (LinearSVC, combinado, P2 sobre 155;
+  La capa de texto sola debe reproducir la base declarada. Por defecto esa base es la de
+  155 notas: macro-F1 0,5265 +/- 0,0490 (LinearSVC, combinado, P2;
   4_resultados/resultados_extension_155/resultados_canonicos/corrida_canonica_resumen.csv).
+  Con OTRO corpus en disco hay que pasar la base de ESE corpus con --base-desde, apuntando
+  a su corrida_canonica_resumen.csv (de ahi se lee la fila grupos/combinado/LinearSVC), o
+  declararla a mano con --base. Si no, la puerta aborta y no se reporta ninguna cifra: eso
+  es lo correcto, porque una base de otro corpus invalida el Delta pareado.
 
 SE REPORTA CON LAS TRES COLUMNAS DEL EXP. 2b
   cobertura de la regla | acierto donde aplica | macro-F1 y exactitud del combinado,
@@ -53,8 +57,10 @@ Predicciones preregistradas ANTES de correr: ESTADO_TESIS.md, bloque
 Uso:
     python cascada_ioc_notas.py
     python cascada_ioc_notas.py --salida <carpeta>
+    python cascada_ioc_notas.py --salida ../4_resultados/resultados_cascada_149         --base-desde ../4_resultados/resultados_notas_149/corrida_canonica_resumen.csv
 Salida por defecto: 4_resultados/resultados_cascada_155/ (carpeta NUEVA; no toca
-resultados_canonicos/ ni resultados_extension_155/).
+resultados_canonicos/ ni resultados_extension_155/). Con otro corpus, carpeta nueva y
+--base-desde del mismo corpus: la base y el corpus tienen que ser de la misma base.
 """
 from __future__ import annotations
 
@@ -93,8 +99,15 @@ OUT_DIR_DEFAULT = (_AQUI.parent / "4_resultados" / "resultados_cascada_155"
                    else _AQUI / "resultados_cascada_155")
 
 # Base declarada a reproducir por la capa de texto (puerta de entrada).
+# Estos son los valores POR DEFECTO, de la base de 155 notas. Para medir sobre otro corpus
+# hay que apuntar la base al resumen canonico de ESE corpus (--base-desde) o declararla a
+# mano (--base / --base-std): con la base de 155 y el corpus de 149 en disco, la puerta
+# aborta. Antecedente: techo_por_familia.py leia el F1 desde una ruta fija y mezclo datos
+# de dos corpus distintos sin avisar.
 BASE_MACRO_F1 = 0.5265
 BASE_MACRO_F1_STD = 0.0490
+BASE_FUENTE = ("resultados_extension_155/resultados_canonicos/"
+               "corrida_canonica_resumen.csv")
 TOL_BASE = 0.003
 
 # Las dos variantes PREREGISTRADAS (con y sin filtro de circularidad, como en B.3).
@@ -189,12 +202,47 @@ def aplicar_regla(i, dicc, iocs_por_nota):
     return next(iter(familias)), "asignada", n_coincidencias
 
 
+def base_desde_csv(ruta: Path):
+    """(media, desvio) del macro-F1 de la fila canonica P2 de un corrida_canonica_resumen.csv.
+
+    La fila es protocolo=grupos, vista=combinado, modelo=LinearSVC: exactamente la
+    configuracion de la capa de texto de esta cascada. Se lee del CSV en vez de escribirla
+    a mano para que la base y el corpus medido no puedan quedar de bases distintas.
+    """
+    df = pd.read_csv(ruta)
+    fila = df[(df["protocolo"] == "grupos") & (df["vista"] == "combinado")
+              & (df["modelo"] == "LinearSVC")]
+    if fila.empty:
+        sys.exit(f"ABORTA: no hay fila grupos/combinado/LinearSVC en {ruta}")
+    return float(fila["f1_macro_mean"].iloc[0]), float(fila["f1_macro_std"].iloc[0])
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--salida", type=Path, default=OUT_DIR_DEFAULT)
+    ap.add_argument("--base-desde", type=Path, default=None,
+                    help="corrida_canonica_resumen.csv del MISMO corpus que se esta "
+                         "midiendo, de donde leer la base a reproducir (fila "
+                         "grupos/combinado/LinearSVC). Sin esto se usa la base de 155.")
+    ap.add_argument("--base", type=float, default=None,
+                    help="base macro-F1 declarada a mano; prioridad sobre --base-desde")
+    ap.add_argument("--base-std", type=float, default=None,
+                    help="desvio de la base declarada a mano (solo informativo)")
+    ap.add_argument("--tol", type=float, default=TOL_BASE,
+                    help="tolerancia de la puerta de entrada (por defecto 0.003)")
     args = ap.parse_args()
     OUT = args.salida
     OUT.mkdir(parents=True, exist_ok=True)
+
+    base, base_std, base_fuente = BASE_MACRO_F1, BASE_MACRO_F1_STD, BASE_FUENTE
+    if args.base_desde is not None:
+        base, base_std = base_desde_csv(args.base_desde)
+        base_fuente = str(args.base_desde)
+    if args.base is not None:
+        base = args.base
+        base_std = args.base_std if args.base_std is not None else float("nan")
+        base_fuente = "declarada a mano en la linea de comandos (--base)"
+    tol = args.tol
 
     print("=" * 78)
     print("  M.1 -- CASCADA IOC -> TEXTO (espejo del Exp. 2b en el frente de notas)")
@@ -206,8 +254,9 @@ def main():
     n = len(textos)
     print(f"Corpus: {CORPUS_DIR}")
     print(f"Notas: {n} | Familias: {len(familias)} | Plantillas: {len(set(grupos))}")
-    print(f"Base a batir (texto solo, P2 grupos+combinado+LinearSVC, 155): "
-          f"macro-F1 {BASE_MACRO_F1:.4f} +/- {BASE_MACRO_F1_STD:.4f}")
+    print(f"Base a batir (texto solo, P2 grupos+combinado+LinearSVC): "
+          f"macro-F1 {base:.4f} +/- {base_std:.4f} | tol {tol}")
+    print(f"  fuente de la base: {base_fuente}")
 
     # ---- IOCs por nota, una sola vez (los patrones son deterministas y no usan etiquetas).
     # Que se extraigan de todo el corpus NO es fuga: el diccionario se arma solo con train.
@@ -290,15 +339,17 @@ def main():
     # ---- PUERTA DE ENTRADA: el texto solo debe reproducir la base declarada
     f1_texto = np.array([f1_score(y, p, average="macro", zero_division=0)
                          for p in pred_texto_sem])
-    dif_base = abs(f1_texto.mean() - BASE_MACRO_F1)
+    dif_base = abs(f1_texto.mean() - base)
     print("\n" + "-" * 78)
     print(f"PUERTA DE ENTRADA: capa de texto sola {f1_texto.mean():.4f} +/- "
-          f"{f1_texto.std(ddof=1):.4f} vs base almacenada {BASE_MACRO_F1:.4f} +/- "
-          f"{BASE_MACRO_F1_STD:.4f} | dif {dif_base:.4f}")
-    if dif_base > TOL_BASE:
+          f"{f1_texto.std(ddof=1):.4f} vs base declarada {base:.4f} +/- "
+          f"{base_std:.4f} | dif {dif_base:.4f}")
+    if dif_base > tol:
         sys.exit(f"ABORTA: la capa de texto NO reproduce la base declarada "
-                 f"(dif {dif_base:.4f} > tol {TOL_BASE}). No se reporta ninguna cifra: "
-                 f"si la particion no es la misma, el Delta pareado no es valido.")
+                 f"(dif {dif_base:.4f} > tol {tol}). No se reporta ninguna cifra: "
+                 f"si la particion no es la misma, el Delta pareado no es valido. "
+                 f"Base usada: {base:.4f} ({base_fuente}). Si el corpus cambio, pasar "
+                 f"--base-desde con el corrida_canonica_resumen.csv de ESTE corpus.")
     print("  OK: misma particion que la base; el Delta pareado por semilla es valido.")
 
     def metricas(preds):
@@ -533,11 +584,10 @@ def main():
                "familia si todas las coincidencias apuntan a UNA sola; conflicto o ausencia "
                "de coincidencia caen al clasificador de texto del mismo pliegue"),
         puerta_de_entrada=dict(
-            base_declarada=BASE_MACRO_F1, base_std=BASE_MACRO_F1_STD,
+            base_declarada=base, base_std=base_std,
             texto_solo_recomputado=round(float(f1_texto.mean()), 4),
-            dif=round(float(dif_base), 4), tol=TOL_BASE, ok=True,
-            fuente="resultados_extension_155/resultados_canonicos/"
-                   "corrida_canonica_resumen.csv"),
+            dif=round(float(dif_base), 4), tol=tol, ok=True,
+            fuente=base_fuente),
         familias_preregistradas=FAM_PREREG, controles_negativos=FAM_CONTROL,
         criterio_adopcion=("macro-F1 combinado supera la base con Delta pareado cuyo "
                            "IC 95 % excluye el cero"),
