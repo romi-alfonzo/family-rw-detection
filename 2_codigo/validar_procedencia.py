@@ -66,6 +66,11 @@ def clasificar_fila(r):
     fuente = (r.get("fuente") or "").strip()
     primero = fuente.split("|")[0].strip().lower()
 
+    # La auditoria B.2 (2026-08-23) dejo la URL verificada en su propia columna. Si esta,
+    # la nota tiene procedencia citable cualquiera sea lo que diga el campo `fuente` viejo.
+    if RE_URL.search((r.get("url_procedencia") or "").strip()):
+        return True, ""
+
     if primero in GENERICAS:
         return False, f"fuente generica o vacia: «{fuente[:40]}»"
     if tipo == "bruto":
