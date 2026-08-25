@@ -32,8 +32,9 @@ DOS VARIANTES (las mismas de B.3), se reportan por separado
 
 PROTOCOLO -- identico a la base, sin ninguna variacion
   P2 (protocolo "grupos"): StratifiedGroupKFold de N_FOLDS=2 sobre los grupos de
-  casi-duplicados, las MISMAS 10 semillas, corpus de 155 notas / 106 plantillas / 30
-  familias, y LinearSVC(C=1, class_weight=balanced) sobre la vista combinada como capa de
+  casi-duplicados, las MISMAS 10 semillas, el corpus que haya en CORPUS_DIR (el tamano se
+  imprime y queda en el manifiesto; NO se escribe a mano en ningun lado), y
+  LinearSVC(C=1, class_weight=balanced) sobre la vista combinada como capa de
   respaldo. La capa de texto se entrena UNA sola vez por (semilla, pliegue) y se comparte
   entre las dos variantes: la base y las variantes salen de la MISMA particion y de las
   MISMAS predicciones de texto, de modo que el Delta pareado por semilla es exacto.
@@ -452,7 +453,8 @@ def main():
 
     # ---- Reporte: las tres columnas del Exp. 2b
     print("\n" + "=" * 78)
-    print("  LAS TRES COLUMNAS DEL EXP. 2b (media +/- desvio, 10 semillas, base 155)")
+    print(f"  LAS TRES COLUMNAS DEL EXP. 2b (media +/- desvio, {N_SEMILLAS} semillas, "
+          f"corpus de {n} notas / {len(set(grupos))} plantillas / {len(familias)} familias)")
     print("=" * 78)
     print(f"  {'variante':18} {'cobertura':>16} {'acierto d/aplica':>18} "
           f"{'macro-F1 combinado':>22} {'exactitud':>10}")
