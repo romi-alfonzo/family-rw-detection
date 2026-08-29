@@ -241,8 +241,16 @@ def main():
         args.por_familia, args.semillas, args.folds = 40, "0", 2
     semillas = [int(s) for s in args.semillas.split(",") if s.strip()]
 
-    out = args.salida or (_AQUI.parent / "4_resultados" /
+    # En el cluster los scripts viven planos en /scratch/ralfonzo/tesis y NO existe
+    # 4_resultados/: en ese caso la salida va junto al script. Misma convencion que
+    # clasificador_bytes.py, y el nombre lleva el job de SLURM para no pisar corridas.
+    base_salida = (_AQUI.parent / "4_resultados"
+                   if (_AQUI.parent / "4_resultados").is_dir() else _AQUI)
+    out = args.salida or (base_salida /
                           ("resultados_exp2d_job" + os.environ.get("SLURM_JOB_ID", "local")))
+    if out.exists() and any(out.iterdir()):
+        sys.exit(f"ABORTA: {out} ya tiene resultados. Usar --salida con otro nombre "
+                 f"(el job 3639 borro los CSV del 3633 por sobrescribir).")
     out.mkdir(parents=True, exist_ok=True)
     log_path = out / "log.txt"
     _f = open(log_path, "w", encoding="utf-8")
