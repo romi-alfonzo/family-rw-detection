@@ -202,11 +202,19 @@ def main():
             f1s, accs, bals, fams = met(res[prot][capa])
             guard[(prot, capa)] = (f1s, fams)
             cob = float(np.mean([a.mean() for a in res[prot]["ap"]])) if capa == "m6" else 0.0
-            lo_b, hi_b = bootstrap_macro_f1(y, res[prot][capa][0], familias)
+            if prot == "LOGO":
+                # particion determinista y LinearSVC convexo: las semillas dan lo mismo.
+                # La incertidumbre honesta es el bootstrap sobre NOTAS.
+                lo_b, hi_b = bootstrap_macro_f1(y, res[prot][capa][0], familias)
+                ic_txt = f"boot.notas [{lo_b:.4f}; {hi_b:.4f}]"
+            else:
+                # P2: la incertidumbre es entre semillas (particiones distintas).
+                _, lo_b, hi_b = ic95(f1s)
+                ic_txt = f"semillas [{lo_b:.4f}; {hi_b:.4f}]"
             filas.append(dict(protocolo=prot, capa="texto solo" if capa == "txt" else "M.6",
                               f1_macro=round(float(f1s.mean()), 4),
                               f1_macro_sd=round(float(f1s.std(ddof=1)), 4) if len(f1s) > 1 else 0.0,
-                              ic95_bootstrap_notas=f"[{lo_b:.4f}; {hi_b:.4f}]",
+                              ic95=ic_txt,
                               exactitud=round(float(accs.mean()), 4),
                               exactitud_balanceada=round(float(bals.mean()), 4),
                               cobertura_regla=round(cob, 4),
@@ -235,10 +243,10 @@ def main():
     pd.DataFrame(deltas).to_csv(OUT / "logo_deltas.csv", index=False, encoding="utf-8-sig")
 
     print("\n=== RESULTADO: mismo corpus, misma vista, mismo clasificador; cambia el protocolo ===")
-    print(f"{'protocolo':<8}{'capa':<12}{'macro-F1':>10}{'±sd':>8}{'IC boot. notas':>22}{'exact.':>8}{'bal.':>8}{'cob':>7}  ¿>0,50?")
+    print(f"{'protocolo':<8}{'capa':<12}{'macro-F1':>10}{'±sd':>8}{'IC 95 %':>30}{'exact.':>8}{'bal.':>8}{'cob':>7}  ¿>0,50?")
     for r in filas:
         print(f"{r['protocolo']:<8}{r['capa']:<12}{r['f1_macro']:>10.4f}{r['f1_macro_sd']:>8.4f}"
-              f"{r['ic95_bootstrap_notas']:>22}{r['exactitud']:>8.4f}{r['exactitud_balanceada']:>8.4f}"
+              f"{r['ic95']:>30}{r['exactitud']:>8.4f}{r['exactitud_balanceada']:>8.4f}"
               f"{r['cobertura_regla']:>7.3f}  {r['supera_050']}")
     print("\n=== DELTAS pareados por semilla ===")
     for d in deltas:
@@ -246,13 +254,14 @@ def main():
 
     ff = pd.DataFrame(filas_fam)
     piv = ff.pivot_table(index="familia", columns=["protocolo", "capa"], values="f1")
-    piv["ganancia_txt"] = piv[("LOGO", "txt")] - piv[("P2", "txt")]
+    piv.columns = [f"{p_}_{c_}" for p_, c_ in piv.columns]   # aplanar: evita el bug de formato
+    piv["ganancia_txt"] = piv["LOGO_txt"] - piv["P2_txt"]
     print("\n=== familias que MAS ganan con LOGO (texto solo) ===")
     for fam, r in piv.sort_values("ganancia_txt", ascending=False).head(8).iterrows():
-        print(f"  {fam:<14} P2 {r[('P2','txt')]:.3f} -> LOGO {r[('LOGO','txt')]:.3f}  (+{r['ganancia_txt']:.3f})")
+        print(f"  {fam:<14} P2 {r['P2_txt']:.3f} -> LOGO {r['LOGO_txt']:.3f}  (+{r['ganancia_txt']:.3f})")
     print("\n=== y las que NO se mueven (deben ser las de 1 plantilla y las heterogeneas) ===")
     for fam, r in piv.sort_values("ganancia_txt").head(5).iterrows():
-        print(f"  {fam:<14} P2 {r[('P2','txt')]:.3f} -> LOGO {r[('LOGO','txt')]:.3f}  ({r['ganancia_txt']:+.3f})")
+        print(f"  {fam:<14} P2 {r['P2_txt']:.3f} -> LOGO {r['LOGO_txt']:.3f}  ({r['ganancia_txt']:+.3f})")
     piv.to_csv(OUT / "logo_por_familia_pivot.csv", encoding="utf-8-sig")
     print(f"\nSalidas en {OUT}")
 
