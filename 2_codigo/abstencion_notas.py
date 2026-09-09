@@ -45,7 +45,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score
-from sklearn.model_selection import StratifiedGroupKFold
+from sklearn.model_selection import LeaveOneGroupOut, StratifiedGroupKFold
 
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -101,12 +101,18 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--salida", type=Path, default=OUT_DEF)
     ap.add_argument("--n-semillas", type=int, default=50)
+    ap.add_argument("--protocolo", choices=["P2", "LOGO"], default="P2",
+                    help="P2 = StratifiedGroupKFold 2 pliegues (canonico). LOGO = leave-one-"
+                         "template-out: particion determinista, entrena con k-1 plantillas por "
+                         "familia; con LinearSVC (convexo) las semillas dan identico, usar "
+                         "--n-semillas 1. Ver ESTADO_TESIS.md «RESULTADO P2-LOGO (2026-09-09)».")
     args = ap.parse_args()
     OUT = args.salida
     OUT.mkdir(parents=True, exist_ok=True)
 
     print("=" * 78)
     print("  M.3 -- ABSTENCION POR UMBRAL DE CONFIANZA")
+    print(f"  protocolo: {args.protocolo}")
     print("=" * 78)
     textos, y, archivos, _ = cargar_corpus(CORPUS_DIR)
     grupos, _ = agrupar_neardups(textos, UMBRAL_NEARDUP)
@@ -127,8 +133,12 @@ def main():
 
     print("\nEvaluando ...")
     for s in range(args.n_semillas):
-        cv = StratifiedGroupKFold(n_splits=N_FOLDS, shuffle=True, random_state=s)
-        for tr, te in cv.split(textos_arr, y, groups=grupos):
+        if args.protocolo == "LOGO":
+            splits = LeaveOneGroupOut().split(textos_arr, y, groups=grupos)
+        else:
+            cv = StratifiedGroupKFold(n_splits=N_FOLDS, shuffle=True, random_state=s)
+            splits = cv.split(textos_arr, y, groups=grupos)
+        for tr, te in splits:
             vec = vectorizador("combinado")
             Xtr = vec.fit_transform(textos_arr[tr])
             Xte = vec.transform(textos_arr[te])
