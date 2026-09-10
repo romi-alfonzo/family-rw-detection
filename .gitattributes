@@ -1,0 +1,6 @@
+# Los scripts de SLURM se ejecutan en el cluster (Linux). `core.autocrlf=true` los deja
+# con CRLF en el arbol de trabajo de Windows, y `sbatch` los rechaza:
+#   sbatch: error: Batch script contains DOS line breaks (\r\n)
+# Con `eol=lf` se hace checkout con LF tambien en Windows, asi que lo que se copia a
+# PARA_SUBIR_AL_CLUSTER/ ya sale listo para el cluster. Paso el 2026-09-10 con job_exp2d.sh.
+*.sh text eol=lf
