@@ -81,6 +81,13 @@ N_TAIL = 512
 # `clasificador_bytes.py` línea 88, `resultados_bytes/bytes_manifiesto.json` (job 3639) y
 # el log `slurm-bytesms-3648.out`.
 HIPER = dict(n_estimators=300, max_depth=20, min_samples_leaf=2, max_features=0.3)
+
+# Referencia publicada del Exp. 2c (job 3648, 30 familias, 10 semillas): exactitud
+# 0,9120 +- 0,0016. La columna (1) de este experimento usa la MISMA carga de archivos, los
+# mismos hiperparametros y el mismo esquema de validacion, asi que tiene que reproducirla.
+# Si no la reproduce hay una diferencia no declarada y los incrementos de (2) y (3) no se
+# pueden sumar a la cifra publicada. La tolerancia son ~3 desvios de la referencia.
+REF_2C, TOL_2C = 0.9120, 0.0050
 N_JOBS = int(os.environ.get("SLURM_CPUS_PER_TASK", 0)) or max(1, (os.cpu_count() or 2) - 1)
 
 
@@ -408,6 +415,16 @@ def main():
             "1_solo_bytes": Xb_pos,
             "2_bytes_mas_forma_del_nombre": np.hstack([Xb_pos, Xforma]),
             "3_bytes_mas_extension_literal": np.hstack([Xb_pos, Xext]),
+            # Controles SIN bytes. Hacen falta para poder LEER las columnas (2) y (3).
+            # El diagnostico previo mide la circularidad de la extension LITERAL, pero no
+            # la de la FORMA del nombre, y la forma es una huella de la campana igual que
+            # la extension: en NapierOne cada familia es una sola campana, de modo que el
+            # esquema de renombrado (largo de la extension, largo y composicion de la base)
+            # puede identificar la familia sin mirar un solo byte del contenido. Si (0a)
+            # sola ya alcanza casi todo, el incremento de la columna (2) no es <<los bytes
+            # ayudados por el nombre>>: es el nombre, con los bytes de acompanantes.
+            "0a_solo_forma_del_nombre": Xforma,
+            "0b_solo_extension_literal": Xext,
         }
         log(f"\n  {len(y)} archivos · {len(familias)} familias · "
             f"{len(vocab)} extensiones distintas")
@@ -420,6 +437,10 @@ def main():
                 f"bal {m['balanced_accuracy']:.4f} | macro-F1 {m['f1_macro']:.4f}")
         log(f"  ({round(time.time() - t0)} s)")
         guardado = (Xb_pos, y)
+        # Guardado incremental: el job 3771 se cancelo en la semilla 4 y perdio las cuatro
+        # semillas ya evaluadas porque todos los CSV se escribian recien al final. Una
+        # corrida interrumpida ahora deja en disco lo que alcanzo a medir.
+        pd.DataFrame(filas).to_csv(out / "exp2d_por_semilla.csv", index=False)
 
     df = pd.DataFrame(filas)
     df.to_csv(out / "exp2d_por_semilla.csv", index=False)
@@ -432,11 +453,30 @@ def main():
     log(res.to_string())
     res.to_csv(out / "exp2d_resumen.csv")
 
+    # Puerta de entrada: la columna (1) tiene que reproducir el Exp. 2c publicado.
+    try:
+        m1 = float(res.loc["1_solo_bytes", ("accuracy", "mean")])
+    except Exception:
+        m1 = float("nan")
+    if not (abs(m1 - REF_2C) <= TOL_2C):
+        log("\n  ATENCION -- LA COLUMNA (1) NO REPRODUCE LA REFERENCIA DEL EXP. 2c:")
+        log(f"     medido {m1:.4f} vs publicado {REF_2C:.4f} +- {TOL_2C:.4f} "
+            f"(diferencia {m1 - REF_2C:+.4f})")
+        log("     Los incrementos de (2) y (3) siguen siendo validos ENTRE SI, porque las")
+        log("     tres columnas comparten la particion, pero NO se pueden sumar al 0,912")
+        log("     publicado. Declarar la base de este experimento por separado antes de")
+        log("     citar cualquier numero, y averiguar la diferencia: misma carga, mismos")
+        log("     hiperparametros y misma validacion deberian dar la misma cifra.")
+    else:
+        log(f"\n  Puerta de entrada: la columna (1) reproduce el Exp. 2c "
+            f"({m1:.4f} vs {REF_2C:.4f}). OK.")
+
     # deltas pareados contra la columna 1
     base = df[df.columna == "1_solo_bytes"].set_index("semilla")
     log("\n  Delta PAREADO por semilla contra «solo bytes»:")
     filas_d = []
-    for col in ("2_bytes_mas_forma_del_nombre", "3_bytes_mas_extension_literal"):
+    for col in ("2_bytes_mas_forma_del_nombre", "3_bytes_mas_extension_literal",
+                "0a_solo_forma_del_nombre", "0b_solo_extension_literal"):
         v = df[df.columna == col].set_index("semilla")
         for met in ("accuracy", "f1_macro"):
             d = (v[met] - base[met]).dropna()
