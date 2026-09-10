@@ -175,11 +175,20 @@ def main():
     print(f"LOGO: {len(logo_splits)} pliegues (uno por plantilla)")
 
     res = {"P2": {"txt": [], "m6": [], "ap": []}, "LOGO": {"txt": [], "m6": [], "ap": []}}
+    # LOGO se evalua UNA vez y se reutiliza en todas las semillas. La particion es fija y
+    # LinearSVC es convexo: la semilla no cambia la prediccion. Verificado en la corrida de
+    # 10 semillas (4_resultados/_log_logo_149.txt): las 10 dieron 0,6747 / 0,7742 identicos.
+    # Reutilizar es exactamente equivalente a recalcular (las listas por semilla quedan con
+    # N copias iguales, asi que los deltas pareados y el bootstrap no cambian) y evita
+    # 99 x (N-1) ajustes: con 50 semillas, la corrida pasa de horas a minutos.
+    logo_una_vez = None
     for s in range(args.n_semillas):
         cv = StratifiedGroupKFold(n_splits=N_FOLDS, shuffle=True, random_state=s)
         p2_splits = list(cv.split(textos_arr, y, groups=grupos))
-        for nombre, splits in (("P2", p2_splits), ("LOGO", logo_splits)):
-            pt, pm, ap_ = evaluar(splits, textos_arr, y, iocs, nombres_nota, s)
+        if logo_una_vez is None:
+            logo_una_vez = evaluar(logo_splits, textos_arr, y, iocs, nombres_nota, s)
+        for nombre, (pt, pm, ap_) in (("P2", evaluar(p2_splits, textos_arr, y, iocs, nombres_nota, s)),
+                                      ("LOGO", logo_una_vez)):
             res[nombre]["txt"].append(pt)
             res[nombre]["m6"].append(pm)
             res[nombre]["ap"].append(ap_)
