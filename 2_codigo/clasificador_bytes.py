@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-clasificador_bytes.py — Experimento 2c: clasificación de familias de ransomware
+clasificador_bytes.py -- Experimento 2c: clasificación de familias de ransomware
 mediante APRENDIZAJE AUTOMÁTICO sobre los bytes de cabecera y cola de los archivos
 cifrados, con búsqueda de hiperparámetros.
 
@@ -15,7 +15,7 @@ Este experimento reemplaza la regla exacta por un clasificador entrenado. Ventaj
   * COBERTURA 100 %: siempre produce una predicción, no depende de que exista una firma
     idéntica en todos los archivos de la familia.
   * Tolera variabilidad: aprende patrones parciales o desplazados que la regla exacta pierde.
-  * SOLO CONTENIDO: no usa el nombre ni la extensión del archivo. Esto es deliberado —
+  * SOLO CONTENIDO: no usa el nombre ni la extensión del archivo. Esto es deliberado --
     en el Exp. 2b la extensión aportaba el 82,8 % pero es un identificador de campaña
     (constante dentro de NapierOne, variable en la práctica). Acá se mide qué información
     hay en los BYTES.
@@ -41,7 +41,14 @@ plantillas en las notas de rescate.
 Uso:
     python3.11 clasificador_bytes.py /ruta/Napierone-small
     python3.11 clasificador_bytes.py /ruta --por-familia 200 --n-iter 12
+    python3.11 clasificador_bytes.py /ruta --multisemilla 1,2,3,4,5   # A.2: desvío
     python3.11 clasificador_bytes.py /ruta --smoke
+
+SALIDA: una carpeta por corrida dentro de 4_resultados/, nombrada con la semilla y el
+job de SLURM (`resultados_bytes_s42_job3639`). Antes se escribía siempre en
+`resultados_bytes/` y cada corrida pisaba la anterior; así se perdió el reporte por
+familia del job 3633. Si la carpeta ya tiene resultados, el script aborta salvo
+que se le pase --forzar.
 """
 
 import argparse
@@ -68,12 +75,35 @@ from sklearn.svm import LinearSVC
 N_JOBS = int(os.environ.get("SLURM_CPUS_PER_TASK", 0)) or -1
 
 _AQUI = Path(__file__).resolve().parent
-OUT_DIR = (_AQUI.parent / "4_resultados" / "resultados_bytes"
-           if (_AQUI.parent / "4_resultados").is_dir()
-           else _AQUI / "resultados_bytes")
+BASE_SALIDA = (_AQUI.parent / "4_resultados"
+               if (_AQUI.parent / "4_resultados").is_dir() else _AQUI)
 
 N_HEAD = 512   # bytes de cabecera
 N_TAIL = 512   # bytes de cola
+
+# Hiperparámetros elegidos por la búsqueda anidada del Exp. 2c (jobs 3557/3633/3639).
+# Se dejan fijos en el modo multisemilla: lo que se mide ahí es la dispersión de la
+# métrica entre semillas, no la selección de modelo (igual que en el clasificador de
+# notas, que reporta 10 semillas con la configuración ya elegida).
+HIPER_2C = dict(n_estimators=300, max_depth=20, min_samples_leaf=2, max_features=0.3)
+
+
+def carpeta_salida(args):
+    """Carpeta de salida ÚNICA por corrida.
+
+    Hasta el 2026-08-17 este script escribía siempre en `resultados_bytes/`, de modo
+    que cada corrida pisaba la anterior: el job 3639 borró los CSV del job 3633 y su
+    reporte por familia completo se perdió. El nombre lleva ahora la semilla y, en el
+    cluster, el identificador de trabajo de SLURM.
+    """
+    if args.salida:
+        return BASE_SALIDA / args.salida
+    partes = ["resultados_bytes"]
+    partes.append("multisemilla" if args.multisemilla else f"s{args.semilla}")
+    job = os.environ.get("SLURM_JOB_ID")
+    if job:
+        partes.append(f"job{job}")
+    return BASE_SALIDA / "_".join(partes)
 
 
 def leer_bytes(path, n_head=N_HEAD, n_tail=N_TAIL):
@@ -180,6 +210,101 @@ def metricas(y, yp):
                 f1_macro=round(f1_score(y, yp, average="macro", zero_division=0), 4))
 
 
+def corrida_posicional(raiz, por_familia, semilla, hiper, folds, log):
+    """Una evaluación completa de `posicional + RandomForest` con semilla explícita.
+
+    La semilla gobierna las TRES fuentes de azar: qué archivos se muestrean, cómo se
+    parten los pliegues y la aleatoriedad interna del bosque. Devuelve
+    (métricas, y, y_predicho, familias)."""
+    Xb, y, familias = cargar(raiz, por_familia, seed=semilla)
+    X = a_matriz_posicional(Xb)
+    pipe = Pipeline([("model", RandomForestClassifier(
+        random_state=semilla, n_jobs=1, class_weight="balanced", **hiper))])
+    t0 = time.time()
+    yp = cross_val_predict(pipe, X, y, n_jobs=N_JOBS,
+                           cv=StratifiedKFold(folds, shuffle=True,
+                                              random_state=semilla))
+    m = metricas(y, yp)
+    m.update(semilla=semilla, n_archivos=len(y), n_familias=len(familias),
+             segundos=round(time.time() - t0))
+    log(f"  semilla {semilla:>3}: exactitud {m['accuracy']:.4f} | "
+        f"balanced {m['balanced_accuracy']:.4f} | macro-F1 {m['f1_macro']:.4f}"
+        f"  ({m['segundos']}s)")
+    return m, y, yp, familias
+
+
+def modo_multisemilla(args, out_dir, log):
+    """A.2 del plan: dispersión de la métrica en el frente de archivos.
+
+    El tutor pidió (12-08-2026) reportar el desvío también en archivos, que hasta ahora
+    iba sin error mientras las notas se reportan como media ± desvío sobre 10 semillas.
+    Se repite SOLO la evaluación final, con los hiperparámetros ya elegidos por la
+    búsqueda anidada (HIPER_2C) — declararlo así en la tesis: es dispersión de la
+    estimación, no una nueva selección de modelo."""
+    import pandas as pd
+
+    semillas = [int(s) for s in args.multisemilla.split(",") if s.strip()]
+    log("=" * 74)
+    log(f"  EXP. 2c -- DISPERSIÓN SOBRE {len(semillas)} SEMILLAS  {semillas}")
+    log(f"  Hiperparámetros fijos: {HIPER_2C}")
+    log(f"  {args.por_familia_final} archivos/familia | {args.folds_finales} pliegues")
+    log("=" * 74)
+
+    filas, por_familia = [], []
+    for s in semillas:
+        m, y, yp, familias = corrida_posicional(
+            args.raiz, args.por_familia_final, s, HIPER_2C, args.folds_finales, log)
+        filas.append(m)
+        (out_dir / f"bytes_por_familia_s{s}.txt").write_text(
+            classification_report(y, yp, zero_division=0), encoding="utf-8")
+        rep = classification_report(y, yp, zero_division=0, output_dict=True)
+        for fam in familias:
+            r = rep[fam]
+            por_familia.append(dict(semilla=s, familia=fam,
+                                    precision=round(r["precision"], 4),
+                                    recall=round(r["recall"], 4),
+                                    f1=round(r["f1-score"], 4),
+                                    soporte=int(r["support"])))
+        # se guarda en cada iteración: si el trabajo se corta por tiempo, lo ya
+        # corrido no se pierde (fue justamente lo que pasó con el job 3633)
+        pd.DataFrame(filas).to_csv(out_dir / "bytes_multisemilla.csv", index=False)
+        pd.DataFrame(por_familia).to_csv(
+            out_dir / "bytes_multisemilla_por_familia.csv", index=False)
+
+    df = pd.DataFrame(filas)
+    resumen = []
+    for col in ("accuracy", "balanced_accuracy", "f1_macro"):
+        resumen.append(dict(metrica=col, media=round(df[col].mean(), 4),
+                            desvio=round(df[col].std(ddof=1), 4),
+                            minimo=round(df[col].min(), 4),
+                            maximo=round(df[col].max(), 4), n_semillas=len(df)))
+    df_res = pd.DataFrame(resumen)
+    df_res.to_csv(out_dir / "bytes_multisemilla_resumen.csv", index=False)
+
+    log("\n" + "=" * 74)
+    for r in resumen:
+        log(f"  {r['metrica']:<18} {r['media']:.4f} ± {r['desvio']:.4f}"
+            f"   [{r['minimo']:.4f}; {r['maximo']:.4f}]")
+    log("=" * 74)
+
+    pf = pd.DataFrame(por_familia).groupby("familia")["f1"].agg(["mean", "std"])
+    log("\nF1 por familia (media ± desvío), peores 8:")
+    for fam, r in pf.sort_values("mean").head(8).iterrows():
+        log(f"  {fam:<15} {r['mean']:.3f} ± {r['std']:.3f}")
+
+    (out_dir / "bytes_manifiesto.json").write_text(json.dumps(dict(
+        fecha=str(date.today()), raiz=str(args.raiz), modo="multisemilla",
+        slurm_job_id=os.environ.get("SLURM_JOB_ID"), semillas=semillas,
+        n_head=N_HEAD, n_tail=N_TAIL, usa_nombre_o_extension=False,
+        por_familia_final=args.por_familia_final, folds=args.folds_finales,
+        hiperparametros_fijos={k: str(v) for k, v in HIPER_2C.items()},
+        origen_hiperparametros="búsqueda anidada del Exp. 2c (jobs 3557/3633/3639)",
+        resumen=resumen, por_semilla=filas,
+        sklearn=sklearn.__version__, python=sys.version.split()[0],
+    ), indent=2, ensure_ascii=False), encoding="utf-8")
+    log(f"\nSalidas en: {out_dir}")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("raiz", help="carpeta con subcarpetas <FAMILIA>[-small]")
@@ -189,20 +314,45 @@ def main():
     ap.add_argument("--folds-internos", type=int, default=3)
     ap.add_argument("--por-familia-final", type=int, default=500,
                     help="archivos por familia para la re-evaluación final")
+    ap.add_argument("--folds-finales", type=int, default=5)
+    ap.add_argument("--semilla", type=int, default=42,
+                    help="semilla del muestreo de la etapa de búsqueda y de sus CV")
+    ap.add_argument("--semilla-final", type=int, default=7,
+                    help="semilla del muestreo de la etapa final (7 en los jobs "
+                         "3633/3639: dejarla así para reproducirlos)")
+    ap.add_argument("--multisemilla", default="",
+                    help="A.2: lista de semillas separadas por coma (p. ej. "
+                         "1,2,3,4,5). Corre SOLO la evaluación final, con los "
+                         "hiperparámetros ya elegidos, y reporta media ± desvío")
+    ap.add_argument("--salida", default="",
+                    help="nombre de la carpeta de salida dentro de 4_resultados/ "
+                         "(por defecto se arma con la semilla y el job de SLURM)")
+    ap.add_argument("--forzar", action="store_true",
+                    help="permitir escribir en una carpeta que ya tiene resultados")
     ap.add_argument("--smoke", action="store_true")
     args = ap.parse_args()
     if args.smoke:
         args.por_familia, args.n_iter, args.por_familia_final = 20, 2, 30
 
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    out_dir = carpeta_salida(args)
+    previos = sorted(out_dir.glob("bytes_*")) if out_dir.is_dir() else []
+    if previos and not args.forzar:
+        sys.exit(f"ABORTA: {out_dir} ya tiene {len(previos)} archivo(s) de una corrida "
+                 f"anterior ({previos[0].name}...). Usá --salida OTRO_NOMBRE, o "
+                 f"--forzar si de verdad querés sobrescribirlos.")
+    out_dir.mkdir(parents=True, exist_ok=True)
     log = lambda m: print(m, flush=True)
 
+    if args.multisemilla:
+        modo_multisemilla(args, out_dir, log)
+        return
+
     log("=" * 74)
-    log(f"  EXPERIMENTO 2c — ML sobre bytes de cabecera/cola{' [SMOKE]' if args.smoke else ''}")
+    log(f"  EXPERIMENTO 2c -- ML sobre bytes de cabecera/cola{' [SMOKE]' if args.smoke else ''}")
     log(f"  Ventana: {N_HEAD} bytes de cabecera + {N_TAIL} de cola. SIN nombre ni extensión.")
     log("=" * 74)
     log(f"Cargando desde {args.raiz} (hasta {args.por_familia} archivos por familia)...")
-    Xb, y, familias = cargar(args.raiz, args.por_familia)
+    Xb, y, familias = cargar(args.raiz, args.por_familia, seed=args.semilla)
     azar = 1.0 / len(familias)
     log(f"\nTotal: {len(Xb)} archivos | {len(familias)} familias | azar = {azar:.4f}")
     log(f"Núcleos asignados: {N_JOBS}\n")
@@ -214,7 +364,8 @@ def main():
         X = reps[rep]
         log(f"[{nombre}] búsqueda anidada...")
         t0 = time.time()
-        cv_ext = StratifiedKFold(args.folds_externos, shuffle=True, random_state=42)
+        cv_ext = StratifiedKFold(args.folds_externos, shuffle=True,
+                                 random_state=args.semilla)
         yp = np.empty_like(y)
         Xarr = X if rep == "posicional" else np.array(X, dtype=object)
         for k, (tr, te) in enumerate(cv_ext.split(Xarr, y)):
@@ -237,15 +388,15 @@ def main():
             f" | macro-F1 {m['f1_macro']:.3f} | {m['segundos']}s\n")
 
     import pandas as pd
-    pd.DataFrame(filas).to_csv(OUT_DIR / "bytes_resumen.csv", index=False)
+    pd.DataFrame(filas).to_csv(out_dir / "bytes_resumen.csv", index=False)
 
     # ---- Re-evaluación de la mejor configuración con más archivos por familia ----
     mejor = max(filas, key=lambda r: r["f1_macro"])
     log("=" * 74)
-    log(f"  ETAPA FINAL — {mejor['configuracion']} con {args.por_familia_final} "
+    log(f"  ETAPA FINAL -- {mejor['configuracion']} con {args.por_familia_final} "
         f"archivos/familia")
     log("=" * 74)
-    Xb2, y2, fam2 = cargar(args.raiz, args.por_familia_final, seed=7)
+    Xb2, y2, fam2 = cargar(args.raiz, args.por_familia_final, seed=args.semilla_final)
     cfg = next(c for c in configuraciones(args.smoke) if c[0] == mejor["configuracion"])
     _, rep, pipe, _ = cfg
     X2 = a_matriz_posicional(Xb2) if rep == "posicional" else np.array(
@@ -255,8 +406,9 @@ def main():
     pipe.set_params(**params)
     log(f"  Hiperparámetros: {params}")
     t0 = time.time()
-    yp2 = cross_val_predict(pipe, X2, y2, cv=StratifiedKFold(5, shuffle=True,
-                            random_state=42), n_jobs=N_JOBS)
+    yp2 = cross_val_predict(pipe, X2, y2, n_jobs=N_JOBS,
+                            cv=StratifiedKFold(args.folds_finales, shuffle=True,
+                                               random_state=args.semilla))
     mf = metricas(y2, yp2)
     mf.update(configuracion=mejor["configuracion"], representacion=rep, cobertura=1.0,
               n_archivos=len(y2), segundos=round(time.time() - t0), etapa="final")
@@ -265,22 +417,28 @@ def main():
         f" | macro-F1 {mf['f1_macro']:.3f}  ({mf['segundos']}s)")
 
     rep_txt = classification_report(y2, yp2, zero_division=0)
-    (OUT_DIR / "bytes_por_familia.txt").write_text(rep_txt, encoding="utf-8")
+    (out_dir / "bytes_por_familia.txt").write_text(rep_txt, encoding="utf-8")
     log("\nReporte por familia (extracto):")
     log("\n".join(rep_txt.splitlines()[:8]))
 
-    pd.DataFrame(filas).to_csv(OUT_DIR / "bytes_resumen.csv", index=False)
-    (OUT_DIR / "bytes_manifiesto.json").write_text(json.dumps(dict(
+    pd.DataFrame(filas).to_csv(out_dir / "bytes_resumen.csv", index=False)
+    # NOTA: acá había un bloque `comparacion` con las cifras de los Exp. 2/2b
+    # tipeadas a mano. Quedaron viejas al corregirse el detector estructural
+    # (traía 0.533/0.828, superados por el job 3638) y el manifiesto las propagaba
+    # como si fueran medición de esta corrida. Un manifiesto describe SU corrida;
+    # las comparaciones entre experimentos se arman leyendo los CSV de cada uno.
+    (out_dir / "bytes_manifiesto.json").write_text(json.dumps(dict(
         fecha=str(date.today()), raiz=str(args.raiz), n_head=N_HEAD, n_tail=N_TAIL,
+        slurm_job_id=os.environ.get("SLURM_JOB_ID"),
+        semilla=args.semilla, semilla_final=args.semilla_final,
+        folds_externos=args.folds_externos, folds_internos=args.folds_internos,
+        folds_finales=args.folds_finales,
         usa_nombre_o_extension=False, n_familias=len(familias), azar=round(azar, 4),
         por_familia_busqueda=args.por_familia, por_familia_final=args.por_familia_final,
         n_iter=args.n_iter, mejores_hiperparametros=mejores, resultado_final=mf,
         sklearn=sklearn.__version__, python=sys.version.split()[0],
-        comparacion=dict(estadisticas_2_features="0.099",
-                         firmas_exactas_donde_aplican="0.970 (cobertura 0.533)",
-                         extension_sola="0.828 (identificador de campaña)"),
     ), indent=2, ensure_ascii=False), encoding="utf-8")
-    log(f"\nSalidas en: {OUT_DIR}")
+    log(f"\nSalidas en: {out_dir}")
 
 
 if __name__ == "__main__":
