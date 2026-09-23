@@ -117,6 +117,26 @@ def leer_bytes(path, n_head=N_HEAD, n_tail=N_TAIL):
     return head.ljust(n_head, b"\x00"), tail.ljust(n_tail, b"\x00")
 
 
+def es_documentacion(p, familia):
+    """¿Es el PDF descriptivo de NapierOne (`<FAMILIA>.pdf`) y no una muestra cifrada?
+
+    NO se puede filtrar por extensión, que es lo que hacían estos scripts hasta el
+    2026-09-22. BADRABBIT y NOTPETYA no cambian la extensión de los archivos que cifran
+    (está documentado en el Exp. 2b, y Davies et al. lo observan para NOTPETYA), de modo
+    que sus documentos PDF cifrados siguen llamándose `.pdf`. Filtrar `*.pdf` borraba
+    143 muestras cifradas de BADRABBIT y 167 de NOTPETYA ---el 17 % de la familia, toda
+    de un mismo tipo de documento--- mientras que a las 28 familias que renombran no les
+    quitaba nada: un sesgo sistemático contra las dos que no renombran, y justo NOTPETYA
+    es la peor familia del Exp. 2c.
+
+    Verificado el 2026-09-22 sobre las 30 carpetas: cada una tiene exactamente un
+    `<FAMILIA>.pdf` de ~3,5 MB que empieza con `%PDF-1.4` y tiene entropía de cabecera
+    5,41 ---la documentación---, y los `.pdf` restantes de BADRABBIT y NOTPETYA tienen
+    entropía 7,57-7,58 y no empiezan con `%PDF`: son muestras cifradas.
+    """
+    return p.suffix.lower() == ".pdf" and p.stem.upper() == familia
+
+
 def cargar(raiz, por_familia, seed=42):
     """Lee hasta `por_familia` archivos de cada carpeta <FAMILIA>[-small|-tiny]."""
     rng = np.random.default_rng(seed)
@@ -127,8 +147,8 @@ def cargar(raiz, por_familia, seed=42):
         for suf in ("-SMALL", "_SMALL", "-TINY", "_TINY"):
             fam = fam.removesuffix(suf)
         archivos = sorted(p for p in d.iterdir() if p.is_file())
-        # excluir archivos que no son muestras cifradas (p. ej. el PDF descriptivo)
-        archivos = [p for p in archivos if p.suffix.lower() != ".pdf"]
+        # excluir la documentación de NapierOne, NO todos los .pdf (ver es_documentacion)
+        archivos = [p for p in archivos if not es_documentacion(p, fam)]
         if len(archivos) < 6:
             print(f"  ADVERTENCIA: {fam} tiene {len(archivos)} archivos, omitida",
                   flush=True)

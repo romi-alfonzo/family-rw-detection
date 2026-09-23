@@ -167,6 +167,26 @@ def extension_comun(nombres, umbral=1.0):
     return (ext, cob) if ext and n >= _minimo(umbral, len(exts)) else ("", cob)
 
 
+def es_documentacion(p, familia):
+    """¿Es el PDF descriptivo de NapierOne (`<FAMILIA>.pdf`) y no una muestra cifrada?
+
+    NO se puede filtrar por extensión, que es lo que hacían estos scripts hasta el
+    2026-09-22. BADRABBIT y NOTPETYA no cambian la extensión de los archivos que cifran
+    (está documentado en el Exp. 2b, y Davies et al. lo observan para NOTPETYA), de modo
+    que sus documentos PDF cifrados siguen llamándose `.pdf`. Filtrar `*.pdf` borraba
+    143 muestras cifradas de BADRABBIT y 167 de NOTPETYA ---el 17 % de la familia, toda
+    de un mismo tipo de documento--- mientras que a las 28 familias que renombran no les
+    quitaba nada: un sesgo sistemático contra las dos que no renombran, y justo NOTPETYA
+    es la peor familia del Exp. 2c.
+
+    Verificado el 2026-09-22 sobre las 30 carpetas: cada una tiene exactamente un
+    `<FAMILIA>.pdf` de ~3,5 MB que empieza con `%PDF-1.4` y tiene entropía de cabecera
+    5,41 ---la documentación---, y los `.pdf` restantes de BADRABBIT y NOTPETYA tienen
+    entropía 7,57-7,58 y no empiezan con `%PDF`: son muestras cifradas.
+    """
+    return p.suffix.lower() == ".pdf" and p.stem.upper() == familia
+
+
 def cargar_dataset(raiz, max_archivos, semilla=42):
     """{familia: [(nombre, head, tail), ...]}
     Muestreo aleatorio con semilla fija, excluyendo el .pdf de documentación."""
@@ -178,7 +198,7 @@ def cargar_dataset(raiz, max_archivos, semilla=42):
         for suf in ("-TINY", "_TINY", "-SMALL", "_SMALL"):
             familia = familia.removesuffix(suf)
         archivos = sorted(p for p in d.iterdir()
-                          if p.is_file() and p.suffix.lower() != ".pdf")
+                          if p.is_file() and not es_documentacion(p, familia))
         if len(archivos) < 3:
             print(f"  ADVERTENCIA: {familia} tiene {len(archivos)} archivos (<3), omitida.")
             continue
