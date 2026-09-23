@@ -12,6 +12,7 @@ _Actualizado 2026-08-04, ya con acceso confirmado (usuario `ralfonzo`) y NapierO
 | **No hay acceso a Internet** en el cluster (reglamento) | `pip3.11 install` puede fallar. El código ya funciona **sin `beautifulsoup4`** (fallback propio, verificado: las 28 notas HTML se extraen igual). Solo son imprescindibles `scikit-learn`, `numpy`, `pandas`. |
 | Hay **GPU** disponible (ejemplo con torch) | No la usan estos trabajos (scikit-learn es CPU). Queda para un experimento futuro con transformers. |
 | El almacenamiento es **temporal** y se borra 60 días después del fin de uso | Bajar los resultados a la PC siempre que termine un trabajo. |
+> ⚠️ CORREGIDO 2026-08-17: El reglamento dice que el almacenamiento es temporal (borrado 60 dias tras el fin de uso), pero EN LA PRACTICA NO SE LIMPIA: Romina tiene archivos de mas de un anho en /scratch (verificado 2026-08-17). Bajar los resultados igual, por respaldo, pero NO usar el borrado como argumento de urgencia.
 | Obligación de **mencionar el uso del cluster** en publicaciones | Anotado: va en los agradecimientos de la tesis (Bloque E). |
 
 ⚠️ **Además:** tu `ls` mostró **29 carpetas**, no 31. Faltan **`BLACKBASTA-small`** (una de las 30

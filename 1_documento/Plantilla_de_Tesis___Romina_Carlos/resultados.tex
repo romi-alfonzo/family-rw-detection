@@ -127,7 +127,7 @@ Se evaluaron cinco subconjuntos de características con tres algoritmos, mediant
 
 \begin{table}[ht]
 \centering
-\caption{Exactitud multiclase (29 familias) según el subconjunto de características. Validación cruzada de 5 particiones sobre 29.029 archivos. Azar $= 0{,}034$.}
+\caption{Exactitud multiclase (29 familias) según el subconjunto de características. Validación cruzada de 5 particiones sobre 29.029 archivos. Azar $= 0{,}034$. Este experimento se realizó antes de incorporar BLACKBASTA al conjunto, de modo que su base son 29 familias; los Experimentos 2b y 2c posteriores se miden sobre las 30.}
 \label{tab:exp2_ampliado}
 \begin{tabular}{|l|c|c|c|}
 \hline
@@ -198,34 +198,34 @@ La clasificación se evalúa mediante el procedimiento \textit{leave-one-out}: p
 
 \subsection{Marcas descubiertas}
 
-El procedimiento identificó marcas estructurales en \textbf{25 de las 29 familias}. En quince casos se trata de firmas binarias en el contenido, varias de ellas legibles como texto: WANNACRY escribe \texttt{57 41 4E 41 43 52 59 21} al inicio de cada archivo, secuencia que corresponde a la cadena \texttt{WANACRY!}; CUBA inserta \texttt{FIDEL.CA} en los primeros veinte bytes; PHOBOS añade \texttt{LOCK96} al final. Otras familias emplean firmas extensas no textuales: CERBER, LOCKBIT, RANSOMEXX y TESLACRYPT presentan bloques constantes de 64 bytes.
+El procedimiento identificó marcas estructurales en \textbf{28 de las 30 familias}. En quince casos se trata de firmas binarias en el contenido, varias de ellas legibles como texto: WANNACRY escribe \texttt{57 41 4E 41 43 52 59 21} al inicio de cada archivo, secuencia que corresponde a la cadena \texttt{WANACRY!}; CUBA inserta \texttt{FIDEL.CA} en los primeros veinte bytes; PHOBOS añade \texttt{LOCK96} al final; BADRABBIT escribe la palabra \texttt{encrypted}, codificada en UTF-16, al final de cada archivo. Otras familias emplean firmas extensas no textuales: CERBER, LOCKBIT, RANSOMEXX y TESLACRYPT presentan bloques constantes de 64 bytes.
 
 Este resultado valida de forma independiente las anotaciones manuales realizadas durante la evaluación de ID Ransomware: las nueve familias cuya identificación sobrevivía al renombrado figuran entre las que el procedimiento automático detecta con firma binaria.
 
-Cuatro familias ---BADRABBIT, JIGSAW, NOTPETYA y SUNCRYPT--- no presentan marca alguna. El caso de NOTPETYA coincide con lo documentado por Davies et al.~\cite{davies2023majority}, quienes observan que esta familia no modifica la extensión de los archivos que ataca y que, por ese motivo, evade las pruebas basadas en nombre y extensión. La convergencia entre ambos trabajos, obtenida por vías metodológicas distintas, refuerza la validez del procedimiento.
+Dos familias ---NOTPETYA y SUNCRYPT--- no presentan marca alguna. SUNCRYPT asigna a cada archivo una extensión distinta, un valor hexadecimal de 64 caracteres, de modo que no existe extensión común que registrar. El caso de NOTPETYA coincide con lo documentado por Davies et al.~\cite{davies2023majority}, quienes observan que esta familia no modifica la extensión de los archivos que ataca y que, por ese motivo, evade las pruebas basadas en nombre y extensión. La convergencia entre ambos trabajos, obtenida por vías metodológicas distintas, refuerza la validez del procedimiento.
 
 \subsection{Resultados y ablación}
 
-Un resultado agregado del 86,2\% de exactitud podría atribuirse por completo a la extensión del archivo, que es también el mecanismo que emplean las herramientas basadas en reglas. Para separar ambas contribuciones se repitió la evaluación en tres modalidades (Tabla~\ref{tab:exp2b}).
+Un resultado agregado del 93,2\% de exactitud podría atribuirse por completo a la extensión del archivo, que es también el mecanismo que emplean las herramientas basadas en reglas. Para separar ambas contribuciones se repitió la evaluación en tres modalidades (Tabla~\ref{tab:exp2b}).
 
 \begin{table}[ht]
 \centering
-\caption{Ablación del Experimento 2b: contribución de cada tipo de marca (1.450 archivos, 29 familias, \textit{leave-one-out})}
+\caption{Ablación del Experimento 2b: contribución de cada tipo de marca (1.500 archivos, 30 familias, \textit{leave-one-out}; media $\pm$ desvío sobre diez semillas de muestreo, con el criterio de detección declarado en 0,90)}
 \label{tab:exp2b}
 \begin{tabular}{|l|c|c|c|}
 \hline
 \textbf{Modalidad} & \textbf{Cobertura} & \textbf{Exactitud global} & \textbf{Exactitud donde aplica} \\
 \hline
-Solo extensión del archivo & 82,8\% & 0,828 & 1,000 \\
-Solo firmas binarias & 53,3\% & 0,517 & 0,970 \\
-Combinado & 87,8\% & 0,862 & 0,982 \\
+Solo extensión del archivo & 86,7\% & 0,867 $\pm$ 0,000 & 1,000 $\pm$ 0,000 \\
+Solo firmas binarias & 57,2\% & 0,563 $\pm$ 0,002 & 0,984 $\pm$ 0,003 \\
+Combinado & 94,1\% & 0,932 $\pm$ 0,001 & 0,991 $\pm$ 0,002 \\
 \hline
 \end{tabular}
 \end{table}
 
 La interpretación de estas cifras exige cautela. La extensión acierta el 100\% de los casos en que está presente, pero ese valor perfecto es un indicio de artefacto y no de mérito: en NapierOne cada familia está representada por una única campaña, de modo que su extensión es constante dentro del conjunto de datos. En la práctica, familias como DHARMA emplean extensiones que incorporan un identificador de la víctima, por lo que la extensión constituye un identificador de \textit{campaña} y no de \textit{familia}. Su rendimiento no es extrapolable.
 
-Las firmas binarias, en cambio, constituyen evidencia de contenido: son marcadores que el propio programa escribe en el archivo para reconocer posteriormente lo que ya ha cifrado, y por lo tanto resultan más estables entre campañas que la extensión. Alcanzan un 97,0\% de acierto, pero solo cubren el 53,3\% de los archivos: la regla de coincidencia exacta exige que la firma sea idéntica en \textit{todos} los archivos de la familia, y un único caso divergente la elimina. Esta limitación de cobertura es la que motiva el experimento siguiente.
+Las firmas binarias, en cambio, constituyen evidencia de contenido: son marcadores que el propio programa escribe en el archivo para reconocer posteriormente lo que ya ha cifrado, y por lo tanto resultan más estables entre campañas que la extensión. Alcanzan un 98,4\% de acierto, pero solo cubren el 57,2\% de los archivos: la regla exige que la firma se repita en al menos el 90\% de los archivos de la familia, de modo que las familias cuyo marcador varía entre archivos quedan fuera. Esta limitación de cobertura es la que motiva el experimento siguiente.
 
 \section{Experimento 2c: Aprendizaje Automático sobre la Estructura de Bytes}
 \label{sec:exp2c}
@@ -259,12 +259,12 @@ Posicional + Random Forest (búsqueda) & 5.800 & 0,897 & 0,897 \\
 N-gramas de bytes + Regresión Logística & 5.800 & 0,856 & 0,858 \\
 N-gramas de bytes + LinearSVC & 5.800 & 0,849 & 0,846 \\
 \hline
-\textbf{Posicional + Random Forest (final)} & \textbf{14.500} & \textbf{0,910} & \textbf{0,908} \\
+\textbf{Posicional + Random Forest (final)} & \textbf{15.000} & \textbf{0,912 $\pm$ 0,002} & \textbf{0,911 $\pm$ 0,001} \\
 \hline
 \end{tabular}
 \end{table}
 
-La mejor configuración alcanza una \textbf{exactitud de 0,910 y un macro-F1 de 0,908 sobre 29 familias, con cobertura total y utilizando exclusivamente el contenido del archivo}. Los hiperparámetros seleccionados fueron 300 árboles, profundidad máxima 20, mínimo de 2 muestras por hoja y 30\% de características por división.
+La mejor configuración alcanza una \textbf{exactitud de 0,912 $\pm$ 0,002 y un macro-F1 de 0,911 $\pm$ 0,001 sobre 30 familias, con cobertura total y utilizando exclusivamente el contenido del archivo} (media y desvío sobre diez semillas de muestreo). Los hiperparámetros seleccionados fueron 300 árboles, profundidad máxima 20, mínimo de 2 muestras por hoja y 30\% de características por división.
 
 Resulta significativo que la representación posicional supere a los n-gramas de bytes: las marcas se encuentran en \textbf{desplazamientos fijos} del archivo, coherente con cabeceras y colas escritas por el programa en posiciones determinísticas. Este comportamiento contrasta con el observado en las notas de rescate, donde los n-gramas de caracteres resultan la mejor representación; la diferencia refleja la naturaleza distinta de ambos artefactos, uno generado por código y el otro redactado por personas.
 
@@ -279,20 +279,20 @@ La Figura~\ref{fig:f1_bytes} presenta el F1 obtenido por cada familia, distingui
 \label{fig:f1_bytes}
 \end{figure}
 
-El resultado es marcadamente bimodal: \textbf{23 de las 29 familias alcanzan un F1 igual o superior a 0,98}, mientras que seis quedan por debajo de 0,76. La correspondencia con el Experimento 2b es notable y opera como validación cruzada entre ambos:
+El resultado es marcadamente bimodal: \textbf{23 de las 30 familias alcanzan un F1 igual o superior a 0,98}, mientras que seis quedan por debajo de 0,75. La correspondencia con el Experimento 2b es notable y opera como validación cruzada entre ambos:
 
 \begin{itemize}
 \item Las \textbf{quince familias con firma binaria} identificada en el Experimento 2b obtienen, sin una sola excepción, un F1 igual o superior a 0,99.
-\item De las \textbf{diez familias que solo poseían extensión propia} ---es decir, sin marca detectable en el contenido mediante coincidencia exacta---, siete alcanzan igualmente valores superiores a 0,99. El clasificador extrae de los bytes información que la regla exacta no capturaba.
-\item De las \textbf{cuatro familias sin marca alguna}, BADRABBIT pasa de un F1 de 0,15 en el experimento estadístico a \textbf{0,98}, quedando plenamente resuelta. SUNCRYPT (0,75), NOTPETYA (0,38) y JIGSAW (0,44) mejoran respecto de los experimentos previos pero permanecen entre las difíciles.
+\item De las \textbf{once familias que solo poseían extensión propia} ---es decir, sin marca detectable en el contenido mediante coincidencia exacta---, siete alcanzan igualmente valores superiores a 0,98. El clasificador extrae de los bytes información que la regla exacta no capturaba. Las cuatro restantes ---JIGSAW, DARKSIDE, CRYPTOLOCKER y WASTEDLOCKER--- son precisamente las que el Experimento 2c no resuelve: al no emplear el nombre del archivo, el clasificador se queda sin la única marca que esas familias dejan.
+\item De las \textbf{dos familias sin marca alguna}, ninguna supera el umbral: SUNCRYPT alcanza 0,745 $\pm$ 0,016 y NOTPETYA 0,394 $\pm$ 0,023. BADRABBIT, en cambio, pasa de un F1 de 0,15 en el experimento estadístico a \textbf{0,978 $\pm$ 0,002}, quedando prácticamente resuelta.
 \end{itemize}
 
-Las seis familias con menor rendimiento ---SUNCRYPT (0,75), WASTEDLOCKER (0,64), CRYPTOLOCKER (0,61), DARKSIDE (0,60), JIGSAW (0,44) y NOTPETYA (0,38)--- forman un grupo de confusión mutua. DARKSIDE presenta un patrón revelador: precisión de 0,45 frente a un recall de 0,90, lo que indica que actúa como clase de destino por defecto para los archivos que el modelo no logra atribuir. Estas seis familias son, presumiblemente, las que cifran sin añadir estructura al archivo, y constituyen el residuo genuino de la indistinguibilidad estadística planteada en el Experimento 2.
+Las seis familias con menor rendimiento ---SUNCRYPT (0,745 $\pm$ 0,016), WASTEDLOCKER (0,628 $\pm$ 0,013), CRYPTOLOCKER (0,605 $\pm$ 0,016), DARKSIDE (0,603 $\pm$ 0,011), JIGSAW (0,439 $\pm$ 0,014) y NOTPETYA (0,394 $\pm$ 0,023)--- forman un grupo de confusión mutua. DARKSIDE presenta un patrón revelador: precisión de 0,45 frente a un recall de 0,90, lo que indica que actúa como clase de destino por defecto para los archivos que el modelo no logra atribuir. Estas seis familias son, presumiblemente, las que cifran sin añadir estructura al archivo, y constituyen el residuo genuino de la indistinguibilidad estadística planteada en el Experimento 2.
 
 \subsection{Limitación}
 \label{subsec:exp2c_limitacion}
 
-El conjunto NapierOne representa cada familia mediante una única campaña, obtenida ejecutando una muestra concreta del ransomware. En consecuencia, el valor de 0,910 mide la capacidad de identificar \textit{esa campaña}, y no puede afirmarse que se extienda a campañas futuras de la misma familia, que podrían modificar sus cabeceras o colas. Esta limitación es análoga a la observada en el corpus de notas de rescate, donde la baja variabilidad de plantillas produce el mismo efecto (Sección~\ref{subsec:res_variabilidad}), y su evaluación requeriría un conjunto de datos con múltiples campañas por familia, no disponible en la actualidad.
+El conjunto NapierOne representa cada familia mediante una única campaña, obtenida ejecutando una muestra concreta del ransomware. En consecuencia, el valor de 0,912 mide la capacidad de identificar \textit{esa campaña}, y no puede afirmarse que se extienda a campañas futuras de la misma familia, que podrían modificar sus cabeceras o colas. Esta limitación es análoga a la observada en el corpus de notas de rescate, donde la baja variabilidad de plantillas produce el mismo efecto (Sección~\ref{subsec:res_variabilidad}), y su evaluación requeriría un conjunto de datos con múltiples campañas por familia, no disponible en la actualidad.
 
 \section{Síntesis del Frente de Archivos Cifrados}
 \label{sec:sintesis_archivos}
@@ -308,7 +308,7 @@ La Figura~\ref{fig:progresion} resume la progresión de los cuatro enfoques eval
 
 Cada etapa responde a una objeción de la anterior: la ampliación del espacio de características descarta que el resultado negativo inicial se debiera a una representación pobre; la localización explícita de firmas identifica dónde reside la señal; y el aprendizaje sobre bytes extiende esa señal a la totalidad del conjunto sin recurrir a metadatos del nombre.
 
-La conclusión del frente de archivos cifrados queda, por tanto, acotada con precisión: la indistinguibilidad estadística es real, pero se limita a \textbf{seis de las veintinueve familias evaluadas}, aquellas que cifran sin dejar estructura reconocible. Para las veintitrés restantes la información de familia está presente en el contenido del archivo y es extraíble automáticamente con una exactitud del 0,910.
+La conclusión del frente de archivos cifrados queda, por tanto, acotada con precisión: la indistinguibilidad estadística es real, pero se limita a \textbf{seis de las treinta familias evaluadas}: dos que no dejan marca alguna y cuatro que solo marcan el nombre del archivo, sin añadir estructura reconocible a su contenido. Para las veinticuatro restantes la información de familia está presente en el contenido del archivo y es extraíble automáticamente con una exactitud de 0,912 $\pm$ 0,002.
 
 \section{Experimento 3: Clasificación por Notas de Rescate (NLP)}
 \label{sec:exp3}
@@ -558,14 +558,14 @@ La Tabla~\ref{tab:comparacion_final} integra los resultados de los tres experime
 Exp. 1: Binaria (archivos) & 2 & 88,6\% acc. & Random Forest \\
 Exp. 2: Multiclase, 2 características & 31 & 9,9\% acc. & Gradient Boosting \\
 Exp. 2: Multiclase, 19 características & 29 & 60,3\% acc. & Random Forest \\
-Exp. 2b: Firmas binarias (donde aplican) & 29 & 97,0\% acc. (53\% cobert.) & Coincidencia exacta \\
-Exp. 2c: Aprendizaje sobre bytes & 29 & \textbf{91,0\% acc. / 0,908 macro-F1} & Random Forest (posicional) \\
+Exp. 2b: Firmas binarias (donde aplican) & 30 & 98,4\% acc. (57\% cobert.) & Coincidencia exacta \\
+Exp. 2c: Aprendizaje sobre bytes & 30 & \textbf{91,2\% acc. / 0,911 macro-F1} & Random Forest (posicional) \\
 Exp. 3: NLP notas, P1 (plantilla conocida) & 30 & 81,8\% acc. / 0,760 macro-F1 & LinearSVC (caracteres) \\
 Exp. 3: NLP notas, P2 (variante nueva) & 30 & 55,1\% acc. / 0,435 macro-F1 & LinearSVC (combinado) \\
 \hline
-ID Ransomware (notas) & --- & 71,93\% & Reglas manuales \\
-ID Ransomware (archivos) & --- & 66,67\% & Reglas y \textit{magic bytes} \\
-CryptoSheriff (archivos) & --- & 16,67\% & Reglas manuales \\
+ID Ransomware (notas) & 22 & 71,93\% (41/57 notas) & Reglas manuales \\
+ID Ransomware (archivos) & 30 & 66,67\% (30,0\% al renombrar) & Reglas y \textit{magic bytes} \\
+CryptoSheriff (archivos) & 30 & 16,67\% & Reglas manuales \\
 \hline
 \end{tabular}
 }
@@ -575,7 +575,7 @@ Los resultados demuestran que:
 
 \begin{enumerate}
     \item Las métricas estadísticas de archivos cifrados son efectivas para la \textbf{detección binaria} de cifrado ($\sim$89\% de exactitud).
-    \item La \textbf{identificación de familia a partir de archivos cifrados es posible} (91,0\% de exactitud sobre 29 familias, sin emplear metadatos del nombre), pero no mediante las propiedades criptográficas del contenido, sino a través de los artefactos estructurales que cada familia añade. La indistinguibilidad se limita a seis familias que cifran sin dejar estructura reconocible.
+    \item La \textbf{identificación de familia a partir de archivos cifrados es posible} (91,2\% $\pm$ 0,2 de exactitud sobre 30 familias, sin emplear metadatos del nombre), pero no mediante las propiedades criptográficas del contenido, sino a través de los artefactos estructurales que cada familia añade. La indistinguibilidad se limita a seis familias que cifran sin dejar estructura reconocible.
     \item Las notas de rescate permiten la identificación de familia con 81,8\% de exactitud en el escenario operativo comparable al de las herramientas existentes (P1), superando el 71,93\% de ID Ransomware, con la ventaja adicional de constituir un método automático y reproducible frente a reglas mantenidas manualmente.
     \item La generalización a variantes nunca vistas (P2, macro-F1 0,435) es sustancialmente más difícil y depende de la diversidad de plantillas disponible por familia, lo que fundamenta la expansión del corpus como línea de trabajo prioritaria.
 \end{enumerate}
@@ -593,7 +593,7 @@ Los dos frentes del trabajo, desarrollados de forma independiente y sobre datos 
 \label{fig:simetria}
 \end{figure}
 
-En las \textbf{notas de rescate}, la señal fácil es la plantilla: reconocer una nueva instancia de un texto ya catalogado alcanza un macro-F1 de 0,760, mientras que atribuir una variante nunca vista desciende a 0,435. En los \textbf{archivos cifrados}, la señal fácil es la extensión añadida, que acierta el 100\% de los casos en que está presente pero identifica la campaña y no la familia; la señal de contenido, en cambio, alcanza 0,910 y resulta más estable porque proviene de marcadores que el propio programa escribe en el archivo.
+En las \textbf{notas de rescate}, la señal fácil es la plantilla: reconocer una nueva instancia de un texto ya catalogado alcanza un macro-F1 de 0,760, mientras que atribuir una variante nunca vista desciende a 0,435. En los \textbf{archivos cifrados}, la señal fácil es la extensión añadida, que acierta el 100\% de los casos en que está presente pero identifica la campaña y no la familia; la señal de contenido, en cambio, alcanza 0,912 y resulta más estable porque proviene de marcadores que el propio programa escribe en el archivo.
 
 Esta distinción explica por qué las herramientas basadas en catálogos de reglas, como ID Ransomware~\cite{idransomware} o el identificador propuesto por Lemmou et al.~\cite{paper_5_note_files}, funcionan satisfactoriamente sobre campañas conocidas y requieren actualización permanente: operan sobre la señal fácil. Un clasificador entrenado sobre el contenido no las reemplaza, pero cubre el caso que ellas no resuelven, que es precisamente el de las variantes no catalogadas.
 
@@ -603,13 +603,13 @@ Los resultados permiten proponer un procedimiento por etapas en el que cada arte
 
 \begin{enumerate}
 \item \textbf{Confirmación del incidente} mediante métricas estadísticas sobre los archivos afectados (detección binaria, $\sim$89\% de exactitud). Los archivos cifrados son el único artefacto cuya presencia está garantizada: la nota puede haber sido eliminada, no encontrada, o directamente no existir.
-\item \textbf{Identificación de familia por el contenido del archivo cifrado} (91,0\%), aplicable a las 23 familias que añaden estructura reconocible.
+\item \textbf{Identificación de familia por el contenido del archivo cifrado} (91,2\%), aplicable a las veinticuatro familias en cuyo contenido persiste información de familia.
 \item \textbf{Identificación de familia por la nota de rescate} cuando esté disponible (81,8\% en el escenario comparable con las herramientas existentes), especialmente valiosa para las seis familias que no dejan estructura en los archivos.
 \end{enumerate}
 
 \subsection{Sobre la naturaleza de los resultados negativos}
 
-El planteamiento inicial de este trabajo sostenía que las propiedades estadísticas de los archivos cifrados no permiten distinguir familias. La ampliación del espacio de características mostró que esa formulación era demasiado amplia: lo indistinguible es la aleatoriedad del contenido cifrado, no el archivo en su conjunto. Conviene señalar que el resultado negativo original no era erróneo sino insuficientemente delimitado, y que su delimitación precisa ---seis familias de veintinueve--- resulta más informativa que la afirmación general de la que se partió.
+El planteamiento inicial de este trabajo sostenía que las propiedades estadísticas de los archivos cifrados no permiten distinguir familias. La ampliación del espacio de características mostró que esa formulación era demasiado amplia: lo indistinguible es la aleatoriedad del contenido cifrado, no el archivo en su conjunto. Conviene señalar que el resultado negativo original no era erróneo sino insuficientemente delimitado, y que su delimitación precisa ---seis familias de treinta--- resulta más informativa que la afirmación general de la que se partió.
 
 Un caso análogo se presenta en el análisis de hiperparámetros de la Sección~\ref{subsec:exp3_hiperparametros}: la ausencia de mejora tras una búsqueda sistemática es en sí misma un resultado, porque desplaza la explicación del rendimiento desde la parametrización del modelo hacia la composición del corpus, que es donde efectivamente se encuentra el factor limitante.
 
