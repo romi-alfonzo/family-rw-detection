@@ -42,6 +42,21 @@ P4. El boilerplate generico existe y es del ecosistema: habra al menos una frase
 NADA SE RETIRA NI SE MODIFICA DESDE ESTE SCRIPT. Solo dictamina y deja la lista.
 =============================================================================================
 
+SEGUNDO PASO -- TRIAJE (agregado el 2026-09-26 DESPUES de ver que P3 fallaba; se declara asi).
+La primera corrida dio 12 notas con ALARMA fuera de los pares conocidos y pares que comparten
+mucho: CLOP-RYUK 185 n-gramas y LORENZ-SODINOKIBI 145, por encima del par de linaje documentado
+DHARMA-PHOBOS (193). Pero el criterio de ALARMA cuenta CUALQUIER n-grama compartido, y existe un
+boilerplate de ecosistema real: «do not rename encrypted files do not try» aparece en 6 familias.
+Compartir esas frases no dice nada sobre la etiqueta.
+
+El discriminante correcto es la EXCLUSIVIDAD: un n-grama presente en EXACTAMENTE DOS familias
+es de ese par y de nadie mas; uno presente en 3 o mas es del ecosistema. Un par con muchos
+n-gramas EXCLUSIVOS comparte texto propio -- parentesco real o error de etiqueta, y hay que
+mirarlo a mano. Un par cuyos compartidos son casi todos genericos no dice nada.
+
+Este paso NO estaba preregistrado. Es triaje de un hallazgo, no una hipotesis puesta a prueba,
+y se reporta como tal.
+
 Uso:  python boilerplate_compartido.py [--n 8] [--salida CARPETA]
 """
 from __future__ import annotations
@@ -180,6 +195,41 @@ def main():
     dp.to_csv(OUT / "pares_de_familias.csv", index=False, encoding="utf-8-sig")
     print(f"\n=== PARES DE FAMILIAS QUE MAS FRASES LARGAS COMPARTEN ===")
     print(dp.to_string(index=False))
+
+    # ---------------- TRIAJE: exclusivo vs ecosistema (segundo paso, no preregistrado) ----
+    print("\n" + "=" * 78)
+    print("  TRIAJE: ¿lo que comparten es PROPIO del par o del ecosistema?")
+    print("  (segundo paso, agregado despues de ver el resultado; no preregistrado)")
+    print("=" * 78)
+    excl = defaultdict(int)
+    ejemplos = defaultdict(list)
+    for ng, fs in de_fam.items():
+        if len(fs) == 2:
+            a_, b_ = sorted(fs)
+            excl[(a_, b_)] += 1
+            if len(ejemplos[(a_, b_)]) < 3:
+                ejemplos[(a_, b_)].append(" ".join(ng))
+    tfilas = []
+    for (a_, b_), tot in sorted(pares.items(), key=lambda t: -t[1])[:25]:
+        e = excl.get((a_, b_), 0)
+        tfilas.append(dict(familia_a=a_, familia_b=b_, compartidos=tot,
+                           exclusivos_del_par=e,
+                           frac_exclusiva=round(e / tot, 3) if tot else 0.0,
+                           es_linaje="SI" if frozenset({a_, b_}) in PARES_LINAJE else "no",
+                           ejemplo=(ejemplos.get((a_, b_)) or [""])[0][:70]))
+    dt = pd.DataFrame(tfilas)
+    dt.to_csv(OUT / "triaje_exclusividad.csv", index=False, encoding="utf-8-sig")
+    print(dt.to_string(index=False))
+    print("\n  LECTURA: frac_exclusiva alta = texto PROPIO del par (parentesco o etiqueta mal).")
+    print("  frac_exclusiva baja = comparten el boilerplate que usa medio ecosistema.")
+    sospechosos = dt[(dt.es_linaje == "no") & (dt.exclusivos_del_par >= 20)]
+    if len(sospechosos):
+        print("\n  ⚠ PARES NO DOCUMENTADOS CON 20+ N-GRAMAS EXCLUSIVOS -- revision humana:")
+        for _, r in sospechosos.iterrows():
+            print(f"    {r.familia_a} - {r.familia_b}: {r.exclusivos_del_par} exclusivos "
+                  f"de {r.compartidos} ({r.frac_exclusiva:.0%})")
+            for ej in ejemplos.get((r.familia_a, r.familia_b), [])[:3]:
+                print(f"        «{ej[:88]}»")
 
     # ---------------- veredicto ----------------
     print("\n" + "=" * 78)
