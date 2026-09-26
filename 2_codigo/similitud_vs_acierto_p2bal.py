@@ -100,7 +100,8 @@ def ic_t(v):
     m, nn = float(np.mean(v)), len(v)
     s = float(np.std(v, ddof=1)) if nn > 1 else 0.0
     h = t_dist.ppf(0.975, nn - 1) * (s / np.sqrt(nn)) if nn > 1 else 0.0
-    return m, m - h, m + h
+    # son proporciones: el IC se recorta a [0, 1] para no reportar un extremo imposible
+    return m, max(0.0, m - h), min(1.0, m + h)
 
 
 def main():
