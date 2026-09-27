@@ -4,7 +4,249 @@
 > dile a Claude: *"lee ESTADO_TESIS.md en mi carpeta Tesis"*. Con eso retoma todo.
 > Mantener actualizado al final de cada sesión.
 
-_Última actualización: 2026-08-17_
+_Última actualización: 2026-08-25_
+
+> ### ▶▶ PARA CONTINUAR EN OTRO CHAT (2026-08-25)
+> **`6_notas_trabajo/HANDOFF_2026-08-25_limpieza_y_proximos_pasos.md`** — traspaso operativo:
+> qué se limpió (corpus **155 → 149**), las cifras vigentes, los próximos pasos en orden, y la
+> lista de lo que **NO** hay que volver a intentar.
+> **⚠️ Toda cifra anterior al 2026-08-25 está sobre 155 o menos notas.** Al citar, decir la base.
+> **⚠️ Las carpetas `_150` están SUPERADAS** (previas a retirar `LOCKBIT/lb20.txt`): no citarlas.
+
+> ### ⏰ AVISO DE FECHAS (2026-08-28)
+> **El reloj de la máquina estaba 3 días atrasado** durante la sesión del 28 de agosto: marcaba
+> el 25 y se corrigió (por NTP) a mitad del trabajo. Consecuencia: **varias cifras y notas
+> escritas ese día quedaron etiquetadas «2026-08-25» cuando se midieron el 2026-08-28.**
+> - **Los encabezados de los 5 bloques afectados ya están corregidos a 2026-08-28**: M.1
+>   re-medida, la corrección de las dos familias de 1 plantilla, B.1 re-medida, el análisis de
+>   margen, y la decisión de alcance de la ventana de pago de CryptoLocker.
+> - **Puede quedar «2026-08-25» dentro del cuerpo de esos bloques**, en el manifiesto
+>   `manifiesto_corpus_v2_150ventana.csv`, en el campo `fecha` de los JSON escritos ese día
+>   (`margen_notas_149/manifiesto_margen.json` dice 2026-08-25) y en la fecha de modificación
+>   de los archivos generados. **Si una fecha del 25 aparece junto a una cifra sobre 149 o 150,
+>   es del 28.** Lo del 25 es la limpieza del corpus, M.3 y el error de HelloKitty.
+> - Los resultados **no** están afectados: solo la etiqueta. Nada se re-midió.
+
+> ### ⚠️ EL TECHO DE LA ENTROPIA NO ES 8,0 (2026-08-29) — AFECTA COMO SE LEE §4.5.7
+> Saltó midiendo el perfil de entropía de CERBER. **La entropía de Shannon estimada sobre una
+> muestra chica no puede llegar a 8,0**, porque la muestra no alcanza a visitar los 256 valores.
+> Techo medido por simulación (4.000 repeticiones de bytes uniformes):
+>
+> | Bloque | Entropía media de datos ALEATORIOS | Desvío |
+> |---|---|---|
+> | 256 bytes | **7,175** | 0,052 |
+> | **512 bytes** | **7,590** | **0,034** |
+> | 1.024 bytes | 7,809 | 0,017 |
+> | 4.096 bytes | 7,955 | 0,004 |
+> | 65.536 bytes | 7,997 | 0,000 |
+>
+> **La tabla de familias difíciles se mide sobre ventanas de 512 bytes**, o sea que su techo es
+> **7,590**, no 8,0. Leídas así, las cifras dicen algo más fuerte:
+> - **CRYPTOLOCKER (7,594 / 7,589) y WASTEDLOCKER (7,591 / 7,585) están EXACTAMENTE en el
+>   techo** — indistinguibles de datos uniformes en los dos extremos.
+> - DARKSIDE: cabecera en el techo (7,593), **cola 3σ por debajo** (7,491).
+> - JIGSAW: algo por debajo en ambos (7,514 / 7,551).
+> - **Resto de familias 7,03 en cabecera: más de 15σ bajo el techo.**
+>
+> El «próximos a 8,0 bits/byte» de la Figura 4.1 **sigue bien**: esa figura se calcula sobre
+> archivos completos, de decenas de miles de bytes, donde el techo sí es ≈ 8,0. Lo que no se
+> podía hacer era leer 7,59 (ventana de 512) contra 8,0 (archivo completo) como si fueran la
+> misma escala. **Ya se agregó un párrafo a §4.5.7 que lo declara.** Solo se agregó.
+
+> ### 🚨🚨 HALLAZGO DEL JOB 3772 (2026-08-29) — CERBER DEJA LA CABECERA EN CLARO
+> Registrado de lo pegado por Romina en el chat, del log `slurm-exp2d-3772.out`. El control de
+> integridad por magia de tipo que se agregó al Exp. 2d el 29-08 disparó en **tres familias**, y
+> son **tres cosas distintas**, con severidad distinta. **No mezclarlas.**
+>
+> ```
+> ⚠ ARCHIVOS QUE PARECEN ESTAR EN CLARO (magia de tipo conocido):
+>    CERBER    500 archivo(s)  ej.: 6aeFyFo2Es.bed4 [JPEG], 87VdlVNpOH.bed4 [ZIP/OOXML], 42Z8Mxseue.bed4 [PDF]
+>    JIGSAW      3 archivo(s)  ej.: 0089-pptx.pptx [ZIP/OOXML], 0024-pptx.pptx, 0025-pptx.pptx
+>    NOTPETYA   16 archivo(s)  ej.: 0030-doc.doc [OLE/Office], 0155-xls.xls, 0043-xls.xls
+> ```
+>
+> #### 1. CERBER: 500 de 500 — NO es contaminación, es CIFRADO PARCIAL (a verificar)
+> Los archivos llevan **nombre renombrado por CERBER** (`6aeFyFo2Es.bed4`, base aleatoria +
+> `.bed4`), o sea que CERBER los procesó, y sin embargo **empiezan con la magia del documento
+> original** — y con magias **distintas entre sí** (JPEG, ZIP/OOXML, PDF). La lectura que se
+> sostiene: **CERBER cifra parcialmente y deja la cabecera del documento original en claro.**
+> No son los 12 JPEG del 2026-08-16: esos conservaban su nombre original y ya están apartados
+> en `_sin_cifrar/`. Estos son 500 de 500.
+>
+> **No es falso positivo del detector:** las magias son de 3 y 4 bytes, así que sobre bytes
+> aleatorios la probabilidad es $2^{-24}$ a $2^{-32}$; en 15.000 archivos se esperarían **0,001
+> coincidencias**, no 500.
+>
+> **Y CERBER sí modifica los archivos:** el Exp. 2b le encontró un **sufijo constante de 64
+> bytes con cobertura 1,00**. Un `.docx` intacto no comparte 64 bytes finales con un `.jpg`
+> intacto. El cuadro coherente es **cabecera original preservada + cola propia de CERBER**.
+>
+> **Converge con algo ya medido y no explicado:** en `d_familias_dificiles.csv` el «resto de
+> familias» tiene entropía de **cabecera 7,03**, bastante más baja que las seis difíciles (7,59).
+> Esa cabecera menos aleatoria del resto es, al menos en parte, esto.
+>
+> **Qué toca y qué no:**
+> - **NO invalida el F1 = 1,000 de CERBER en el Exp. 2c**: lo explica su firma de cola, que
+>   tiene cobertura 1,00 y es propia de la familia. La cabecera preservada es del documento de
+>   origen y la comparten todas las familias, así que no discrimina.
+> - **SÍ obliga a un matiz en §4.5.5** (dejar-un-tipo-fuera): para CERBER el tipo de documento
+>   **sí está a la vista en los bytes**. La conclusión agregada se sostiene — son 25 a 28
+>   familias por pliegue y CERBER aparece en uno solo — pero hay que declararlo.
+> - Es, en sí mismo, **un resultado sobre la familia** y probablemente citable (el cifrado
+>   parcial es técnica documentada de ransomware, para ganar velocidad).
+>
+> **VERIFICAR ANTES DE ESCRIBIR NADA** (volcado de los primeros 16 bytes; comparar contra un
+> original de NapierOne del mismo tipo):
+>
+> ```bash
+> cd /scratch/ralfonzo/tesis && for f in $(ls /scratch/ralfonzo/Napierone-small/CERBER-small/ | head -6); do echo "== $f"; od -A d -t x1 -N 16 "/scratch/ralfonzo/Napierone-small/CERBER-small/$f" | head -1; done
+> ```
+>
+> #### 2. JIGSAW (3) y NOTPETYA (16): esto sí es del tipo de los 12 JPEG
+> Conservan **nombre Y extensión originales** (`0089-pptx.pptx`, `0030-doc.doc`) y magia de
+> documento: son archivos **sin cifrar**, no cifrado parcial. Son **19 sobre 15.000 = 0,13 %**.
+> - Cuadra con lo ya medido: en el Exp. 2b la **cobertura de extensión de JIGSAW era 0,98**, no
+>   1,00. Ese 2 % que faltaba es esto.
+> - NOTPETYA no cambia extensiones nunca, así que sus 16 no se distinguen por nombre de los
+>   otros 484: no envenenan la columna del nombre más que el resto.
+> - **Decisión tomada: dejar correr el 3772.** Excluir los 12 JPEG de CERBER movió las métricas
+>   0,001 a 0,003; 19 archivos van a mover menos, y el log deja documentado exactamente qué
+>   había en los datos. Re-correr 4-5 h por 0,13 % no se justifica **antes** de decidir qué se
+>   hace con CERBER, que es la pregunta grande.
+>
+> #### 3. El diagnóstico de circularidad de la extensión: confirmado y con número
+> ```
+> familias con UNA sola extensión: 25 de 30
+> extensiones compartidas por más de una familia: 5 de 905
+>    .doc / .docx / .xls / .xlsx -> BADRABBIT, NOTPETYA
+>    .pptx -> BADRABBIT, JIGSAW, NOTPETYA
+> exactitud de una TABLA DE CONSULTA que solo mira la extensión: 0,9724
+> ```
+> **La columna (3) del 2d queda declarada como memorización de un diccionario**, tal como se
+> diseñó: una tabla de consulta que solo mira la extensión ya acierta **0,9724 de exactitud**.
+> Las únicas cinco extensiones ambiguas son las de ofimática, y las comparten las dos familias
+> que **no renombran** (BADRABBIT y NOTPETYA) más los tres archivos sin cifrar de JIGSAW.
+> **905 extensiones distintas** sobre 30 familias: SUNCRYPT asigna una por archivo.
+>
+> #### Jobs
+> **3771 cancelado** (llevaba los hiperparámetros viejos). **3772 corriendo** desde el
+> 2026-08-28 23:29 con la versión corregida.
+
+> ### 🚨 REVISION DEL JOB DE EXP. 2d (2026-08-29) — TENIA LOS HIPERPARAMETROS MAL
+> `exp2d_nombre_extension.py` declaraba usar los hiperparámetros del Exp. 2c y tenía puestos
+> **los de sklearn por defecto**: `max_depth=None, min_samples_leaf=1, max_features="sqrt"`.
+> Los buenos, verificados contra **tres** fuentes — `clasificador_bytes.py` línea 88
+> (`HIPER_2C`), `resultados_bytes/bytes_manifiesto.json` del job 3639 y el log
+> `slurm-bytesms-3648.out` — son **300 árboles, profundidad 20, hoja 2, `max_features=0.3`**.
+>
+> **Por qué importaba:** la columna (1) del 2d es «solo bytes» y tiene que **reproducir la
+> referencia publicada** (0,912 ± 0,002 de exactitud). Con los otros hiperparámetros no la
+> reproduce, y entonces las tres columnas dejan de ser comparables contra el Exp. 2c — que es
+> justo lo que el experimento quiere medir. Corregido y **commiteado** (`d537ebd`).
+>
+> **Otras tres mejoras al mismo job:**
+> 1. **Se agregó A.3, la curva de aprendizaje**, que seguún `EXPERIMENTOS_PENDIENTES.md` iba
+>    en este mismo job porque comparte la carga de datos. Tamaños 10 a 500 archivos/familia,
+>    **subconjuntos anidados**, solo bytes, con delta pareado entre pasos consecutivos e
+>    IC 95 % — el mismo criterio de lectura que B.1 en notas.
+> 2. **Control de integridad por magia de tipo.** Este experimento usa el NOMBRE, así que un
+>    archivo en claro con su nombre original lo arruina. El script cuenta y lista los archivos
+>    que empiezan con magia conocida (JPEG, PDF, ZIP/OOXML, OLE, PNG, GIF, RTF, GZIP).
+> 3. El job pide `--time=12:00:00` y `--nodelist=c2`, que no tenía.
+>
+> **⚠️ ANTES DE LANZAR, verificar en el clúster que los 12 JPEG siguen apartados:**
+> `ls /scratch/ralfonzo/Napierone-small/CERBER-small/_sin_cifrar/`. Si no están ahí, el 2d da
+> un resultado falso. El script lo detecta igual y lo avisa en el log.
+>
+> Probado de punta a punta con un corpus sintético (5 familias con firma y extensión
+> controladas): las tres columnas, los delta con IC, la curva y el diagnóstico de circularidad
+> funcionan. **Estimado real: 4-5 h**, no 3-4 — con `max_features=0.3` cada división mira 307
+> columnas y no 32.
+
+
+> ### ✓✓ ESCRITO EN LA TESIS (2026-08-28) — EL FRENTE DE ARCHIVOS QUEDA REDACTADO
+> Se agregaron **nueve subsecciones** a `resultados.tex`, todas con base y métrica declaradas.
+> **Solo se agregó: no se tocó una línea de lo ya escrito.** Compila: **74 páginas, 0 errores,
+> 0 referencias sin resolver.** Respaldo previo en `resultados.tex.antes_archivos`.
+>
+> | § | Subsección | Qué cierra | Fuente verificada |
+> |---|---|---|---|
+> | 4.3.3 | Optimización de hiperparámetros sobre las características estadísticas | A1 — cierra la única limitación de optimización declarada | `resultados_gridsearch_estadisticas/` |
+> | 4.4.4 | El criterio de detección: de la unanimidad a la mayoría | BADRABBIT + estabilidad del 2b | `resultados_estructural_10semillas/` (10 manifiestos) |
+> | 4.4.5 | Validación externa de las firmas descubiertas | 6 coincidencias con ID Ransomware | `Pruebas.xlsx`, hoja «Deteccion de archivos encriptad» |
+> | 4.5.4 | Validación anidada y estabilidad de la estimación | pedido de Cappo sobre train/test y desvío | `resultados_bytes/bytes_resumen.csv` + `..._multisemilla_job3648/` |
+> | 4.5.5 | Generalización a tipos de documento nunca vistos | A2 | `resultados_analisis_bytes/a_generalizacion_tipos.csv` |
+> | 4.5.6 | Cuántos bytes hacen falta y dónde reside la señal | A3 + A4 + bloque del medio + control de relleno | `resultados_ablacion_extendida/` + `b_importancia_por_posicion.csv` |
+> | 4.5.7 | Por qué fallan las seis familias difíciles | A5, con el matiz de SUNCRYPT/NOTPETYA | `d_familias_dificiles.csv` + por-familia de 10 semillas |
+> | 4.5.8 | Familias que destruyen el nombre original | A6 | recuento de nombres del 2026-08-16 |
+> | 4.5.9 | Verificación de integridad del conjunto de datos | los 12 JPEG de CERBER | job 3639 vs 3633 |
+>
+> **Figuras insertadas** (ya estaban en `images/`, sin usar): `fig_ablacion_extendida.png`
+> (Fig. 4.3) y `fig_importancia_por_posicion.png` (Fig. 4.4).
+>
+> #### Cifras que se corrigieron al verificar contra los CSV (no citar las viejas)
+> - **El desvío del criterio de mayoría se reduce 16 veces, no 14.** Unanimidad
+>   0,900 ± 0,016 frente a mayoría 0,932 ± 0,001 (desvío muestral sobre las 10 semillas:
+>   0,0157 y 0,00098; el cociente es 16,1). **El informe semanal del 18-08 que se le pasó a
+>   Cappo dice «catorce»** — salió de redondear antes de dividir. La cifra buena es 16.
+> - **Firmas binarias: 17 familias bajo el criterio de mayoría** (4 prefijos — CUBA, LORENZ,
+>   TESLACRYPT, WANNACRY — y **13 sufijos**), idénticas en las 10 semillas. El «15» que ya
+>   estaba escrito es el valor **bajo unanimidad**, y ahí oscila: 15 en 7 semillas y 16 en 3.
+>   Las dos que entran y salen son BADRABBIT y BLACKBASTA. Las dos bases quedan declaradas.
+> - **BADRABBIT bajo unanimidad se detecta en 1 de 10 semillas**, contra las 1,7 que predice
+>   $0{,}965^{50} \approx 0{,}17$. La predicción teórica y la medición coinciden.
+> - **La cobertura de BADRABBIT en las muestras de 50 va de 0,92 a 1,00, media ≈ 0,96** —
+>   reproduce por vía independiente el 96,5 % del volcado sobre la familia completa.
+> - **Últimos 16 bytes = 27,8 % de la importancia** (calculado sobre `b_importancia_por_posicion.csv`,
+>   offsets −1 a −16). En este documento figuraba «27,2 %», de una banda distinta.
+> - **CERBER renombra 981 archivos, BLACKMATTER 13.** El «491 archivos» de
+>   `PENDIENTE_REDACCION.md` (A6) estaba mal; el recuento verificado del 16-08 es el bueno.
+>
+> #### Las 6 coincidencias con ID Ransomware, verificadas una por una en `Pruebas.xlsx`
+> Idénticas: **LORENZ** y **MAZE**. La firma hallada **contiene** a la declarada:
+> **WANNACRY, TESLACRYPT, GANDCRAB, MEDUZALOCKER**.
+> **CUBA y PHOBOS NO cuentan como corroboración por bytes**: la celda de CUBA está vacía y la
+> de PHOBOS declara una regla («0x00 metadata; divider»), no una secuencia. SODINOKIBI igual
+> (CRC32 de la clave pública). CONTI corrobora la **extensión** `.MRBNY`, no los bytes.
+> **RYUK sigue siendo la única discrepancia** y se escribió como tal: la herramienta reporta
+> `HERMES` en `[0x584D0-0x58792]` — un rango de 706 bytes — y nuestro detector no la halla.
+>
+> #### ✅ RESUELTO EL MISMO DÍA — los logs de SLURM ya están en disco
+> Romina bajó `logs_slurm_2026-08-17.tgz` (23 logs) y quedaron en
+> **`4_resultados/_logs_slurm_2026-08-17/`**. Con eso el frente de archivos **no tiene
+> ninguna cifra sin respaldo local**. Lo que el log del 3633 obliga a corregir:
+>
+> - **El «0,9105 / 0,9097» que este documento atribuía al job 3633 NO está en su log.**
+>   `slurm-bytes-3633.out` imprime **tres decimales**: `exactitud 0.910 | balanced 0.910 |
+>   macro-F1 0.910`. Los cuatro decimales venían de los CSV que el 3639 pisó; son
+>   compatibles con el log pero **no verificables**. En la tesis quedó escrita la
+>   comparación a la precisión que el artefacto sostiene: **0,909 / 0,907 (corpus
+>   verificado, job 3639) frente a 0,910 / 0,910 (con los 12 JPEG, job 3633)**, diferencia
+>   de 0,001 y 0,003. Misma conclusión, ahora citable. **No volver a escribir 0,9105.**
+> - **Confirmado en el log:** CERBER pasa de `1.00 / 0.99` (3633) a `1.00 / 1.00` (3639).
+>
+> #### ✅ Queda fijada la procedencia de cada fila de la Tabla 4.11 (Exp. 2c)
+> Los tres logs lo dejan cerrado, y es lo que hace falta para la pasada de pulido:
+>
+> | Job | Base | Búsqueda anidada (exactitud / macro-F1) | Etapa final |
+> |---|---|---|---|
+> | **3557** | 29 fam. · 5.800 arch. | posicional **0,897 / 0,897** · LogReg 0,856 / 0,858 · LinearSVC 0,849 / 0,846 | 0,910 / 0,908 (14.500) |
+> | 3633 | 30 fam. · 6.000 arch. · **con** los 12 JPEG | posicional 0,899 / 0,899 · LogReg 0,860 / 0,864 · LinearSVC 0,850 / 0,847 | 0,910 / 0,910 (15.000) |
+> | **3639** | 30 fam. · 6.000 arch. · **sin** los 12 JPEG (**canónico**) | posicional **0,891 / 0,892** · LogReg 0,862 / 0,865 · LinearSVC 0,852 / 0,849 | 0,909 / 0,907 (15.000) |
+> | 3648 | 30 fam. · 10 semillas | — (hiperparámetros fijos) | **0,9120 ± 0,0016 / 0,9111 ± 0,0014** |
+>
+> **Las tres filas de búsqueda de la Tabla 4.11 son del job 3557, o sea 29 familias**, y la
+> fila final es del 3648, o sea 30. La tabla no lo declara. Los valores equivalentes sobre 30
+> familias (0,891 / 0,862 / 0,852) están escritos en la nueva §4.5.4 con su base.
+>
+> #### ⚠️ Dos incoherencias PREVIAS que quedaron a la vista (no se tocaron)
+> 1. El pie de la **Figura 4.2** dice «siete de las **diez** que solo poseían extensión propia»
+>    y el cuerpo de §4.5.3 dice «**once** familias». Son 11 (verificado). Es una palabra.
+> 2. La **Tabla 4.11** (Exp. 2c) mezcla bases: las filas de búsqueda son de **5.800 archivos /
+>    29 familias** (0,897) y la fila final es de **15.000 / 30**. Los valores de la etapa de
+>    búsqueda sobre 30 familias son **0,8913 / 0,8623 / 0,8515**, y quedan escritos en la nueva
+>    §4.5.4. En la pasada de pulido hay que decidir si la tabla se unifica.
+
 
 > **⚠️ La carpeta fue reorganizada el 2026-08-04.** Ver `LEEME_ESTRUCTURA.md` para el mapa.
 > Rutas nuevas (las de este documento que digan lo viejo, traducir así):
@@ -617,6 +859,141 @@ que se supone. **Ojo: la fuente de SecureWorks NO afirma explícitamente que no 
 extensión** —eso apareció en la búsqueda secundaria y NO lo pude confirmar en fuente
 primaria—, así que esto queda como **pregunta a verificar**, no como hallazgo. No toqué nada
 del frente de archivos. Es para Romina y el tutor.
+
+## ★★★ B.3 RE-MEDIDO SOBRE 155 NOTAS (2026-08-20, local, `--solo-grafo`)
+
+> **Base declarada: 155 notas, 106 plantillas, 30 familias.** Es una RE-MEDICIÓN, mismo
+> código (`2_codigo/grafo_marcadores.py`), sin tocar el método. La corrida vieja (144 notas /
+> 97 nodos) queda intacta más abajo; esto se AGREGA con su propia base.
+
+**Comando** (carpeta de salida NUEVA, no se pisó la del 19-08):
+```
+python grafo_marcadores.py --solo-grafo --salida C:/Users/Romina/Tesis/4_resultados/resultados_grafo_marcadores_155
+```
+Se agregó `--salida` al script (cambio mínimo, mismo patrón que `clasificador_notas_v2.py`;
+commit `091cf7b` en develop, sin coautoría). Salidas en
+`4_resultados/resultados_grafo_marcadores_155/`. El F1 por familia para la correlación sale de
+`4_resultados/resultados_extension_155/` (B.1, P2ret, k=todo, 100 repeticiones), no de una
+corrida nueva. **P1/P2/P3 + control de azar NO se re-corrieron** (no estaban entre lo pedido y
+el item de correlación usa el F1 de B.1 ya existente; es un paso aparte, un solo comando).
+
+**Recuento del grafo, 155 vs 144:** notas 155 (era 144) · plantillas 106 (era 95) · **nodos
+familia#plantilla 108** (eran 97; siguen siendo 2 grupos que cruzan familias, ver item 2).
+Marcadores por tipo: **URL 154 · ONION 99 · EMAIL 80 · CLAVE 36 · BTC 7 · ID 6** (eran URL 159
+· ONION 106 · EMAIL 74 · CLAVE 37 · ID 9 · BTC 5). **Plantillas sin ningún marcador: 16 de 108**
+(eran 11 de 97).
+
+### 1) Cohesión por familia sobre 155 — coseno char 3-5 medio entre plantillas (por construcción < 0,90)
+
+`b3_cohesion_por_familia.csv`. Todas las cifras son **coseno medio entre plantillas de la
+familia, base 155 notas**. Comparadas con la tabla vieja (base 144). Las tres causas previstas
+se confirman, y aparecen tres cambios no previstos:
+
+| Familia | Coh. 144 | Coh. 155 | n_plant. 144→155 | Qué pasó |
+|---|---|---|---|---|
+| **MEDUZALOCKER** | 0,4317 | **0,6548** ▲ | 3→4 | se limpió la contaminación Medusa + 2 notas reales (chip, rapid); **margen pasó a POSITIVO** (−0,1685 → +0,0607) |
+| **CHIMERA** | 0,1538 | **0,3402** ▲ | 2→4 | 2 plantillas nuevas (inglés auténtico pcrisk + alemán HNS); ahora hay pares de-de y en-en que suben la media. **Ya no es la más baja de las 30** |
+| **JIGSAW** | 0,5075 | **0,2300** ▼ | 2→4 | sumó traducciones (alemán g91, francés g92): baja la cohesión como se anticipó |
+| **RYUK** | 0,4388 | **0,2175** ▼ | 2→4 | **es ahora la cohesión MÁS BAJA de las 30**; no es por idioma (ver item 4) sino por mezclar fragmentos ultra-cortos solo-IOC (idr_balance_2019, idr_portal_2021) con la prosa pcrisk |
+| **WASTEDLOCKER** | — (1 plant.) | **0,8967** ▲ | 1→3 | ya no es 1 molde rígido: 4 notas → 3 plantillas por **deriva del IDF** al crecer el corpus (el par estaba en coseno mín. 0,894, al borde de 0,90). Ahora es la cohesión MÁS ALTA y margen MÁS ALTO (+0,5075). **Reevaluar el relato de «familia irrecolectable»** |
+| **CRYPTOLOCKER** | 0,3564 | 0,4337 ▲ | 3→2 | perdió una plantilla (salió el Crypt0l0cker/TorrentLocker en la limpieza de integridad) |
+| GANDCRAB | 0,6033 | 0,5588 ▼ | 5→4 | perdió una plantilla por deriva del IDF |
+
+El resto se mueve poco (±0,01): AVOSLOCKER 0,8103→0,8159 · BLACKCAT 0,6297→0,6326 · CONTI
+0,7776→0,7794 · DARKSIDE 0,8723→0,8714 · HELLOKITTY 0,3108→0,3111 · LOCKBIT 0,4296→0,4291 ·
+NETWALKER 0,8053→0,8121 · NOTPETYA 0,8169→0,8128 · SUNCRYPT 0,4529→0,4536 · TESLACRYPT
+0,7998→0,7996 · WANNACRY 0,4449→0,5262. **La deriva del IDF (documentada en la sección de
+recolección) mueve el conteo de plantillas de familias al borde del umbral; hay que citar la
+cohesión SIEMPRE con la base 155.**
+
+### 2) Plantillas compartidas entre familias — SIGUEN SIENDO LAS MISMAS
+
+**Los 2 parentescos por CONTENIDO (grupos de casi-duplicados que cruzan familias) persisten, y
+no aparecieron nuevos** (`grupos_neardup.csv` de `resultados_extension_155`):
+
+| Grupo (155) | Familias | Notas |
+|---|---|---|
+| **grupo 6** | BLACKBASTA + CONTI | `blackbasta2.txt` + `conti4.txt` |
+| **grupo 56** (era grupo 55 en 144) | DHARMA + PHOBOS | 11 notas DHARMA (.hta/.txt) + `pcrisk_phobos_1.txt` |
+
+El renumerado 55→56 es solo por el crecimiento del corpus; **es el mismo parentesco**. Por eso
+108 nodos = 106 plantillas + 2 (los 2 grupos que aportan un nodo por familia). Las notas nuevas
+**no crearon ninguna componente compartida nueva**.
+
+**Aristas del grafo de marcadores entre familias** (variante canónica con_exclusion_filtro2):
+**5 aristas, todas URLs de torproject** — bajaron de 7 (144) a 5 (155). Detalle: 4 son
+BLACKBASTA#5/#6 ↔ CONTI#42/#44 por `https://torproject.org`, y **1 NUEVA** AVOSLOCKER#0 ↔
+CLOP#41 por `https://www.torproject.org/download/`. **Ningún IOC operativo se comparte entre
+familias distintas** — igual que en 144: las aristas cruzadas son infraestructura Tor común, no
+parentescos. (El parentesco BLACKBASTA↔CONTI y DHARMA↔PHOBOS sale de la deduplicación por
+contenido —grupos 6 y 56—, NO de los marcadores. No escribir nunca «el grafo reencuentra los
+parentescos».)
+
+### 3) Correlación cohesión → F1 por familia — SE SOSTIENE sobre 155
+
+Spearman contra el **F1 por familia de B.1** (`resultados_extension_155`, curva 30fam · P2ret ·
+k=todo · **155 notas** · 100 repeticiones). **Control:** con el mismo cálculo sobre la base
+vieja (cohesión 144 + F1 144) se **reproduce exactamente** la cifra registrada, ρ = **+0,7041**
+(n=29), lo que valida el método antes de aplicarlo a 155.
+
+| Predictor | ρ 144 (n=29) | ρ 155 (n=30) | ρ 155 (n=29, sin WASTED, 1:1) |
+|---|---|---|---|
+| **Cohesión interna** (coseno medio entre plantillas) | **+0,7041** (p=2·10⁻⁵) | **+0,6879** (p=2,7·10⁻⁵) | **+0,6925** (p=3,1·10⁻⁵) |
+| **Margen** (cohesión − máx. a plantilla ajena) | +0,6741 (p=6·10⁻⁵) | **+0,7462** (p=2,2·10⁻⁶) | **+0,7500** (p=2,8·10⁻⁶) |
+| Fracción de pares unidos por marcador | +0,4245 (p=0,022) | +0,3016 (p=0,11, **n.s.**) | +0,3431 (p=0,068, **n.s.**) |
+| Cantidad de plantillas de la familia | −0,1084 (p=0,58, n.s.) | **−0,4885** (p=0,006) | −0,4730 (p=0,010) |
+
+- **El resultado central aguanta:** la cohesión interna sigue siendo un predictor fuerte del F1
+  por familia (ρ +0,69 sobre 155, contra +0,70 sobre 144). **Es n=30 ahora**, no 29: a 155
+  todas las familias tienen ≥2 plantillas (WASTEDLOCKER pasó de 1 a 3), así que ninguna queda
+  fuera por falta de cohesión definible.
+- **El margen pasó a ser el predictor MÁS fuerte** (ρ +0,75). Coherente con que la recolección
+  llenó familias de baja cohesión: el margen las separa mejor.
+- ⚠️ **La fracción de pares unidos por marcador DEJÓ de ser significativa** (era p=0,022, ahora
+  p=0,11). Con más plantillas por familia, la continuidad de IOCs pesa menos en el F1.
+- ⚠️⚠️ **La cantidad de plantillas volteó a NEGATIVA y significativa** (ρ −0,49, p=0,006), cuando
+  en 144 era nula (ρ −0,11, n.s.). **Esto es un CONFUNDIDO de la recolección dirigida, NO un
+  hallazgo causal:** las notas nuevas se sumaron justo a las familias difíciles y de baja
+  cohesión (CHIMERA, JIGSAW, RYUK, MAZE, MEDUZALOCKER, WANNACRY → todas a 4 plantillas), así que
+  «muchas plantillas» quedó correlacionado con «era una familia difícil». **No contradice a
+  B.1** (que es causal, quitando plantillas y midiendo la caída). Hay que escribirlo con este
+  cuidado: la correlación entre familias está contaminada por a cuáles se les recolectó.
+
+**Contexto (F1 por familia P2ret k=todo, 100 rep, base 144 → base 155):** la recolección movió
+fuerte a las difíciles: CHIMERA 0,000→0,912 · WANNACRY 0,010→0,733 · MEDUZALOCKER 0,000→0,608 ·
+MAZE 0,000→0,561 · RYUK 0,032→0,271 · WASTEDLOCKER (indef.)→0,987. Bajaron JIGSAW 0,670→0,505
+(las traducciones, como se anticipó) y CRYPTOLOCKER 0,410→0,097 (perdió la plantilla
+TorrentLocker). *(Son cifras de B.1/P2ret, contexto de la correlación, no de B.3.)*
+
+### 4) Familias con plantillas en IDIOMAS distintos — insumo para preregistrar embeddings
+
+Detección por heurístico de palabras-función sobre el texto extraído, **verificada a mano nota
+por nota** (el detector marcó 4, una era falso positivo):
+
+| Familia | Idiomas | Plantillas |
+|---|---|---|
+| **JIGSAW** | inglés + alemán + francés | g89/g90 (en), g91 (de: «Guten Tag, bedauerlicherweise…»), g92 (fr: «BONJOUR VOUS VENEZ DE VOUS FAIRE HACKER…») |
+| **CHIMERA** | inglés + alemán | g35/g37 (en), g34/g36 (de: «Sie wurden Opfer der Chimera Malware…») |
+| **GANDCRAB** | inglés + francés | g75 (fr: «Attention! Tous vos fichiers… sont cryptés», nota completa; hallazgo nuevo) + 7 en |
+
+- ⛔ **RYUK NO va en la lista** — el heurístico la marcó `pt` por FALSO POSITIVO sobre
+  `idr_ryuk_balance_2019.txt`, que son solo 2 emails + «Ryuk / balance of shadow universe»
+  (inglés, 6 tokens). Verificado a mano. Su cohesión baja es por longitud/estructura, no idioma.
+- **Casos que NO son multi-idioma pero conviene declarar** para no confundir al preregistrar:
+  SUNCRYPT (`suncrypt.html` trae las etiquetas «EN DE FR ES JP» de un selector, pero el cuerpo
+  es inglés) y TESLACRYPT («NOT YOUR LANGUAGE? USE Google Translate» + link, cuerpo inglés): son
+  inglés con afordancia de traducción, no plantillas localizadas.
+- **WANNACRY es multi-idioma en la realidad pero NO en el corpus:** las 4 plantillas del corpus
+  son inglés; las 28 localizadas `m_*.wnry` no se pudieron obtener (ver resultado negativo
+  WANNACRY). Es una familia multi-idioma latente sin material en disco.
+
+> **El experimento de embeddings (paso siguiente, que NO se arranca acá) se preregistra sobre
+> ESTA salida: la predicción es que un embedding multilingüe sube la cohesión / el F1 de
+> JIGSAW, CHIMERA y GANDCRAB (las 3 con plantillas realmente en otro idioma), y NO debería mover
+> a RYUK (baja por longitud) ni a las de cohesión ya alta.** Predicción sobre
+> `4_resultados/resultados_grafo_marcadores_155/`.
+
+---
 
 ## ★★★ B.3 — EL GRAFO YA DIO EL DIAGNÓSTICO CLAVE (2026-08-19, local, `--solo-grafo`)
 
@@ -1645,6 +2022,404 @@ familia. Eso es un resultado en sí (los marcadores no confunden familias entre 
 frase «el grafo reencuentra los parentescos» **no debe escribirse**: la única arista
 BLACKBASTA↔CONTI que sobrevive es una grafía peculiar de una URL pública, consistente con la
 plantilla copiada pero no un IOC compartido.
+
+## ⚠️ AUDITORÍA DE NOMBRES CONTRA MISP (2026-08-22) — SOLO 10 DE 155 SON GENUINOS
+
+Cruce automático de los nombres de archivo del corpus (155 notas) contra los
+`ransomnotes-filenames` del catálogo MISP (537 nombres reales en 298 entradas). Resultado:
+
+**Solo 10 de 155 notas (6,5 %) tienen un nombre que coincide con un nombre documentado.**
+Coinciden: CERBER 5 (`# DECRYPT MY FILES #.html/.txt`), DHARMA 2 (`Info.hta`,
+`FILES ENCRYPTED.txt`), BLACKBASTA 1 (`instructions_read_me.txt`), MEDUZALOCKER 1
+(`HOW_TO_RECOVER_DATA.html`), TESLACRYPT 1 (`Howto_RESTORE_FILES.html`). El resto son nombres
+puestos por el curador del repositorio (`pcrisk_ryuk_1.txt`, `idr_ryuk_balance_2019.txt`,
+`note_variant_email.txt`…).
+
+**Consecuencia para M.2 / D.2 (nombre de la nota como característica): SE CAE.** Con 10 notas
+genuinas repartidas en 5 familias no hay material para una vista de nombre; usar los nombres
+del curador sería circular (el curador escribió el nombre sabiendo la familia). El
+desbloqueo que se anotó el 2026-08-20 era prematuro: MISP aporta los nombres de referencia,
+pero el CORPUS no los conserva.
+
+**Lo que SÍ habilita este cruce, y hay que escribirlo:**
+1. Es una **verificación de autenticidad del corpus**: las notas que conservan nombre original
+   coinciden con lo documentado por una fuente independiente ⇒ el corpus es genuino donde
+   dice serlo. Va al cap. 3 como control de procedencia.
+2. Explica por qué **ID Ransomware rinde mejor en producción que en nuestro corpus**: su señal
+   principal es el nombre del archivo, que nuestro corpus mayormente perdió al recolectarse
+   de repositorios. Es un límite del corpus público, no del método — y es citable.
+3. Refuerza la limitación ya declarada: los repositorios de notas **pierden metadatos** que en
+   un incidente real sí están disponibles.
+
+**Registrar en el manifiesto** la columna procedencia del nombre (`genuino_misp` para las 10,
+`curador` para el resto) — es barato y deja la auditoría reproducible.
+
+## ★ RESPUESTA A CAPPO (2026-08-22) — ¿otros trabajos analizan el catálogo MISP? NO como corpus
+
+Pregunta del tutor (WhatsApp 21-08): «¿Otros trabajos analizan este corpus base [el JSON de
+MISP]? ¿Qué resultados obtienen?». Barrido web con verificación página por página (4
+rastreadores: el galaxy mismo, RansomLook, la planilla «Ransomware Overview», el blog de
+Amigo-A) + búsqueda de cierre. **Conclusión: ningún trabajo publicado usa el galaxy
+«Ransomware» de MISP (ni sus fuentes) como corpus analizado con métricas. Es un catálogo de
+inteligencia de amenazas — se usa como referencia y enriquecimiento, no como dataset
+evaluado.** En detalle:
+
+- **Galaxy MISP:** tras ~12 combinaciones de búsqueda, cero papers que lo usen como datos o
+  ground truth. Lo más cercano usa OTROS clusters del proyecto (threat-actor.json: dAPTaset,
+  Springer 2020; arXiv 2103.02301) o solo el formato MISP, sin métricas sobre el catálogo.
+- **RansomLook (ransomlook.io):** sí aparece como fuente de datos, pero de METADATOS de
+  sitios de filtración, nunca de notas para clasificar familia. El único análisis académico:
+  Müller & Yannikos (arXiv 2605.24559, 2026), 25.761 posts de víctimas — estadística
+  descriptiva (top 1 % de grupos concentra 21,29 % de los ataques), sin clasificación.
+- **Blog de Amigo-A (id-ransomware.blogspot):** usado como catálogo de referencia (446 de las
+  2.135 entradas del galaxy lo citan; G DATA lo recomienda para identificación manual). Ningún
+  trabajo lo analiza como corpus. Precisión útil: el corpus de Lemmou NO salió de ahí (salió
+  de Malware Traffic Analysis, Hybrid Analysis y otros).
+- **Planilla «Ransomware Overview» (2016-17):** solo referencia comunitaria; nada la analiza.
+
+### Ampliación (2026-08-22): ¿es FUENTE FIABLE citable? SÍ — el matiz era otro
+
+Aclaración de Romina: la pregunta del tutor no es si alguien lo evalúa con clasificadores,
+sino si otros trabajos lo usan como fuente confiable. Respuesta: **sí, en tres niveles.**
+
+1. **Papers académicos lo usan como fuente de conocimiento:** dAPTaset (Laurenza &
+   Lazzeretti, workshop de ESORICS, Springer 2020) integra clusters de misp-galaxy para
+   construir su base de APTs; el paper de inferencia de threat actors (arXiv 2103.02301,
+   2021) usa el cluster Threat Actor del galaxy como base de conocimiento. Y RansomLook
+   (fuente del galaxy) es fuente de datos en un paper revisado por pares (RDBAlert, MDPI
+   Electronics 2025) y en Müller & Yannikos (arXiv, 2026).
+2. **Respaldo institucional del proyecto MISP:** paper fundacional revisado por pares
+   (Wagner et al., «MISP — The Design and Implementation of a Collaborative Threat
+   Intelligence Sharing Platform», ACM WISCS 2016); mantenido por CIRCL (el CERT de
+   Luxemburgo); usado por CERTs nacionales, CERT-EU, sector financiero y militar — las
+   instancias de CIRCL superan las 1.200 organizaciones y 4.000 usuarios. El galaxy es la
+   base de conocimiento oficial del proyecto (misp-galaxy.org), versionada en GitHub.
+3. **Cómo citarlo bien en la tesis:** «MISP Project, galaxy Ransomware», con versión y fecha
+   de la copia (v172, copia 2026-08-20), citando además la fuente primaria de cada dato
+   cuando exista (p. ej. Amigo-A). Matiz a declarar: es comunitario y contiene entradas de
+   imitadores — por eso el mapeo familia→entrada se hace a mano.
+
+**Consecuencia para el pipeline:** no existen números publicados sobre esta base contra los
+cuales compararse — el catálogo aporta METADATOS citables (nombres reales de nota, extensiones
+por familia, alias), que es el rol que ya se le dio. Las comparaciones válidas del pipeline
+siguen siendo: Lemmou et al. 2021 (notas; su F 0,920 es la binaria de nombres), ID Ransomware
+(evaluación propia en Pruebas.xlsx) y NapierOne (frente de archivos). Que nadie haya explotado
+el catálogo como fuente de features con procedencia es, además, espacio de novedad para D.2.
+
+## 📌 PREDICCIONES PREREGISTRADAS — experimento de embeddings multilingües (Exp. 3e)
+
+Escritas el 2026-08-20, ANTES de correr, sobre la lista de familias multi-idioma verificada
+nota por nota en B.3-155. Mecanismo que se pone a prueba: la representación actual (n-gramas
+TF-IDF) es ciega al significado entre idiomas y parafraseo; un embedding multilingüe no.
+
+**Diseño:** misma partición y protocolo que la base (P2 sobre 155 notas / 106 plantillas /
+30 familias, 10 semillas, carpeta de salida nueva). Única variable: la representación
+(embedding multilingüe en lugar de / además de TF-IDF). Base a batir: macro-F1 0,530 ± 0,062.
+> **ENMIENDA 2026-08-20, previa a la ejecución (sin resultados a la vista):** el 0,530 ±
+> 0,062 citado arriba corresponde a grupos+combinado+**Regresión Logística** — error de
+> quien preregistró al tomar «la mejor config» de la corrida 155. El modelo canónico del
+> frente es **LinearSVC**, y «única variable: la representación» exige compararlo contra
+> sí mismo. **Base a batir corregida: macro-F1 0,5265 ± 0,0490 (LinearSVC, combinado,
+> P2 sobre 155)**, y el control TF-IDF del experimento debe reproducirla dentro del mismo
+> proceso antes de evaluar los embeddings.
+
+**Predicciones:**
+1. **Suben las tres familias multi-idioma verificadas: JIGSAW (en+de+fr), CHIMERA (en+de) y
+   GANDCRAB (en+fr)** — su F1 por familia en P2 mejora respecto de la base 155.
+2. **RYUK NO se mueve** (control negativo): su cohesión baja viene de fragmentos ultra-cortos
+   solo-IOC, no de idiomas — un embedding no puede inventar contenido donde no lo hay.
+3. El macro-F1 global: sin predicción direccional fuerte — la mejora de 3 familias sobre 30
+   puede quedar dentro del ruido global aunque el mecanismo funcione. Por eso el criterio
+   principal es por familia, no global.
+
+**Criterio de adopción (fijado a priori):** se adopta la representación si (a) las tres
+familias nombradas suben su F1 por familia con Δ pareado positivo sobre las mismas semillas,
+(b) RYUK no sube de forma comparable, y (c) el macro-F1 global no EMPEORA (Δ pareado, IC 95 %
+no enteramente negativo). Si suben las tres Y TAMBIÉN RYUK, la mejora es genérica y el
+mecanismo NO queda probado — se reporta igual, con esa lectura.
+
+**Lectura si falla:** si las multi-idioma no suben, la variación entre sus plantillas es de
+contenido y no de superficie ⇒ el techo del corpus queda confirmado también contra
+representaciones semánticas, y se documenta como cierre del frente de método.
+
+## 📌 RESULTADO Exp. 3e — EMBEDDINGS MULTILINGÜES (2026-08-21, local, CPU)
+
+> **Base declarada: 155 notas · 106 plantillas · 30 familias.** Prueba fuera de muestra de las
+> predicciones preregistradas de arriba (escritas antes de correr). **Veredicto: NO ADOPTAR
+> ninguna de las dos variantes** — (a) embedding solo empeora; (b) concatenado da una **mejora
+> genérica con el mecanismo NO probado** (sube también el control negativo). Código:
+> `2_codigo/experimento_embeddings.py` + `2_codigo/construir_embeddings_notas.py` (commits
+> `d5ad3d5` y `1ebb5ff` en develop, sin coautoría). Salidas en
+> `4_resultados/resultados_embeddings_155/` (**no se tocó `resultados_canonicos/` ni
+> `resultados_extension_155/`**).
+
+> ⚠️ **DOS CORRECCIONES METODOLÓGICAS aplicadas antes de la corrida definitiva** (pedido del
+> tutor/Romina; ambas al manifiesto). Una corrida preliminar SIN estas correcciones quedó
+> **superada** — no citar sus cifras:
+> 1. **Truncado por `max_seq_length`.** El modelo corta a 128 tokens y **133 de 155 notas
+>    (86 %) superan la ventana** (mediana 346 tokens, máx. 12023). Sin corregir, cada nota
+>    larga se representaba solo por su comienzo. **Solución: trocear cada nota en ventanas de
+>    126 tokens no solapadas, embeber cada trozo y promediar (mean pooling) + re-normalizar L2.**
+>    El efecto fue real: JIGSAW en la variante (a) pasó de **−0,169 (truncado) a +0,021 (con
+>    troceado)** — el «baja» preliminar era en parte «no vio el texto».
+> 2. **Escala en la concatenación.** TF-IDF combinado son ~10⁴ dims ralas y el embedding 384
+>    densas; concatenados crudos el embedding queda aplastado. **Solución: L2 por bloque antes
+>    de concatenar** (cada bloque a norma 1).
+
+**Modelo (dependencia a declarar en metodología):**
+`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`, dim 384, `max_seq_length=128`.
+Embeddings por **troceado + mean pooling** (ventana 126 tokens, no solapada; 133/155 notas
+troceadas; máx. 96 trozos) y re-normalizados L2. Versiones: `sentence-transformers 6.0.0`,
+`torch 2.13.0+cpu`, `transformers 5.15.1`, `scikit-learn 1.6.1`, Python 3.11. El modelo es
+preentrenado y FIJO (no se ajusta con los datos ⇒ sin fuga aunque se calcule sobre todo el
+corpus). Los embeddings se computan en un proceso aparte (torch importado primero) para evitar
+un conflicto de DLL torch/MKL en Windows; no afecta las cifras.
+
+**Diseño ejecutado tal cual:** mismo protocolo P2 (`grupos`, `StratifiedGroupKFold` 2 pliegues),
+**mismas 10 semillas**, **mismo agrupamiento de casi-duplicados** (coseno char 3-5 > 0,90 →
+106 plantillas) y **mismo clasificador LinearSVC(C=1, class_weight=balanced)**. Única variable:
+la representación (variante (b): L2 por bloque antes de concatenar). **Control de partición: la
+base TF-IDF recomputada en el mismo proceso da macro-F1 0,5265 ± 0,0490 = idéntica a la
+almacenada (dif 0,0000)** ⇒ las particiones son las mismas y el Δ pareado por semilla es válido.
+
+> ⚠️ **Reconciliación del número base.** La preregistración citó «0,530 ± 0,062»; esa cifra es
+> la fila **Regresión Logística** (`grupos+combinado+LogReg` = 0,5300 ± 0,0617). El diseño exige
+> «única variable = la representación», así que el modelo se mantiene fijo en **LinearSVC** (el
+> canónico del frente de notas) y la base a batir es **macro-F1 0,5265 ± 0,0490**
+> (`grupos+combinado+LinearSVC`, `resultados_extension_155/corrida_canonica_resumen.csv`). No es
+> improvisación: es la única lectura que respeta «mismo protocolo, única variable».
+
+### (1) F1 por familia — las 4 preregistradas (macro-métrica: F1 por familia, media ± desvío sobre 10 semillas; base 155)
+
+Δ = variante − base, **pareado por semilla**. IC 95 % del Δ (t de Student, df=9). «sem+» = semillas con Δ>0.
+Cifras corregidas (troceado + L2 por bloque).
+
+**Variante (a) — embedding EN LUGAR de TF-IDF:**
+| Familia | Predicción | F1 base | F1 variante | Δ pareado | IC 95 % | sem+ | Veredicto |
+|---|---|---|---|---|---|---|---|
+| CHIMERA (en+de) | sube | 0,553 ± 0,249 | **0,822 ± 0,306** | **+0,269** | [+0,152; +0,385] | 9/10 | ✅ SUBE fuerte |
+| JIGSAW (en+de+fr) | sube | 0,282 ± 0,321 | 0,303 ± 0,319 | +0,021 | [−0,222; +0,263] | 2/10 | ⚠️ plano (ruido) |
+| GANDCRAB (en+fr) | sube | 0,670 ± 0,320 | 0,456 ± 0,236 | **−0,215** | [−0,429; −0,000] | 2/10 | ❌ BAJA |
+| RYUK (control −) | no se mueve | 0,260 ± 0,266 | 0,318 ± 0,297 | +0,058 | [−0,030; +0,146] | 4/10 | ✓ no sube signif. |
+
+**Variante (b) — embedding CONCATENADO con TF-IDF (L2 por bloque):**
+| Familia | Predicción | F1 base | F1 variante | Δ pareado | IC 95 % | sem+ | Veredicto |
+|---|---|---|---|---|---|---|---|
+| CHIMERA (en+de) | sube | 0,553 ± 0,249 | 0,612 ± 0,261 | +0,059 | [−0,050; +0,168] | 3/10 | ⚠️ sube (n.s.) |
+| JIGSAW (en+de+fr) | sube | 0,282 ± 0,321 | 0,332 ± 0,331 | +0,050 | [−0,103; +0,203] | 3/10 | ⚠️ sube (n.s.) |
+| GANDCRAB (en+fr) | sube | 0,670 ± 0,320 | 0,712 ± 0,274 | +0,042 | [−0,061; +0,144] | 4/10 | ⚠️ sube (n.s.) |
+| RYUK (control −) | no se mueve | 0,260 ± 0,266 | **0,388 ± 0,240** | **+0,128** | [+0,055; +0,200] | 8/10 | ⛔ SUBE MÁS que las 3 |
+
+### (2) macro-F1 global (30 familias, azar 0,033) — Δ pareado e IC 95 %, base 155
+
+| Variante | macro-F1 base | macro-F1 variante | Δ pareado | IC 95 % | sem+ |
+|---|---|---|---|---|---|
+| (a) embedding en lugar de TF-IDF | 0,5265 ± 0,0490 | **0,4532 ± 0,0436** | **−0,0733** | [−0,1073; −0,0393] | 0/10 |
+| (b) embedding concatenado (L2/bloque) | 0,5265 ± 0,0490 | **0,5358 ± 0,0406** | **+0,0092** | [−0,0098; +0,0283] | 7/10 |
+
+- **(a) empeora de forma significativa** (0/10 semillas mejoran, IC 95 % enteramente negativo):
+  el embedding solo pierde ~0,07 de macro-F1 contra TF-IDF ⇒ la señal de superficie (n-gramas)
+  es la que sostiene el desempeño global; el multilingüe chico no la reemplaza. (Con el troceado
+  la caída bajó de −0,1145 a −0,0733: ver el texto completo ayudó, pero no alcanza.)
+- **(b) es plano:** Δ +0,0092, IC 95 % **incluye 0** ⇒ no mejora de forma significativa, aunque
+  7/10 semillas queden del lado positivo.
+
+### (3) Veredicto contra el criterio de adopción preregistrado, por variante
+
+- **(a) embedding en lugar de TF-IDF → NO ADOPTAR.** Falla (a): de las tres multi-idioma sube
+  fuerte solo CHIMERA (+0,269, 9/10); JIGSAW queda plano (+0,021, IC incluye 0) y **GANDCRAB
+  baja** (−0,215). Falla (c): el macro-F1 global empeora con IC 95 % enteramente negativo.
+- **(b) embedding concatenado → NO ADOPTAR, por «mejora genérica / mecanismo NO probado».**
+  Se cumple (a) en signo —las tres suben algo (CHIMERA +0,059, JIGSAW +0,050, GANDCRAB +0,042),
+  aunque **ninguna es significativa** (los tres IC 95 % incluyen 0)— y se cumple (c) —el global
+  no empeora—. **Pero RYUK (control negativo) sube +0,128 (8/10, IC 95 % enteramente positivo),
+  MÁS que cualquiera de las tres multi-idioma.** Es exactamente el caso que la preregistración
+  fijó a priori: «si suben las tres Y TAMBIÉN RYUK, la mejora es genérica y el mecanismo NO queda
+  probado». El efecto de (b) es una ganancia difusa de agregar features densas —que ayuda a
+  cualquier familia, y a RYUK más que a nadie—, **no** el cierre de brechas entre idiomas.
+
+### Lectura honesta
+
+**El único efecto atribuible al mecanismo lingüístico es CHIMERA en la variante (a)** (+0,269,
+9/10 semillas): sus plantillas son **el mismo mensaje traducido literalmente** (en+de) y el
+embedding multilingüe las acerca — justo lo predicho. **No generaliza:**
+- **GANDCRAB baja en (a)** pese a tener una plantilla francesa: su bloque francés es una nota
+  larga y distinta, y al reemplazar TF-IDF por el embedding se pierde la señal de superficie que
+  la venía identificando bien (base 0,670).
+- **JIGSAW no se mueve** de forma clara: su baja cohesión es de contenido, no solo de idioma —
+  sus dos plantillas inglesas ya son mensajes distintos («Your computer files have been
+  encrypted» vs «I want to play a game with you»), verificado en B.3-155. Un embedding no
+  inventa el contenido que falta.
+- **En (b) suben las tres pero RYUK sube más**, y RYUK no tiene componente de idioma (control):
+  la suba es genérica.
+
+> **Conclusión para la tesis:** cambiar la representación por un embedding multilingüe chico
+> **no supera la base TF-IDF** en el frente de notas —variante (a) peor de forma significativa,
+> variante (b) estadísticamente indistinguible y con el mecanismo no probado (sube el control)—.
+> El único efecto lingüístico limpio es CHIMERA, insuficiente para adoptar. **Refuerza el
+> argumento central: el techo lo pone el dato (la diversidad de contenido del corpus), no la
+> representación** — ahora también contra representaciones semánticas, no solo contra ajuste de
+> hiperparámetros. Cierre del frente de método en notas; ampliar corpus (contenido nuevo) sigue
+> siendo la única palanca con evidencia. **Y valida el control del truncado:** sin trocear, el
+> «baja» de JIGSAW era artefacto de no ver el texto (−0,169 → +0,021).
+>
+> *(Todas las cifras: F1 por familia y macro-F1 sobre 30 familias, P2 = protocolo `grupos`,
+> LinearSVC, 10 semillas, base 155 notas / 106 plantillas. Δ pareado por semilla. Azar
+> macro-F1 0,033. Embedding: troceado ventana 126 + mean pooling; variante (b): L2 por bloque.)*
+
+
+## ★ FUENTE NUEVA DEL TUTOR (2026-08-20) — catálogo MISP «Ransomware»
+
+El tutor envió el JSON del galaxy «Ransomware» del proyecto MISP (2.135 entradas; fuentes:
+MISP Project, id-ransomware.blogspot/Amigo-A, ransomlook.io). Guardado en
+`3_datos/misp_ransomware_galaxy/misp_galaxy_ransomware_2026-08-20.json` (fuera del repo).
+**Las 30 familias del núcleo tienen entrada.** Qué aporta, en orden de valor:
+
+1. **Extensiones documentadas por familia → evidencia citable de campaña-vs-familia.** Hoy la
+   afirmación «la extensión identifica la campaña, no la familia» se sostiene con razonamiento
+   y el ejemplo de DHARMA. MISP la convierte en tabla: **DHARMA 21 extensiones documentadas,
+   MEDUZALOCKER 36, JIGSAW 19, CLOP 8** — contra la ÚNICA extensión por familia que muestra
+   NapierOne (una campaña). Refuerza el Exp. 2b y el diseño del 2d con fuente externa.
+2. **`ransomnotes-filenames` (298 entradas) → nombres REALES de nota de rescate.** Era el
+   bloqueo de la señal 1: los nombres de ThreatLabz son etiquetas del curador. Acá hay nombres
+   documentados (DHARMA: `README.txt`, `Info.hta`, `FILES ENCRYPTED.txt`…). Habilita la
+   feature de nombre con procedencia y alimenta el Exp. 2d.
+3. **`ransomnotes` (115 entradas) → textos de notas** con procedencia citable — posible fuente
+   de plantillas para las familias que siguen bajas (pasar SIEMPRE por el verificador de
+   casi-duplicados antes de contarlas).
+4. **`synonyms` (207 entradas) → alias con fuente** para el filtro de circularidad (hoy la
+   lista de alias es artesanal) y, crítico para la extensión a familias nuevas: **deduplicar
+   por alias antes de sumar una familia** (no agregar «REvil» y «Sodinokibi» como dos).
+5. **`date`** → año por familia con fuente adicional a `Pruebas.xlsx`.
+
+⚠️ Advertencias: es un catálogo comunitario, con entradas de imitadores y calidad despareja
+(«CerberTear» no es CERBER; hay entradas «(Fake)»). El mapeo familia→entrada hay que hacerlo
+**a mano, una por una** — el emparejamiento automático rápido que se usó para el censo inicial
+agarró imitadores en al menos CERBER y CRYPTOLOCKER. Tarea corta, pendiente. Citar como
+«MISP Project, galaxy Ransomware» con la fecha de la copia.
+
+## 📌 PREDICCIONES PREREGISTRADAS — antes de re-medir sobre 155 notas (2026-08-20)
+
+Escritas ANTES de correr la medición sobre el corpus de 155 notas, para que la corrida sea una
+prueba de B.1 fuera de muestra y no una lectura a posteriori. Base de la predicción: el Δ del
+paso 3→4 plantillas medido por B.1 (macro-F1 +0,0297, IC 95 % [+0,0039; +0,0554], pareado).
+
+1. **F1 por familia de WANNACRY y RYUK sube fuerte** (hoy 0,01 ± 0,10 y 0,03 ± 0,16 en P2ret;
+   pasaron de 2 a 4 textos distintos).
+2. **NOTPETYA, CRYPTOLOCKER y WASTEDLOCKER no se mueven** (no se les agregó nada; techo
+   confirmado en la sesión de recolección).
+3. **El macro-F1 global de P2 sube de forma modesta**, del orden del Δ de B.1 diluido por las
+   familias sin cambio.
+
+Reglas de la corrida: mismo código y configuración que la canónica, 10 semillas, **carpeta de
+salida NUEVA** (no pisar `resultados_canonicos/`), base declarada «155 notas, 30 familias».
+Después de esta corrida y NO antes: mejoras de features de a una (primera: vista de marcadores
+por forma, C.bis), cada una contra esta base con criterio de adopción fijado a priori
+(IC 95 % del Δ pareado excluye 0). La ampliación a familias nuevas va al final, con el método
+congelado.
+
+## 📌 RESULTADO DE LA RE-MEDICIÓN SOBRE 155 NOTAS (2026-08-20) — EXTENSIÓN QUE SE AGREGA
+
+Prueba fuera de muestra de las predicciones preregistradas de arriba. **Base declarada:
+155 notas · 30 familias · 106 plantillas** (casi-dup coseno char 3-5 > 0,90). Corpus
+verificado 1:1 contra `manifiesto_corpus_v2.csv` (155 filas; 0 discrepancias en ambos
+sentidos; extracción 128 texto + 27 html; ninguna nota omitida). Salidas en
+`4_resultados/resultados_extension_155/` (**NO se tocó `resultados_canonicos/`**). Mismo
+código y configuración que la canónica (10 semillas P1/P2; R=100 P2ret). El control interno
+de la curva pasó: k=todo reprodujo el evaluador canónico sobre 155 (aborta si no coincide).
+
+> **Las cifras canónicas de 146/144 NO se corrigen: tienen otra base. Esto es una medición
+> aparte, sobre 155.** Código en commit `a914e33` (parámetro `--salida`, sin cambios de método).
+
+### Cifras globales (155 vs canónica)
+| Métrica | 155 notas | Canónica | Δ |
+|---|---|---|---|
+| P2 macro-F1 (grupos, combinado+LinearSVC) | **0,5265 ± 0,0490** | 0,435 ± 0,057 (146) · 0,4210 (144) | +0,092 · +0,106 |
+| P1 macro-F1 (estratificado, caracteres+LinearSVC) | **0,7955 ± 0,0194** | 0,760 ± 0,029 (146) · 0,7501 (144) | +0,036 |
+| P2ret macro-F1 (30fam, k=todo, R=100) | **0,7612 ± 0,0597** | 0,6164 ± 0,0450 (144) | +0,1448 |
+
+Curva P2 (30fam, plantillas) sobre 155 **satura en k≈2**: deltas 1→2 +0,0476 (sig), 2→3
++0,0109 (no sig), 3→4 −0,0040 (no sig). El paso 3→4 que en 144 era +0,0297 (sig) ahora es
+nulo. **El aporte vino del NIVEL (familias que dejaron de dar 0), no de seguir trepando la
+curva.**
+
+### Contraste de las TRES predicciones (per-familia: 30fam · P2ret · plantillas · k=todo, R=100)
+
+| Familia | F1 144 | F1 155 | Δ | Predicción | Veredicto |
+|---|---|---|---|---|---|
+| WANNACRY | 0,0100 ± 0,100 | 0,7333 ± 0,395 | +0,723 | (a) sube fuerte | ✅ CUMPLE (fuerte) |
+| RYUK | 0,0324 ± 0,160 | 0,2706 ± 0,419 | +0,238 | (a) sube fuerte | ⚠️ PARCIAL: sube, pero solo a 0,27 ± 0,42 |
+| NOTPETYA | 0,6950 ± 0,114 | 0,9367 ± 0,131 | +0,242 | (b) no se mueve | ❌ FALLA: subió +0,24 |
+| CRYPTOLOCKER | 0,4100 ± 0,456 | 0,0967 ± 0,269 | −0,313 | (b) no se mueve | ❌ FALLA: bajó −0,31 |
+| WASTEDLOCKER | 0,0000 ± 0,000 | 0,9874 ± 0,073 | +0,987 | (b) no se mueve | ❌ FALLA: subió +0,99 |
+
+(Confirmado que la base per-familia es la correcta: los valores 144 de WANNACRY 0,0100 y RYUK
+0,0324 coinciden con los citados en la preregistración.)
+
+**(a) — CUMPLE para WANNACRY (fuerte), PARCIAL para RYUK.** WANNACRY 0,01→0,73 confirma el
+efecto del paso 2→4 plantillas. RYUK subió +0,24 pero solo a 0,27 ± 0,42: dirección correcta,
+magnitud débil y varianza enorme (sigue fallando la mayoría de las repeticiones). No suavizar
+a «cumple»: es media victoria.
+
+**(b) — FALLA en las TRES, cada una por un mecanismo distinto. Este es el hallazgo:**
+- **WASTEDLOCKER 0,000 → 0,987 sin agregar una sola nota.** Descolapso del reagrupamiento: las
+  4 notas que en 144 formaban 1 plantilla (unidas por transitividad, coseno mínimo 0,894) se
+  parten en **3 plantillas** en 155 porque el IDF se reajusta sobre el corpus más grande. Con
+  ≥2 plantillas ya es evaluable en P2ret, y como las 3 quedan a ~0,89 entre sí, la plantilla
+  retenida se parece mucho a las de entrenamiento → F1 0,987. **Artefacto de partición, NO
+  aprendizaje. Anticipado antes de correr.**
+- **CRYPTOLOCKER 0,410 → 0,097.** Se le **quitó** la nota mal etiquetada (`lm_Crypt0l0cker` =
+  TorrentLocker, retirada el 2026-08-19). 4→3 notas, 3→2 plantillas: cambió su composición. No
+  es «no se le agregó nada», es «se le sacó algo». Con 2 plantillas queda frágil en P2ret.
+- **NOTPETYA 0,695 → 0,937 sin agregar ni quitar nada (sigue 2 notas / 2 plantillas).** El F1
+  por familia en multiclase depende del corpus entero (frontera, IDF, clases negativas): al
+  crecer las demás familias y afinarse la frontera, NOTPETYA se volvió más separable. **Es la
+  refutación más limpia del supuesto de (b): «sin material nuevo ⇒ el F1 no cambia» es falso.**
+
+**(c) — FALLA por lo alto.** Predijo subida «modesta, del orden del Δ 3→4 de B.1 (+0,0297)
+diluido». El P2 canónico subió **+0,092** (0,435→0,5265), ~3× lo predicho; el P2ret macro
++0,1448. Mecanismo: la predicción supuso que solo WANNACRY/RYUK moverían la aguja, pero
+**cinco** familias que en 144 daban ~0,000 saltaron en 155 —WANNACRY, CHIMERA (0→0,912),
+MAZE (0→0,561), MEDUZALOCKER (0→0,608), WASTEDLOCKER (0→0,987)—, cuatro porque la recolección
+les agregó textos distintos (dejaron de ser monoplantilla) y WASTEDLOCKER por el artefacto de
+reagrupamiento; más corrimientos indirectos de frontera (NOTPETYA +0,24, CERBER 0,869→0,999).
+El macro-F1 promedia 30 familias por igual, así que cinco familias pasando de 0 a 0,56–0,99
+domina. CRYPTOLOCKER (−0,31) compensa en parte.
+
+### Lección metodológica (para el capítulo, con base declarada)
+El **F1 por familia bajo P2/P2ret no es estable frente a cambios del corpus**, ni siquiera para
+familias sin material nuevo, por tres vías: (i) el reagrupamiento de casi-duplicados se
+recalcula global (IDF sobre todo el corpus) y familias al borde del umbral 0,90 se descolapsan
+(WASTEDLOCKER); (ii) retiros de notas cambian la composición (CRYPTOLOCKER); (iii) la frontera
+multiclase depende del corpus entero (NOTPETYA). Comparar F1 por familia entre versiones del
+corpus exige declararlo. **No se tocó el método** (decisión del pedido): se reporta el efecto
+con su mecanismo. Nota lateral que confirma una anticipación previa: **JIGSAW bajó 0,670→0,505**
+al sumarle traducciones — coherente con el choque idioma-vs-cohesión ya documentado.
+
+### Pendiente (Paso 2, en otro chat)
+Sobre ESTA base de 155: mejoras de features de a una (primera C.bis, vista de marcadores por
+forma), cada una con criterio de adopción a priori (IC 95 % del Δ pareado excluye 0).
+La ampliación a familias nuevas de ThreatLabz sigue pendiente de decisión con el tutor.
+
+## ★ DISEÑO DE LA EXTENSIÓN COMO VALIDACIÓN (2026-08-21) — la cohesión predice, se preregistra
+
+Aclaración de propósito, tras la pregunta de Romina («¿cómo agregar familias si las que
+tenemos fallan?»): **la extensión no persigue subir el número — mide si el método escala, y
+el macro-F1 sobre más familias VA A DAR MÁS BAJO que sobre 30 (más clases = problema más
+difícil). Decírselo a Cappo de entrada.** El entregable es la curva macro-F1 vs cantidad de
+familias y el análisis por familia, no una cifra mayor.
+
+**Diseño acordado — la extensión como validación fuera de muestra de B.3:**
+1. Para cada familia candidata (ThreatLabz, deduplicada por alias con MISP), medir su
+   **cohesión** antes de clasificar.
+2. **Predecir por escrito** cuáles rendirán (cohesión alta) y cuáles no, usando la
+   correlación de B.3-155 (Spearman ρ +0,69 entre cohesión y F1 por familia).
+3. Correr y contrastar predicción contra resultado.
+
+Si acierta sobre familias que no participaron en derivar la correlación, ρ +0,69 pasa de
+observación a regla validada — el hallazgo más fuerte del frente. Si falla, se reporta que
+la correlación era específica del corpus. Umbral de admisión vigente: ≥ 2 plantillas para
+ser evaluable, ~4 para rendir; familias de 1 nota no entran.
 
 ## ★ DECISIÓN 2026-08-20 — EXTENSIÓN DE FAMILIAS EN EL FRENTE DE NOTAS
 
@@ -2865,6 +3640,4425 @@ Es el punto de partida de la progresión del cap. 4 (0,228 → 0,603 estadístic
 > que sí hay localmente es una **muestra chica**: `3_datos/archivos_cifrados/SVM/Pruebas/`
 > (73 cifrados + 41 limpios) y una copia en `Notebooks/Datasets/`. Para reproducir el 0,228 hay
 > que pedirle el `.rar` a Carlos, o rehacerlo bajando NapierOne Tiny.
+
+## 📌 PREDICCIONES PREREGISTRADAS — M.1 CASCADA IOC→TEXTO (2026-08-22)
+
+Escritas **ANTES de implementar y correr** el experimento, calculadas únicamente desde el
+grafo B.3-155 ya publicado (`4_resultados/resultados_grafo_marcadores_155/`, CSV
+`b3_aristas.csv` + `b3_marcadores_por_plantilla.csv`). Es el espejo del Exp. 2b en el frente
+de notas: **regla exacta donde aplica + clasificador de texto como respaldo**.
+
+**Mecanismo medido que la sostiene (B.3-155):** tras filtrar infraestructura común, **ningún
+IOC operativo se comparte entre familias distintas** — las 5 aristas entre familias del grafo
+son URLs de torproject, no marcadores de campaña. Por lo tanto un IOC ya visto identifica la
+familia casi sin error, pero solo cubre las notas que reutilizan infraestructura conocida.
+
+**Base declarada:** 155 notas · 106 plantillas (108 nodos familia#plantilla) · 30 familias.
+Protocolo P2 (`grupos`, StratifiedGroupKFold 2 pliegues), 10 semillas, LinearSVC combinado
+como capa de respaldo. Base a batir: **macro-F1 0,5265 ± 0,0490** (LinearSVC, combinado, P2
+sobre 155; `resultados_extension_155/resultados_canonicos/corrida_canonica_resumen.csv`).
+
+### (a) Cobertura esperada de la regla
+
+Derivada del grafo, en dos niveles. **Cota del grafo** = fracción que comparte al menos un IOC
+con otra plantilla de su familia (supone que el vecino siempre está en entrenamiento).
+**Estimación bajo 2 pliegues** = la anterior corregida por la probabilidad hipergeométrica de
+que al menos uno de los k vecinos caiga en el pliegue de entrenamiento,
+`1 − C(g−1,k)/C(n−1,k)` promediada sobre los dos tamaños de pliegue de la familia.
+
+| Variante | Cota del grafo (plantillas) | Cota del grafo (notas) | **Cobertura esperada, 2 pliegues** |
+|---|---|---|---|
+| **Sin** filtro de circularidad | 61/108 = 0,565 | 99/155 = 0,639 | **0,584** |
+| **Con** filtro de circularidad | 53/108 = 0,491 | 89/155 = 0,574 | **0,530** |
+
+El filtro de circularidad cuesta ~0,05 de cobertura: saca 74 valores que contienen el nombre
+o alias de la familia, y deja **LOCKBIT y CHIMERA en cobertura 0,000** (LOCKBIT pasa de 4 notas
+cubiertas a 0 — es la concentración ya documentada en B.3).
+
+**Dos razones por las que la cobertura medida puede quedar por DEBAJO de la estimación, ya
+declaradas:** (1) el grafo agrega los IOCs de *todas* las notas de una plantilla, mientras que
+la cascada decide **nota por nota** — una nota concreta puede no llevar el IOC que une a su
+plantilla con la vecina; (2) el diccionario se construye solo con el pliegue de entrenamiento.
+Y una razón por la que puede quedar por ENCIMA: los IOCs compartidos con OTRA familia
+(2 plantillas / 3 notas sin filtro, 4 plantillas / 6 notas con filtro) también disparan la
+regla, pero cuando lo hacen **acierta poco o nada**.
+
+### (b) Acierto donde aplica
+
+**Cercano a 1: se predice ≥ 0,95.** Es consecuencia directa del mecanismo de B.3 (IOCs
+privados de cada familia). No se predice exactamente 1,000: la vía de error identificada de
+antemano son las **URLs de infraestructura común** (torproject y similares) que en un pliegue
+de entrenamiento aparecen bajo una sola familia y en prueba aparecen en otra. La regla de
+unanimidad (todas las coincidencias apuntan a UNA familia) filtra el conflicto visible, no este
+caso. Si el acierto medido cae por debajo de 0,90, el filtro de genéricos de B.3
+(`MAX_FAMILIAS_VALOR`) pasa a ser necesario y se declarará como hallazgo.
+
+### (c) Familias que más deberían beneficiarse
+
+Las de `pares_unidos_por_marcador` alto en `b3_cohesion_por_familia.csv`, cruzadas con su
+cobertura y su F1 de partida (F1 base = `corrida_canonica_por_familia.csv` de
+`resultados_extension_155`, P2, 10 semillas):
+
+| Familia | frac. pares unidos | Cobertura sin filtro | F1 base | Margen |
+|---|---|---|---|---|
+| **BLACKBASTA** | 0,667 | 1,000 | **0,122** | el mayor margen de las 30 |
+| **CLOP** | 0,500 | 0,750 | 0,316 | alto |
+| **BLACKMATTER** | 1,000 | 1,000 | 0,413 | alto |
+| **SODINOKIBI** | 0,333 | 1,000 | 0,474 | medio |
+| **LORENZ** | 1,000 | 1,000 | 0,550 | medio |
+| **NOTPETYA** | 1,000 | 1,000 | 0,581 | medio |
+| **PHOBOS** | 0,500 | 0,750 | 0,612 | medio |
+| **GANDCRAB** | 1,000 | 1,000 | 0,681 | bajo (ya alto) |
+| **NETWALKER** | 1,000 | 1,000 | 0,700 | bajo (ya alto) |
+| **TESLACRYPT** | 1,000 | 1,000 | 0,789 | bajo (ya alto) |
+
+**Controles negativos preregistrados: RYUK y HELLOKITTY.** Las dos tienen
+`pares_unidos_por_marcador = 0` y **cobertura 0,000** en las dos variantes, con F1 base bajo
+(RYUK 0,225 · HELLOKITTY 0,137). **No deben moverse.** Si suben, la ganancia no viene del
+mecanismo de IOCs y el experimento no prueba lo que dice probar. *(HELLOKITTY tiene 5
+plantillas y solo 2 marcadores en total; RYUK tiene 9 marcadores pero ninguno repetido entre
+sus plantillas.)*
+
+**BLACKBASTA es el caso interesante y hay que leerlo con cuidado:** comparte plantilla de texto
+con CONTI (grupo 6 de casi-duplicados) pero **no comparte IOCs** con ella, así que es
+exactamente la familia que la cascada debería rescatar — y es la predicción que conecta M.1
+con M.4.
+
+### (d) Criterio de adopción (fijado a priori)
+
+**Se adopta la cascada si el macro-F1 del combinado supera la base con Δ pareado por semilla
+cuyo IC 95 % (t de Student, df=9) excluye el cero.** Las dos variantes (con y sin filtro de
+circularidad) se juzgan por separado con el mismo criterio.
+
+Condiciones de lectura, también a priori:
+- Si el macro-F1 sube **y** suben las familias de (c) **sin** que se muevan RYUK/HELLOKITTY →
+  el mecanismo queda probado.
+- Si sube el macro-F1 pero **también** suben los controles negativos → mejora genérica,
+  mecanismo NO probado (misma regla que cerró el Exp. 3e).
+- Si la cobertura medida queda muy por debajo de la estimación de (a) → se reporta la cascada
+  como **regla de alta precisión y baja cobertura**, igual que las firmas binarias del Exp. 2b,
+  y se declara que no mueve el agregado.
+- **Puerta de entrada:** la capa de texto sola debe reproducir macro-F1 0,5265 ± 0,0490. Si no
+  reproduce, la corrida se detiene y no se reporta ninguna cifra.
+
+Salidas en carpeta NUEVA: `4_resultados/resultados_cascada_155/`. No se toca
+`resultados_canonicos/`, `resultados_extension_155/` ni el capítulo 4.
+
+## 📌 RESULTADO M.1 — CASCADA IOC→TEXTO (2026-08-22, local)
+
+> **Base declarada: 155 notas · 106 plantillas · 30 familias.** Prueba fuera de muestra de las
+> predicciones preregistradas del bloque anterior (escritas antes de implementar y correr).
+> **Veredicto: la variante SIN filtro de circularidad SE ADOPTA por el criterio preregistrado;
+> la variante CON filtro NO.** Código: `2_codigo/cascada_ioc_notas.py` (commit `3473c40` en
+> develop, sin coautoría). Salidas en `4_resultados/resultados_cascada_155/` — **no se tocó
+> `resultados_canonicos/`, `resultados_extension_155/` ni el capítulo 4**.
+
+**Puerta de entrada superada exactamente:** la capa de texto sola dio **macro-F1 0,5265 ±
+0,0490**, diferencia **0,0000** contra la base almacenada (LinearSVC, combinado, P2 sobre 155).
+El script aborta si no coincide dentro de 0,003, así que la partición es la misma y el Δ
+pareado por semilla es válido, no una comparación entre corridas distintas.
+
+**Qué se corrió:** IOCs extraídos **solo del pliegue de entrenamiento** con los patrones
+canónicos de `normalizacion_marcadores.PATRONES` (los mismos del Sprint 1.1 y de B.3, no un
+criterio nuevo); diccionario valor→familia; en prueba, si la nota contiene un IOC del
+diccionario y **todas** sus coincidencias apuntan a UNA familia se le asigna, y el conflicto o
+la ausencia caen al LinearSVC combinado entrenado en ese mismo pliegue. P2 (`grupos`,
+StratifiedGroupKFold 2 pliegues), mismas 10 semillas. En el corpus hay **265 valores de IOC
+distintos**; 18 de las 155 notas no tienen ningún IOC.
+
+### (1) Las tres columnas del Exp. 2b (media ± desvío, 10 semillas, base 155)
+
+| Variante | Cobertura de la regla | Acierto donde aplica | macro-F1 combinado | Exactitud |
+|---|---|---|---|---|
+| texto solo (base) | — | — | 0,5265 ± 0,0490 | 0,6026 |
+| **sin filtro de circularidad** | **0,2613 ± 0,0264** (40,5 de 155 notas) | **0,9814 ± 0,0241** | **0,5453 ± 0,0485** | **0,6348** |
+| **con filtro de circularidad** | 0,2419 ± 0,0287 (37,5 notas) | 0,9719 ± 0,0370 | 0,5323 ± 0,0486 | 0,6239 |
+
+**Δ pareado por semilla contra la base, IC 95 % (t de Student, df=9):**
+
+| Variante | Δ macro-F1 | IC 95 % | semillas con Δ>0 | Δ exactitud | IC 95 % |
+|---|---|---|---|---|---|
+| **sin circularidad** | **+0,0188** | **[+0,0128; +0,0248]** | **10/10** | **+0,0323** | [+0,0236; +0,0410] |
+| con circularidad | +0,0058 | [−0,0013; +0,0130] | 6/10 | +0,0213 | [+0,0120; +0,0305] |
+
+Exactitud balanceada: base 0,5818 → 0,6012 (sin circularidad) · 0,5864 (con circularidad).
+
+**Donde la regla aplica, gana claramente al texto:** acierto de la regla 0,9814 contra 0,8569
+del clasificador de texto **sobre esas mismas notas** (+0,1244). No es que la regla cubra lo
+fácil: cubre notas que el texto erraba en un 14 % de los casos.
+
+### (2) Veredicto contra el criterio de adopción preregistrado
+
+El criterio fijado a priori era: *se adopta si el macro-F1 combinado supera la base con Δ
+pareado cuyo IC 95 % excluye el cero.*
+
+- **SIN filtro de circularidad → SE ADOPTA.** Δ +0,0188 con IC 95 % [+0,0128; +0,0248], que
+  excluye el cero, y **10/10 semillas** del lado positivo.
+- **CON filtro de circularidad → NO se adopta.** Δ +0,0058 con IC 95 % [−0,0013; +0,0130], que
+  **incluye el cero** (6/10 semillas). Queda como **regla de alta precisión y baja cobertura
+  que no mueve el agregado** — exactamente la lectura que el preregistro dejó prevista.
+
+**El mecanismo queda probado, y esto es lo importante:** los dos controles negativos preregistrados
+**no fueron tocados por la regla en ninguna semilla** — cero notas de RYUK y cero de HELLOKITTY
+recibieron asignación por IOC, tal como predecía su cobertura 0,000 en el grafo.
+
+> ⚠️ **Matiz metodológico que hubo que agregar al leer los resultados.** HELLOKITTY mueve su F1
+> +0,0097 pese a no ser tocada. No es una violación del control: el Δ de F1 de una familia mezcla
+> **recall propio** (notas suyas que la regla asignó) con **precisión ajena** (notas de otras
+> familias que el texto le atribuía por error y la regla reasignó). HELLOKITTY tiene **0 notas
+> propias asignadas y 16 falsos positivos ajenos corregidos** (12 de DHARMA, 2 de BLACKBASTA, 2 de
+> PHOBOS). RYUK tiene 0 y 0, y su Δ es exactamente 0,0000. El script ahora reporta las dos
+> columnas por familia (`notas_propias_asignadas`, `falsos_positivos_ajenos_corregidos`) y juzga
+> el control por «¿la regla la tocó?», no por «¿su F1 se movió?». **Sin esta descomposición el
+> veredicto automático decía «mejora genérica» y habría sido falso.**
+
+### (3) F1 por familia — preregistradas y controles (Δ pareado, IC 95 %, base 155)
+
+Variante **sin filtro de circularidad** (la adoptada). «propias» = notas de la familia asignadas
+por la regla en las 10 semillas; «ajenas» = falsos positivos del texto corregidos.
+
+| Familia | Predicción | F1 base | F1 cascada | Δ pareado | IC 95 % | propias / ajenas | Veredicto |
+|---|---|---|---|---|---|---|---|
+| **BLACKBASTA** | el mayor margen | 0,179 ± 0,243 | **0,307 ± 0,222** | **+0,128** | [+0,038; +0,219] | 8 / 1 | ✅ sube, IC excluye 0 |
+| **LORENZ** | sube | 0,536 ± 0,324 | 0,625 ± 0,361 | **+0,089** | [+0,021; +0,157] | 8 / 0 | ✅ sube |
+| **CLOP** | sube | 0,346 ± 0,228 | 0,419 ± 0,234 | **+0,074** | [+0,006; +0,141] | 23 / 2 | ✅ sube |
+| **TESLACRYPT** | sube (ya alta) | 0,789 ± 0,286 | 0,848 ± 0,306 | **+0,059** | [+0,022; +0,096] | 81 / 13 | ✅ sube |
+| **PHOBOS** | sube | 0,567 ± 0,302 | 0,621 ± 0,320 | +0,054 | [−0,022; +0,130] | 21 / 8 | ⚠️ sube, n.s. |
+| **SODINOKIBI** | sube | 0,427 ± 0,245 | 0,451 ± 0,270 | +0,024 | [−0,006; +0,054] | 0 / 5 | ⚠️ solo precisión ajena |
+| **GANDCRAB** | sube | 0,670 ± 0,320 | 0,670 ± 0,320 | +0,000 | [0,000; 0,000] | 0 / 0 | ❌ la regla nunca aplicó |
+| **NOTPETYA** | sube | 0,581 ± 0,227 | 0,581 ± 0,227 | +0,000 | [0,000; 0,000] | 18 / 0 | ➖ aplicó, no cambió nada |
+| **NETWALKER** | sube | 0,686 ± 0,475 | 0,686 ± 0,475 | +0,000 | [0,000; 0,000] | 14 / 0 | ➖ aplicó, no cambió nada |
+| **BLACKMATTER** | sube | 0,377 ± 0,416 | 0,377 ± 0,416 | +0,000 | [0,000; 0,000] | 5 / 0 | ➖ aplicó, no cambió nada |
+| **RYUK** *(control −)* | no se mueve | 0,260 ± 0,266 | 0,260 ± 0,266 | **+0,000** | [0,000; 0,000] | **0 / 0** | ✅ control intacto |
+| **HELLOKITTY** *(control −)* | no se mueve | 0,133 ± 0,127 | 0,143 ± 0,134 | +0,010 | [+0,000; +0,019] | **0 / 16** | ✅ no tocada (ver matiz) |
+
+**Las que suben y no estaban preregistradas** (se reportan por transparencia, no como
+predicción acertada): **DHARMA +0,1026** [+0,0368; +0,1684] (60 notas propias asignadas),
+**CHIMERA +0,0681** [+0,0048; +0,1314], **CERBER +0,0373** [+0,0143; +0,0602].
+
+**Ninguna familia baja de forma significativa.** Las dos que bajan tienen IC 95 % que incluye el
+cero y son precisamente las víctimas de los errores de Tor (ver punto 5): **CONTI −0,0935**
+[−0,2012; +0,0142] y **AVOSLOCKER −0,0333** [−0,1087; +0,0421].
+
+**BLACKBASTA confirma la predicción y además delata su origen:** sube +0,128 sin filtro de
+circularidad pero solo +0,012 (IC incluye 0) con el filtro. Su señal de IOC **es circular** —
+contiene el alias `basta`. Hay que decirlo así al escribirlo; es el mismo tipo de advertencia que
+B.3 dejó sobre LOCKBIT.
+
+### (4) La cobertura quedó MUY por debajo de lo preregistrado, y la causa está identificada
+
+Predicho 0,584 (sin circularidad) y 0,530 (con); medido **0,2613** y **0,2419**. La causa
+principal no era ninguna de las dos que el preregistro anticipó:
+
+**De las 1.550 decisiones (155 notas × 10 semillas), 362 (23,4 %) terminaron en CONFLICTO** —
+la nota tenía coincidencias que apuntaban a más de una familia y por diseño cayó al texto. Y el
+conflicto lo producen **4 valores de los 265 del corpus, los cuatro URLs de torproject**:
+
+| Valor | Familias que lo usan |
+|---|---|
+| `https://www.torproject.org/` | BLACKBASTA, BLACKCAT, BLACKMATTER, CERBER, GANDCRAB, LOCKBIT, MAZE |
+| `https://torproject.org/` | BLACKCAT, DARKSIDE, LORENZ, NETWALKER, SODINOKIBI |
+| `https://www.torproject.org/download/` | AVOSLOCKER, CLOP |
+| `https://torproject.org` | BLACKBASTA, CONTI |
+
+**Los 261 valores restantes (98,5 %) son privados de una sola familia.** Es la confirmación
+independiente y cuantificada del mecanismo de B.3: *ningún IOC operativo se comparte entre
+familias; lo único compartido es el sitio de descarga de Tor.*
+
+El efecto es brutal en familias concretas: **GANDCRAB tuvo 90 conflictos y 0 asignaciones** —
+cobertura medida 0,000 contra 1,000 predicha por el grafo—, y lo mismo BLACKCAT (40 conflictos)
+y SODINOKIBI (30). Una nota con un IOC privado que la identifica sin ambigüedad **queda bloqueada
+entera** porque además menciona el enlace de descarga de Tor.
+
+### (5) Los 8 errores de la regla son, uno por uno, las aristas de Tor que B.3 ya había documentado
+
+Sobre 405 asignaciones en la variante sin circularidad hubo **8 errores** (acierto 0,9814):
+
+| Nota | Familia real → asignada | Causa |
+|---|---|---|
+| `CONTI\conti2.txt`, `CONTI\conti3.txt` (3 semillas c/u) | CONTI → BLACKBASTA | `https://torproject.org` |
+| `AVOSLOCKER\avoslocker.txt` | AVOSLOCKER → CLOP | `https://www.torproject.org/download/` |
+| `CLOP\Details_Cleo.txt` | CLOP → AVOSLOCKER | la misma URL, al revés |
+
+Son **exactamente** las aristas entre familias del grafo B.3-155 (las 4 BLACKBASTA↔CONTI y la
+nueva AVOSLOCKER↔CLOP). **Validación cruzada entre B.3 y M.1:** el grafo predijo dónde iba a
+fallar la regla, y falló ahí y solo ahí.
+
+### (6) Diagnóstico POST-HOC — no preregistrado, NO adoptable
+
+Decidido **después** de ver los resultados, y por eso etiquetado así en el código, en los CSV y
+en el manifiesto: **no se le aplica el criterio de adopción y no es candidato a adoptarse.**
+Contesta una sola pregunta: cuánta cobertura bloquean las URLs de Tor. Se descartan del
+diccionario los valores que en el entrenamiento aparecen en más de una familia (es el filtro de
+genéricos de B.3, `MAX_FAMILIAS_VALOR`) y después se aplica la misma regla.
+
+| Variante post-hoc | Cobertura | Acierto donde aplica | macro-F1 | Δ pareado | IC 95 % |
+|---|---|---|---|---|---|
+| sin circularidad + solo IOCs privados | **0,3974** | **0,9875** | 0,5658 ± 0,0477 | +0,0393 | [+0,0300; +0,0486] |
+| con circularidad + solo IOCs privados | 0,3368 | 0,9796 | 0,5472 ± 0,0476 | +0,0207 | [+0,0137; +0,0277] |
+
+Quitar cuatro URLs sube la cobertura de 0,2613 a **0,3974** y el macro-F1 de 0,5453 a **0,5658**.
+Aun así **no llega a los 0,584 preregistrados**: el resto de la brecha son las dos razones que el
+preregistro sí anticipó —el grafo agrega los IOCs de todas las notas de una plantilla mientras la
+cascada decide nota por nota, y el diccionario se arma con la mitad del corpus—. **Si esta
+variante se quisiera usar, hay que preregistrarla y volver a correrla como experimento propio;
+citarla como resultado sería elegir la configuración después de ver los números.**
+
+### (7) Qué se puede escribir en la tesis con esto
+
+**La simetría de los dos frentes queda completa, y con la misma estructura de tres columnas:**
+
+| Frente | Regla exacta: cobertura | Acierto donde aplica | ML que cubre el resto |
+|---|---|---|---|
+| **Archivos** (Exp. 2b / 2c) | firmas binarias 0,563 | 0,970 | bytes + RF: exactitud 0,912 ± 0,002, 100 % de cobertura |
+| **Notas** (M.1 / Exp. 3) | IOCs 0,261 ± 0,026 | **0,981 ± 0,024** | TF-IDF + LinearSVC: macro-F1 0,5265 ± 0,0490 |
+
+Las dos reglas exactas se comportan igual: **precisión altísima donde aplican, cobertura
+parcial**, y el aprendizaje se queda con el resto. En notas la cascada además **sí mueve el
+agregado** (+0,0188 de macro-F1, IC 95 % [+0,0128; +0,0248], 10/10 semillas), cosa que ningún
+otro cambio de método logró en este frente: hiperparámetros, abstracción de marcadores y
+embeddings dieron los tres resultado nulo o negativo. **M.1 es la primera mejora de método con
+IC 95 % que excluye el cero en el frente de notas.**
+
+Es también la respuesta cuantificada a Lemmou et al. (2021): su identificación de familia es
+búsqueda por reglas y marcadores en mundo cerrado; medida aquí bajo train/test con plantillas
+separadas, esa vía **cubre el 26 % de las notas** —el 40 % si se le saca la infraestructura Tor
+compartida— y acierta el 98 % donde cubre. No reemplaza al clasificador: lo complementa.
+
+**Límites a declarar con la cifra:**
+1. La ganancia depende del filtro de circularidad: **+0,0188 sin filtro y +0,0058 (n.s.) con
+   filtro.** Parte de la señal es el nombre de la familia dentro de sus propios IOCs
+   (BLACKBASTA es el caso claro). Reportar siempre las dos.
+2. La cobertura del 26 % es **sobre este corpus**, donde varias familias reutilizan
+   infraestructura entre plantillas. No es una tasa de despliegue.
+3. Cuatro URLs de Tor bloquean casi un cuarto de las decisiones. Es una limitación de la regla
+   de unanimidad tal como se preregistró, no del mecanismo.
+
+## 📌 VERIFICACIÓN «datoss.json» = CATÁLOGO MISP + CRUCE RÁPIDO CON LAS 30 (2026-08-22)
+
+- `C:\Users\Romina\Downloads\datoss\datoss.json` es **byte a byte la misma copia** del catálogo
+  MISP que envió el tutor: MD5 `0c6632bd0b4cc219e0528f77b4bb925c`, idéntico a
+  `3_datos/misp_ransomware_galaxy/misp_galaxy_ransomware_2026-08-20.json`. **No es un dato
+  nuevo** — no hay nada que importar; la carpeta de Downloads no trae readme ni corpus, solo
+  ese JSON.
+- Cruce automático contra las 30 familias (por `value`+`synonyms`, subcadena, **SIN auditar**):
+  **15/30 con `ransomnotes-filenames`** (TESLACRYPT 18 sumando sus 4 entradas versionadas,
+  CERBER 12, MEDUZALOCKER 11, CLOP 4, CHIMERA 3, DHARMA 6…) · **13/30 con `extensions`** ·
+  **solo 5/30 con texto de nota utilizable** (>80 caracteres, no-URL: GANDCRAB 4, DHARMA 3,
+  AVOSLOCKER, BLACKBASTA y RANSOMEXX 1 c/u). NOTPETYA no tiene entrada propia (solo «Petya»).
+- ⚠️ Esos conteos son **cotas superiores**: el match por subcadena arrastra homónimos e
+  imitadores — «cyclops» matchea CLOP, «Fake Cerber»/«CerberTear» caen en CERBER, CRYPTOLOCKER
+  arrastra 14 entradas homónimas (CryptoLocker3, MSN CryptoLocker…), «Jokeroo» cae en GANDCRAB.
+  **Confirma que el mapeo manual familia→entrada (transversal de `EXPERIMENTOS_PENDIENTES.md`)
+  es imprescindible antes de correr M.2** — el cruce automático solo no alcanza.
+- Para la **extensión a familias nuevas**: **92 entradas con texto de nota utilizable fuera de
+  las 30** (53 de ellas además con nombre de archivo de nota). La procedencia se audita por
+  nota (muchas `ransomnotes-refs` apuntan a id-ransomware.blogspot) y todo pasa por
+  `verificar_nota_nueva.py`, como fija `PLAN_MEJORAS.md` §MISP.
+- **Lectura sobria:** MISP casi no aporta textos nuevos a las 30 canónicas. Su valor es el
+  **metadato** (nombres reales de nota, extensiones, synonyms para deduplicar alias), es decir
+  M.2 y la tabla citable de extensiones — no es un corpus de notas.
+
+### ★ MAPEO MISP BORRADOR GENERADO Y VERIFICADO ADVERSARIALMENTE (2026-08-22)
+
+**El prerequisito de M.2 quedó preparado para la auditoría de Romina.** Script nuevo
+`2_codigo/mapeo_misp_familias.py` (commits `84268e5` y el de corrección en develop, sin
+coautoría): busca candidatas por alias exacto/subcadena + 6 controles manuales, y emite
+**82 candidatas, todas con dictamen borrador (INCLUIR/EXCLUIR/REVISAR) y motivo**. Salidas
+(fuera de git, derivadas del catálogo): `3_datos/misp_ransomware_galaxy/mapeo_borrador/`
+— `mapeo_misp_borrador.csv` (columna `dictamen_romina` vacía para la auditoría; abre en
+Excel) y `RESUMEN_mapeo.md`. **El borrador NO es citable; el mapeo auditado sí.**
+
+**Verificación adversarial por subagente contra el JSON completo: 74/76 dictámenes
+resistieron.** Correcciones aplicadas: `mailto` INCLUIR→REVISAR (el catálogo no dice en
+ningún lado que mailto = NetWalker; hace falta fuente citable, mismo rasero que Ako) y
+`cerberimposter` REVISAR→EXCLUIR (la propia entrada dice que no reutiliza el código de
+Cerber). Hallazgos verificados que valen para la tesis:
+
+1. **Confirmación independiente de la limpieza del 2026-08-19:** la entrada TorrentLocker
+   de MISP (syn Crypt0L0cker/CryptoFortress/Teerac) documenta como nombres de nota
+   `HOW_TO_RESTORE_FILES.html` y `DECRYPT_INSTRUCTIONS.html` + 8 versiones multiidioma —
+   **exactamente el nombre de la nota `lm_Crypt0l0cker_HOW_TO_RESTORE_FILES.html` retirada
+   del corpus**. El barrido por subcadena no la capturaba (Crypt0L0cker se escribe con
+   ceros): se agregó como control manual EXCLUIR.
+2. **NotPetya NO tiene entrada en el catálogo bajo ningún alias** (verificado exhaustivo:
+   ExPetr/Nyetya/Petna/EternalPetya/PetrWrap/DiskCoder, cero resultados en value+synonyms
+   de las 2135). Para la tabla citable de NOTPETYA usar CCN-CERT (README.TXT), no MISP.
+3. **BlackMatter existe SOLO como sinónimo de Darkside** en todo el catálogo. La tesis las
+   trata como 2 clases: BLACKMATTER queda **sin entrada MISP propia** (declararlo en M.2).
+4. **Colisión real de nombre de nota a declarar en M.2:** `YOUR_FILES_ARE_ENCRYPTED.*`
+   aparece en CUATRO entradas — Chimera (.HTML/.TXT), SunCrypt (.HTML), Mischa (.HTML) y
+   Petya (.TXT). El nombre de nota no es unívoco entre familias.
+5. Las ext `.encrypted/.ENC` de la entrada CryptoLocker son casi idénticas a las de
+   TorrentLocker (`.Encrypted/.enc`): **sospecha de contaminación entre entradas del
+   catálogo** — refuerza la pregunta abierta sobre CRYPTOLOCKER en NapierOne; no citar esas
+   extensiones sin verificación.
+
+**Cobertura tras el borrador (cifras borrador, no citables hasta auditar):** 14 familias
+quedan con ≥1 nombre de nota citable vía MISP (AVOSLOCKER, BLACKBASTA, CERBER 12, CHIMERA 3,
+CLOP 4, DHARMA 6, GANDCRAB 2, LOCKBIT, MEDUZALOCKER 11, RANSOMEXX 2, RYUK, SUNCRYPT,
+TESLACRYPT 18, WASTEDLOCKER) · 2 sin entrada propia (BLACKMATTER, NOTPETYA) · 5 filas
+REVISAR para llevar al tutor: Hunt (¿variantes de afiliado de Dharma cuentan?), Wcry
+(¿pre-WannaCry cuenta?), Ako/MedusaReborn, mailto, SZ40. Los conteos de la tabla del cruce
+rápido de arriba quedan superados por este mapeo (el cruce rápido era sin dictaminar).
+
+> ✅ **Actualización 2026-08-23: `mailto` pasó de REVISAR a INCLUIR.** No lo resolvió el
+> catálogo sino una fuente externa: **INCIBE-CERT** (CERT nacional de España) dice
+> «NetWalker ransomware, also known as Mailto or Koko», y PCrisk lo equipara en el título de
+> su entrada. **Quedan 4 REVISAR** (Hunt, Ako, Wcry, SZ40). Recuento final del borrador:
+> **35 INCLUIR · 43 EXCLUIR · 4 REVISAR** sobre 82 candidatas.
+
+## ★★★ TABLA CITABLE DE NOMBRES DE NOTA (30/30) Y AUDITORÍA DE PROCEDENCIA (2026-08-23)
+
+> **Los dos prerequisitos de M.2 quedaron hechos y MEDIDOS.** Y la medición cambia el diseño
+> del experimento: hay que leerla antes de correr M.2. Código: `2_codigo/tabla_nombres_notas.py`
+> y `2_codigo/auditoria_nombres_corpus.py` (commits `9389437` y `38ac9e7` en develop, sin
+> coautoría). Salidas en `3_datos/nombres_notas/` (fuera de git).
+
+### (1) Tabla de nombres: **30/30 familias con al menos un nombre citable**
+
+Recolección con 6 agentes en paralelo + **un verificador adversarial por lote que abrió cada
+URL**: 76 hallazgos, **75 confirmados** (98,7 %). Cobertura: **137 filas, 30/30 familias**,
+**8/30 con advisory oficial o CERT** (el resto id-ransomware / pcrisk / vendor / MISP).
+Advisories confirmados leyendo el documento: **AA23-353A** (BLACKCAT, `RECOVER-(7 chars)
+FILES.txt`), **AA24-060A** (PHOBOS, 3 nombres con 3 fuentes), **AA21-291A** (BLACKMATTER),
+HHS HC3 (MAZE), CCN-CERT (NOTPETYA `README.TXT`), CERT-In (CONTI, WANNACRY), **INCIBE-CERT**
+(NETWALKER). ⚠️ **CISA responde 403**: los advisories se verificaron sobre el **espejo de
+ic3.gov** — anotarlo al citar.
+
+**El único rechazo del verificador fue correcto y corrige un dato:** se había propuesto
+BADRABBIT como `SIN_ARCHIVO`, pero Securelist menciona un «Readme file» y otras fuentes dan
+`Readme.txt` — **BadRabbit sí deja archivo**. La verificación adversarial evitó escribir un
+negativo falso.
+
+**`SIN_ARCHIVO` confirmado (es RESULTADO, no hueco), con 2-3 fuentes cada uno:**
+**CRYPTOLOCKER** (pantalla de bloqueo; Amigo-A + SecureWorks/Sophos — corrobora lo ya
+registrado) y **JIGSAW** (ventana con temporizador; Amigo-A + pcrisk + BleepingComputer).
+
+**Colisiones de nombre entre familias — el límite declarado de M.2:**
+
+| Nombre | Familias |
+|---|---|
+| `README.txt` | BADRABBIT, BLACKBASTA, CONTI, DHARMA, NOTPETYA |
+| `Info.hta` | **DHARMA, PHOBOS** |
+| `{ID}-readme.txt` | NETWALKER, SODINOKIBI |
+| `YOUR_FILES_ARE_ENCRYPTED.HTML` | CHIMERA, SUNCRYPT |
+
+> **`Info.hta` en DHARMA y PHOBOS es el hallazgo más fuerte para el capítulo:** son
+> exactamente el par que M.4 iba a atacar por «mismo texto, IOCs distintos». Ahora se sabe que
+> **también comparten el nombre de la nota**, así que la vista del nombre **no puede
+> separarlos** — es una limitación estructural del linaje, no del método.
+
+### (2) Auditoría de procedencia: **solo 47 de 155 notas (30 %) tienen nombre usable**
+
+155 notas emparejadas por MD5 contra el repo de Lemmou (187 archivos; **47/47 de las notas
+`fuente=lemmou` emparejaron, 0 sin match**):
+
+| Procedencia del nombre | Notas | ¿Sirve para M.2? |
+|---|---|---|
+| `genuino` (el corpus tiene el nombre real) | 21 | ✅ tal cual |
+| `genuino_renombrado` (contenido verificado, nombre tocado por el curador) | 26 | ✅ con el nombre ORIGINAL del repo |
+| `curador` (nombre inventado: `blackbasta1.txt`, `pcrisk_cuba_1.txt`) | 76 | ⛔ circular |
+| `sin_verificar` | 32 | ⚠️ no hasta traerlo de la fuente |
+
+**⛔ Circularidad concreta encontrada: 5 notas de CERBER con prefijo `lm_Cerber_`**
+(`lm_Cerber__HELP_DECRYPT_[]_.hta` → genuino `_HELP_DECRYPT_[]_.hta`). Si M.2 usara el nombre
+del corpus tal cual **estaría leyendo la etiqueta**. El nombre genuino recuperado NO la
+contiene. Más las 76 `curador`, que codifican la familia por construcción.
+
+> **La distinción que hay que escribir bien:** un nombre genuino que contiene el nombre de la
+> familia (`RyukReadMe.txt`) **no es circular** — lo bautizó el malware y es justo la señal que
+> explota ID Ransomware. Circular es que **el curador** haya puesto la familia en el nombre.
+> La auditoría separa las dos cosas; sin esa separación, M.2 sería o circular o vacío.
+
+**Los 47 nombres usables se concentran en 4 familias:** DHARMA 18, CERBER 14, GANDCRAB 7,
+TESLACRYPT 8. **Las otras 26 familias tienen CERO nombre genuino en disco.**
+
+### (3) ⚠️ CONSECUENCIA DE DISEÑO: M.2 CAMBIA DE FORMA, Y HAY QUE DECIDIRLO
+
+La auditoría **descarta una de las dos versiones posibles de M.2**:
+
+- **(a) nombre de la nota como feature por nota, bajo P2** → **inviable, y ahora está medido**:
+  el 70 % de los nombres del corpus los puso el recolector. Entrenar con ellos es circular;
+  excluirlos deja 4 familias con nombre y 26 sin nada. No es un problema de esfuerzo.
+- **(b) regla nombre→familia, con la estructura de tres columnas de M.1/Exp. 2b** → viable
+  como **regla** (el diccionario sale de la tabla citable, externa al corpus, igual que el
+  diccionario de IOCs salía solo del pliegue de entrenamiento). **Pero su evaluación solo se
+  puede hacer sobre las 47 notas con nombre genuino, o sea 4 familias** — hay que declarar esa
+  base, y no es comparable con el macro-F1 sobre 30.
+
+**Predicción a preregistrar antes de correr (b), si se corre:** cobertura alta y acierto alto
+en DHARMA/CERBER/GANDCRAB/TESLACRYPT, salvo la confusión DHARMA↔PHOBOS por `Info.hta`; y
+**cero aporte fuera de esas 4 familias**, por falta de nombre, no por falta de señal.
+
+**Lo que sí se puede escribir sin correr nada más:** la **tabla de nombres por familia
+(30/30, 137 filas con fuente)** como aporte descriptivo citable, la **medición de circularidad
+del corpus** (47/155 usables, 5 prefijos `lm_`), las **4 colisiones** y los **2 `SIN_ARCHIVO`
+confirmados**. Es material de capítulo 4 y de limitaciones, ya verificado.
+
+## 📌 PREREGISTRO — M.6 CASCADA COMBINADA: IOCs PRIVADOS + NOMBRE GENUINO → TEXTO (2026-08-23)
+
+> **Escrito ANTES de implementar y correr.** Base: 155 notas · 106 plantillas · 30 familias ·
+> P2 (`grupos`, StratifiedGroupKFold 2 pliegues) · **10 semillas NUEVAS (100-109)**, distintas
+> de las 10 de M.1, para que la estimación no reuse las semillas con las que se vio el
+> resultado post-hoc. Salida en carpeta NUEVA `4_resultados/resultados_cascada_combinada_155/`.
+
+### Qué se corre y por qué es legítimo correrlo
+
+Dos cambios sobre M.1, en la MISMA capa de reglas y con la MISMA regla de unanimidad:
+
+1. **Filtro de genéricos (`solo_privados`):** se descartan del diccionario los valores que en
+   el ENTRENAMIENTO aparecen en más de una familia. **No es un criterio nuevo:** es
+   `MAX_FAMILIAS_VALOR` de B.3, declarado **antes** de que M.1 se corriera. En M.1 apareció
+   como diagnóstico post-hoc (cobertura 0,3974 · macro-F1 0,5658 · Δ +0,0393
+   [+0,0300; +0,0486]) y por eso **no era citable**. Acá se preregistra y se corre con semillas
+   nuevas.
+   > ⚠️ **Declararlo así en la tesis, sin adornar:** re-correr sobre el MISMO corpus **no
+   > elimina** que la variante se eligió después de ver resultados. Lo que la hace defendible
+   > es que el criterio es **anterior e independiente** (B.3) y que la estimación se rehace con
+   > semillas nuevas. Es una atenuación, no una prueba fuera de muestra.
+2. **Nivel nuevo de NOMBRE DE ARCHIVO de la nota**, la señal de ID Ransomware. Diccionario
+   nombre→familia construido **solo con el pliegue de entrenamiento**, y **solo con nombres
+   auditados**: los 47 verificados por MD5 contra el repo de Lemmou (con el nombre ORIGINAL,
+   no el del corpus) + los 17 recuperados de la fuente de cada nota. **Los 76 nombres
+   `curador` NUNCA entran** — sería leer la etiqueta.
+
+### Hechos del corpus medidos ANTES de correr (definen el techo)
+
+| Hecho | Valor |
+|---|---|
+| Notas con nombre genuino | **64 / 155**, en **14 familias** |
+| Notas con al menos 1 IOC | 137 / 155 |
+| Notas con nombre **y** IOC | **63** |
+| Notas con nombre y **sin** IOC (la ganancia posible del nivel nuevo) | **1** |
+| Notas sin nombre ni IOC (piso irrecuperable por regla) | 17 |
+| Nombres distintos | 40, con **1 sola colisión**: `info.hta` → DHARMA, PHOBOS |
+
+### Predicciones (con criterio de falsación explícito)
+
+1. **El nivel de nombre aporta ≈ 0.** Como 63 de 64 notas con nombre ya tienen IOC, el nivel
+   nuevo puede sumar **como máximo 1 nota de cobertura (+0,006)**. Predicción: Δ macro-F1 del
+   nombre **sobre** la variante de IOCs privados **< 0,005, con IC 95 % que incluye el cero**.
+   **Las dos señales son redundantes en este corpus, no complementarias.**
+2. **La ganancia real viene del filtro de genéricos:** cobertura **≈ 0,40** (0,3974 medido
+   post-hoc) y macro-F1 **≈ 0,565** (esperado 0,55-0,58), Δ contra la base 0,5265 **positivo
+   con IC 95 % que excluye el cero**.
+3. **`info.hta` NO separa DHARMA de PHOBOS:** las asignaciones por ese nombre deben dar
+   **conflicto** (dos familias) y caer al texto. Si alguna se asigna, hay un error de
+   implementación.
+4. **Controles negativos** (sin nombre genuino y sin IOC privado): **BADRABBIT, BLACKCAT,
+   CHIMERA, CLOP-sin-IOC, JIGSAW, NOTPETYA** no deben recibir asignación por nombre. RYUK y
+   HELLOKITTY, controles de M.1 por IOC, **ahora SÍ pueden moverse** porque tienen nombre
+   genuino recuperado (`RyukReadMe.txt`, `read_me_ldk.txt`) — **deja de ser control**, hay que
+   decirlo al reportar.
+5. **La cobertura medida va a quedar por debajo de la estimada**, como en M.1 (predicho 0,584 /
+   medido 0,2613): el diccionario se arma con la mitad del corpus y decide nota por nota.
+
+### Criterio de adopción, fijado a priori
+
+- **Se adopta la variante combinada** si su macro-F1 supera la base con **Δ pareado por semilla
+  cuyo IC 95 % excluye el cero**.
+- **El nivel de nombre se adopta por separado** solo si aporta Δ > 0 con IC 95 % que excluye el
+  cero **sobre la variante de IOCs privados** (no contra la base pelada: eso confundiría los
+  dos efectos).
+- Se reportan **las dos variantes de circularidad** (con y sin filtro), como en M.1.
+- Si la predicción 1 se confirma, el resultado que se escribe es: **el nombre de la nota es
+  redundante con los IOCs en este corpus** — y es el sexto negativo de método convergente
+  (hiperparámetros, abstracción de marcadores, embeddings, recolectar >4 plantillas, M.2 por
+  nota, y este). **Refuerza que el techo lo pone el dato.**
+
+## 📌 RESULTADO M.6 — CASCADA COMBINADA (2026-08-23, local)
+
+> **Base declarada: 155 notas · 106 plantillas · 30 familias · P2 · semillas NUEVAS 100-109.**
+> Código: `2_codigo/cascada_combinada_notas.py`. Salidas en
+> `4_resultados/resultados_cascada_combinada_155/` — **no se tocó `resultados_canonicos/`,
+> `resultados_extension_155/`, `resultados_cascada_155/` ni el capítulo 4.**
+> **Veredicto: SE ADOPTA la variante combinada, Y el nivel de nombre se adopta por separado.
+> Dos de las cinco predicciones preregistradas FALLARON** (se reportan como tales).
+
+### (1) Las tres columnas del Exp. 2b (media ± desvío, 10 semillas nuevas)
+
+| Variante | Cobertura | (de la cual por nombre) | Acierto donde aplica | macro-F1 | Δ pareado | IC 95 % | semillas |
+|---|---|---|---|---|---|---|---|
+| texto solo (base, semillas 100-109) | — | — | — | **0,4603 ± 0,0648** | — | — | — |
+| privados sin circ. | 0,3871 | 0,0000 | 0,9512 | 0,4940 | +0,0338 | [+0,0187; +0,0488] | 10/10 |
+| **privados sin circ. + NOMBRE** | **0,4484** | **0,1065** | **0,9557** | **0,5037** | **+0,0435** | **[+0,0299; +0,0570]** | **10/10** |
+| privados con circ. | 0,3348 | 0,0000 | 0,9356 | 0,4813 | +0,0211 | [+0,0065; +0,0356] | 8/10 |
+| privados con circ. + NOMBRE | 0,3897 | 0,0987 | 0,9416 | 0,4885 | +0,0283 | [+0,0158; +0,0407] | 9/10 |
+
+**Aporte AISLADO del nivel de nombre** (contra la variante de IOCs privados, como exigía el
+preregistro — no contra la base pelada):
+
+| Comparación | Δ macro-F1 | IC 95 % | semillas | ¿Se adopta? |
+|---|---|---|---|---|
+| sin circ. + nombre − sin circ. | **+0,0097** | **[+0,0013; +0,0181]** | 6/10 | **SÍ** |
+| con circ. + nombre − con circ. | +0,0072 | [+0,0001; +0,0143] | 5/10 | SÍ (al límite) |
+
+### (2) ⛔ PREDICCIÓN 1 FALSADA — y el mecanismo es un hallazgo mejor que la predicción
+
+Se predijo que el nombre aportaría **< 0,005 con IC que incluye el cero**, porque solo **1** de
+las 64 notas con nombre carecía de IOC. **Falso: aporta +0,0097 con IC que excluye el cero, y
+la cobertura sube de 0,3871 a 0,4484** (+0,061 ≈ 9,5 notas por semilla, no 1).
+
+**El error del cálculo a priori, identificado:** se contaron las notas *sin ningún IOC*, pero lo
+que importa es las notas **sin ningún IOC visto en ENTRENAMIENTO**. Y ahí está la diferencia
+estructural:
+
+> **El nombre de la nota se REPITE entre notas de la misma familia; el IOC casi nunca.**
+> `Info.hta` aparece en 11 notas de DHARMA, así que un pliegue de entrenamiento casi siempre lo
+> contiene. Los IOCs operativos (correo, `.onion`, BTC) son en su mayoría **únicos de una nota**,
+> así que una nota de prueba con IOC nuevo no tiene con qué emparejar. **El nombre generaliza
+> entre campañas; el IOC no.** Es exactamente la hipótesis original de D.2 («muchas familias
+> conservan el nombre de la nota entre campañas»), que resulta **confirmada** — la estimación a
+> priori era la equivocada, no la hipótesis.
+
+### (3) ⚠️ PREDICCIÓN 3 FALSADA EN PARTE — la colisión `info.hta` casi no hace daño
+
+Se predijo que `info.hta` daría **conflicto** y caería al texto. **No es lo que pasa:** de **78
+asignaciones por `info.hta`, 75 aciertan DHARMA, 2 aciertan PHOBOS y solo 1 falla**
+(PHOBOS→DHARMA).
+
+**Por qué:** el filtro de genéricos estima la privacidad **solo en el pliegue de entrenamiento**.
+Si la nota de PHOBOS con `info.hta` cae en prueba, en entrenamiento el nombre parece privado de
+DHARMA y se usa. **PHOBOS igual sube +0,1451** de F1.
+
+### (4) 🔴 HALLAZGO NO PREREGISTRADO E IMPORTANTE: LA BASE ES INESTABLE ANTE LA SEMILLA
+
+**El texto solo da macro-F1 0,4603 ± 0,0648 con las semillas 100-109, contra 0,5265 ± 0,0490
+con las semillas 0-9: una diferencia de 0,0662.** El control de sanidad del script abortó la
+primera corrida por esto (la tolerancia inicial de 0,035 estaba mal fundada).
+
+**Causa:** con **2 pliegues y 30 clases**, hay semillas donde familias enteras caen en un solo
+pliegue y su F1 se va a 0. El rango por semilla va de **0,3665 a 0,5421**.
+
+> **Consecuencia para la tesis, y hay que decirla:** el valor absoluto **0,5265 es específico de
+> las semillas 0-9** y es más frágil de lo que sugiere su «± 0,0490». **Los Δ pareados NO están
+> afectados** (base y variante salen de la misma partición en cada semilla), y por eso M.1 y M.6
+> siguen en pie. Pero si el 0,5265 se cita como el resultado del frente de notas, corresponde
+> **declarar que es sobre 10 semillas fijas** y idealmente re-medirlo con más semillas.
+
+### (5) F1 por familia — la variante adoptada (Δ pareado, IC 95 %)
+
+**Suben con IC que excluye el cero (8 familias):**
+
+| Familia | F1 base | F1 M.6 | Δ | IC 95 % | asignadas por nombre |
+|---|---|---|---|---|---|
+| **DHARMA** | 0,4759 | **0,7479** | **+0,2720** | [+0,1342; +0,4098] | **96** |
+| **BLACKBASTA** | 0,2143 | 0,4566 | +0,2423 | [+0,0373; +0,4474] | 0 |
+| LORENZ | 0,3499 | 0,4790 | +0,1291 | [+0,0571; +0,2010] | 0 |
+| SODINOKIBI | 0,3011 | 0,3959 | +0,0947 | [+0,0034; +0,1861] | 0 |
+| RYUK | 0,2357 | 0,2956 | +0,0600 | [+0,0012; +0,1188] | 12 |
+| TESLACRYPT | 0,8144 | 0,8705 | +0,0560 | [+0,0128; +0,0992] | 0 |
+| CERBER | 0,8458 | 0,8939 | +0,0481 | [+0,0108; +0,0855] | 0 |
+| JIGSAW | 0,4456 | 0,4726 | +0,0270 | [+0,0018; +0,0521] | 0 |
+
+**DHARMA +0,2720 es la mayor mejora de una familia en todo el frente de notas**, y viene del
+nombre (96 de sus 133 asignaciones). **GANDCRAB +0,1425** (36 por nombre) y **PHOBOS +0,1451**
+también suben pero con IC que incluye el cero. **Ninguna familia baja de forma significativa**:
+AVOSLOCKER −0,0583 y CONTI −0,0279, las dos con IC que incluye el cero.
+
+**RYUK deja de ser control negativo**, como se preregistró: ahora recibe 12 asignaciones por
+nombre (`RyukReadMe.txt`). Los **5 controles de nombre preregistrados** (BADRABBIT, BLACKCAT,
+CHIMERA, JIGSAW, NOTPETYA) tuvieron **0 asignaciones por nombre**: control intacto.
+
+### (6) Los 30 errores tienen UNA sola causa, la misma de M.1
+
+Sobre **695 asignaciones hubo 30 errores** (acierto 0,9557). **29 de los 30 son las 4 URLs de
+torproject** ya documentadas en M.1 y B.3 — GANDCRAB→CERBER (9, verificado: comparten
+`https://www.torproject.org/`), CONTI→BLACKBASTA (9), CLOP↔AVOSLOCKER (4), etc. **1 solo es del
+nombre** (`info.hta`).
+
+> **Limitación central a declarar:** el filtro de genéricos **reduce pero no elimina** el
+> problema de la infraestructura compartida, porque la privacidad se estima **en el pliegue de
+> entrenamiento**. Un valor realmente compartido que en entrenamiento aparece en una sola
+> familia **parece privado** y produce errores confiados en prueba. Es el mismo mecanismo que
+> explica `info.hta`.
+
+### (7) Qué se puede escribir con esto
+
+**El frente de notas pasa de 0,4603 a 0,5037 de macro-F1 (Δ +0,0435, IC 95 % [+0,0299;
++0,0570], 10/10 semillas), con cobertura 0,4484 y acierto 0,9557 donde la regla aplica.** Es la
+mejora de método más grande del frente, y **replica la estructura del Exp. 2b de archivos**:
+regla exacta de altísima precisión y cobertura parcial, más aprendizaje para el resto.
+
+**Y responde a Lemmou et al. (2021) con más precisión que antes:** su vía de reglas y marcadores,
+medida aquí bajo train/test con plantillas separadas, cubre el **45 %** de las notas y acierta el
+**96 %** donde cubre — con nombre de archivo incluido, que es lo que hace ID Ransomware.
+
+**Límites a declarar junto con la cifra:** (a) la base es inestable ante la semilla (punto 4);
+(b) solo 64/155 notas tienen nombre auditado, en 14 familias, así que el aporte del nombre está
+acotado por el corpus, no por el método; (c) 29 de 30 errores son 4 URLs de Tor; (d) la variante
+con filtro de circularidad da menos (+0,0283): parte de la señal es el nombre de la familia
+dentro de sus propios marcadores. Reportar siempre las dos.
+
+## 📌 RE-MEDICIÓN CON 50 SEMILLAS + RESULTADO M.7 (METADATO) — 2026-08-23
+
+### (A) La base re-medida con 50 semillas: **0,4958 ± 0,0733**
+
+Pedido de Romina tras el hallazgo de inestabilidad. `cascada_combinada_notas.py` acepta ahora
+`--n-semillas` y `--semilla-inicial`. Corrido con **50 semillas (0-49)**; salidas en
+`4_resultados/resultados_cascada_combinada_155_50semillas/`.
+
+| | 10 semillas (100-109) | **50 semillas (0-49)** |
+|---|---|---|
+| Base, texto solo | 0,4603 ± 0,0648 | **0,4958 ± 0,0733** |
+| M.6 (privados + nombre) | 0,5037 | **0,5471** |
+| Δ pareado | +0,0435 [+0,0299; +0,0570], 10/10 | **+0,0513 [+0,0453; +0,0573], 50/50** |
+| Cobertura | 0,4484 | 0,4547 (0,1155 por nombre) |
+| Acierto donde aplica | 0,9557 | **0,9805** |
+| Aporte aislado del nombre | +0,0097 [+0,0013; +0,0181] | **+0,0088 [+0,0062; +0,0114]**, 35/50 |
+
+> **Conclusión sobre la base:** el **0,5265 publicado salió de las semillas 0-9 y está en el
+> extremo alto de la distribución**; la estimación sobre 50 semillas es **0,4958 ± 0,0733**.
+> **M.6 se refuerza:** Δ +0,0513 con **50/50 semillas** a favor e IC más angosto. Al escribir el
+> capítulo, citar la base con su número de semillas; lo prolijo es re-medir P1/P2 con 50.
+
+### (B) M.7 — EL METADATO DE LA NOTA (extensión + tamaño) **NO AYUDA**
+
+Idea de Romina: el análisis forense usa metadatos del archivo, no solo el contenido. Y es
+información que el modelo **no tenía**, porque el TF-IDF normaliza L2 y descarta el largo.
+Código: `2_codigo/metadatos_notas.py`. 50 semillas, P2, mismo protocolo.
+Salidas: `4_resultados/resultados_metadatos_155/`.
+
+| Variante | macro-F1 | Δ pareado | IC 95 % | semillas | ¿Significativo? |
+|---|---|---|---|---|---|
+| texto (referencia) | 0,4958 ± 0,0733 | — | — | — | — |
+| texto + extensión | 0,4982 | +0,0023 | [−0,0031; +0,0078] | 28/50 | **no** |
+| texto + largo | 0,4914 | **−0,0044** | **[−0,0086; −0,0001]** | 23/50 | **sí, NEGATIVO** |
+| texto + extensión + largo | 0,4955 | −0,0003 | [−0,0065; +0,0059] | 26/50 | no |
+| **solo metadato (sin texto)** | **0,0446** | −0,4513 | [−0,4711; −0,4314] | 0/50 | sí |
+
+**Predicción preregistrada (aporte < 0,01 con IC que incluye el cero): se cumple** para
+extensión y para extensión+largo. **El largo es levemente peor que no usarlo.**
+
+**Lo que cierra el caso: el metadato solo da macro-F1 0,0446, contra un azar de 0,033.** Casi
+nada. Y eso desmonta la información mutua que parecía prometedora (43 % de la entiqueta):
+**con las etiquetas PERMUTADAS al azar la IM ya daba 1,394 bits de 2,058 observados** — con 30
+clases y 155 notas, contar celdas sobreajusta. **La IM cruda no es evidencia; el macro-F1 bajo
+P2 sí.**
+
+**Dos confundidos que hay que declarar si esto se escribe:**
+
+1. **El largo es en parte el MÉTODO DE RECOLECCIÓN, no la familia.** Notas `bruto` (archivos
+   del repo Lemmou): largo medio **4.016** caracteres · `corpus-existente` **1.100** ·
+   `transcripcion` **1.032**. Y IM(tipo ; familia) = 0,751 de 4,597 bits: **el método ya
+   predice el 16 % de la familia.** Los 37.602 caracteres de la nota más larga de CERBER son
+   el markup del `.hta`, no el mensaje.
+2. **La extensión es casi constante:** 117 de 155 notas son `.txt`, presente en las 30
+   familias. `.hta` aparece en solo 2 (DHARMA, CERBER).
+
+**Y el control del confundido lo confirma:** las familias que más suben con extensión+largo son
+**DHARMA +0,1436** (sus 19 notas son **todas `bruto`**, 11 de ellas `.hta`) y **TESLACRYPT
++0,0311** (9 notas, todas `bruto`) — o sea, justo donde el largo está leyendo el método. Suben
+también CRYPTOLOCKER +0,1210 y JIGSAW +0,0933, que son transcripciones cortas y uniformes.
+**Pero el macro-F1 neto es cero o negativo: es REDISTRIBUCIÓN entre familias, no mejora.**
+
+> **Resultado a escribir: el metadato de archivo de la nota (extensión y tamaño) no aporta al
+> frente de notas.** Es el **séptimo negativo de método convergente** —hiperparámetros,
+> abstracción de marcadores, embeddings, recolectar más de 4 plantillas, M.2 por nota, y ahora
+> metadato— y todos apuntan a lo mismo: **el techo lo pone el dato, no el método.** Con una
+> excepción, que es la que sí funcionó: **las reglas exactas sobre marcadores y nombre de
+> archivo (M.1/M.6)**, porque no compiten con el texto: cubren lo que el texto no puede.
+
+## 📌 ¿SIRVE UN DATASET DE NOMBRES POR FAMILIA? SÍ — MEDIDO (2026-08-23)
+
+Pregunta de Romina. Código: `2_codigo/evaluar_tabla_nombres.py`. Salidas:
+`3_datos/nombres_notas/eval_tabla_{resumen,detalle}.csv`.
+
+### El uso que NO sirve, y hay que dejarlo escrito
+
+**Como feature por nota, no se puede.** Asignarle a cada nota el nombre documentado de SU
+familia convierte el nombre en **una función de la etiqueta**: la regla acertaría casi todo y
+no significaría nada. Es la misma circularidad del prefijo `lm_Cerber_`, pero sistemática.
+
+### El uso que SÍ sirve: diccionario EXTERNO de consulta (lo que hace ID Ransomware)
+
+Y su evaluación es **más limpia que la de M.6**, porque no hace falta partición: el diccionario
+sale de **literatura externa** (advisories, CERT, id-ransomware, pcrisk, MISP) y los nombres de
+prueba salen de **artefactos auditados** (64 notas con nombre verificado por MD5 o declarado por
+la fuente de esa nota). **Ninguna de las dos puntas usa la etiqueta de la nota evaluada, así que
+no hay nada que se pueda filtrar.** Mide el techo real de la señal.
+
+Diccionario: 132 filas útiles → **58 nombres literales + 41 plantillas**. Prueba: **64 nombres
+en 14 familias**.
+
+| Modo de emparejar | Cobertura | Acierto donde decide | Errores | Ambiguos (con la correcta) | Sin cobertura |
+|---|---|---|---|---|---|
+| **exacto** | **0,5000** (32/64) | **1,0000** (20/20) | **0** | 12 | 32 |
+| exacto + patrón | 0,6094 (39/64) | 0,9630 (26/27) | 1 | 12 | 25 |
+
+> **Donde la tabla da una respuesta única, acierta el 100 % en modo exacto (20 de 20), sin un
+> solo error.** Es la cifra más limpia de todo el frente de notas, y es la comparación directa
+> y cuantificada contra ID Ransomware.
+
+**Los 12 ambiguos son honestos:** todos son `info.hta` → {DHARMA, PHOBOS}, y **los 12 contienen
+la familia correcta**. La tabla no se equivoca: dice con razón que ese nombre pertenece a dos
+familias. Es el límite estructural del linaje, ya documentado.
+
+**El único error del modo patrón es un artefacto de mi conversión a regex**, no una colisión
+real: `Recovery_README.html` (MEDUZALOCKER) queda capturado por `RECOVER<5_chars>.html` de
+TESLACRYPT porque el `.+` se come «y_readme». **Por eso la cifra citable es la del modo exacto**
+y el modo patrón se reporta como cota optimista.
+
+### Por qué la cobertura es 0,50 y no más — y no es culpa de la tabla
+
+| Familia | Aciertos | Por qué falla el resto |
+|---|---|---|
+| CUBA, DARKSIDE, HELLOKITTY, LOCKBIT, LORENZ, MAZE, WANNACRY | **todos** (11/11) | — |
+| GANDCRAB | 0/7 | el corpus guarda `[]-DECRYPT.txt`: **Lemmou reemplazó la parte variable por `[]`**, y la tabla tiene `GDCB-DECRYPT.txt` / `CRAB-Decrypt.txt` |
+| CERBER | 4/14 | ídem, `_READ_THIS_FILE_[]_.txt` contra `_HELP_DECRYPT_[A-Z0-9]{4-8}_.hta` |
+| DHARMA | 6/18 | 11 de sus 18 son los `info.hta` ambiguos (con la correcta dentro) |
+| TESLACRYPT | 4/8 | mismo `[]` |
+
+**La mitad de la no-cobertura es un artefacto del corpus, no de la señal:** el repo de Lemmou
+normalizó el ID de víctima a `[]`, así que esos nombres no pueden emparejar con la tabla ni con
+nada. Es un límite del dato, medible y declarable.
+
+### Qué se escribe con esto
+
+1. **La tabla de nombres por familia es un aporte de la tesis por sí misma**, y ahora tiene una
+   evaluación: **cobertura 0,50 · acierto 1,000 donde decide** sobre nombres auditados.
+2. **Es la respuesta cuantificada a ID Ransomware con su propio mecanismo.** Su 71,93 % son
+   41/57 notas de 22 familias (`Pruebas.xlsx`), medido sobre otro conjunto; acá, con el
+   diccionario de nombres, la precisión donde aplica es total y el límite es la cobertura.
+3. **Sirve en despliegue, no en entrenamiento.** Ese es el enunciado correcto: como tabla de
+   consulta identifica sin error; como feature sería circular. Los dos usos NO son lo mismo y
+   conviene decirlo explícitamente en el capítulo de método.
+
+## ★★★ POR QUÉ EL FRENTE DE NOTAS ESTÁ EN 0,55 Y NO MÁS: EL TECHO ES EL PROTOCOLO (2026-08-23)
+
+Pregunta de Romina («qué más exprimimos»). La respuesta quedó medida y es estructural.
+
+### (1) P2 usa 2 pliegues porque **está forzado**, no por elección conservadora
+
+Recuento de plantillas por familia (155 notas → 108 nodos familia#plantilla):
+
+| Plantillas | Familias | Cuáles |
+|---|---|---|
+| **2** | **8** | BADRABBIT, BLACKMATTER, CRYPTOLOCKER, CUBA, DARKSIDE, NETWALKER, NOTPETYA, SUNCRYPT |
+| 3 | 5 | AVOSLOCKER, CONTI, LORENZ, SODINOKIBI, WASTEDLOCKER |
+| ≥4 | 17 | el resto (CERBER 8, DHARMA 6, LOCKBIT 6, HELLOKITTY 5, …) |
+
+**Con 8 familias de 2 plantillas, el máximo de pliegues que deja cada familia representada en
+todos es 2.** Y con 2 pliegues **el modelo entrena con ~54 de las 108 plantillas: menos de 2
+por clase para 30 clases.** No es un defecto del método: es lo que el corpus permite. Pasar a
+3 pliegues subiría el entrenamiento a ~72 plantillas (+18), y **no se puede** sin dejar 8
+familias fuera de algún pliegue.
+
+### (2) El 0,5471 es un promedio arrastrado por esas 8 familias
+
+Descomposición de M.6 (50 semillas, variante adoptada), `m6_por_familia.csv`:
+
+| Grupo | Familias | F1 base | F1 M.6 | Δ |
+|---|---|---|---|---|
+| **2 plantillas** | 8 | 0,3935 | **0,3958** | **+0,0023** (M.6 no las puede ayudar) |
+| 3 plantillas | 5 | 0,6153 | 0,6381 | +0,0228 |
+| **≥4 plantillas** | **17** | 0,5088 | **0,5916** | **+0,0828** |
+| TODAS (30) | 30 | 0,4958 | 0,5471 | +0,0513 |
+
+> **Cómo hay que reportarlo, y vale más que arañar otro 0,01:** el macro-F1 sobre las **17
+> familias con ≥4 plantillas es 0,5916**; las **8 con 2 plantillas quedan en 0,3958** y M.6 no
+> las mueve (+0,0023) porque no tienen nombre genuino y sus IOCs no se repiten. **El 0,5471
+> sobre 30 clases subestima lo que el método hace**, porque promedia 8 clases que entrenan con
+> UNA plantilla. Única familia por debajo de 0,20: **CRYPTOLOCKER** (2 plantillas, y su nota
+> ni existe como archivo — ver `SIN_ARCHIVO`).
+
+### (3) Y recolectarles plantillas NO es la salida: ya está medido
+
+B.1 sobre 155 notas: la curva **satura en k≈2**. Deltas **1→2 +0,0476 (sig.) · 2→3 +0,0109
+(NO sig.) · 3→4 −0,0040 (NO sig.)**. Conseguirle una 3ª plantilla a esas 8 familias vale
+**+0,011 no significativo**. Lo que había servido al pasar de 144 a 155 notas fue **el NIVEL**
+(familias que dejaron de dar 0), no seguir trepando la curva.
+
+### (4) Balance del frente: 7 negativos, 2 positivos, y 2 palancas chicas sin usar
+
+**No funcionó (medido):** hiperparámetros (840 configs) · abstracción de marcadores ·
+embeddings multilingües · recolectar más allá de 2-4 plantillas · M.2 como feature por nota ·
+M.7 metadato (extensión y tamaño) · más pliegues (imposible).
+
+**Sí funcionó:** **M.1** cascada IOC (+0,0188) y **M.6** IOCs privados + nombre genuino
+(**+0,0513**, 50/50 semillas) → **0,5471**. Las dos son reglas exactas: no compiten con el
+texto, **cubren lo que el texto no puede**.
+
+**Lo único que queda sin probar, y las dos son chicas:**
+1. **La tabla externa de nombres como nivel de la cascada.** Medido aparte: acierto **1,000**
+   donde decide (20/20) y cubre **32 de 64** nombres auditados, contra los ~18 que cubre el
+   diccionario armado con el pliegue de entrenamiento. **Casi el doble de cobertura de nombre,
+   sin necesitar entrenamiento** (el diccionario es externo, no hay fuga posible).
+2. **Lista declarada de infraestructura compartida** (`torproject.org`). **29 de los 30 errores
+   de M.6 son esas 4 URLs.** Es a priori, por conocimiento de dominio, no post-hoc.
+
+Estimación honesta de las dos juntas: **+0,02 a +0,03**, o sea llegar a ~0,57. Después de eso,
+**el frente de notas está en su techo con este corpus**, y lo que queda es escribirlo bien.
+
+## ★★★★ LA RESPUESTA A «¿CÓMO HIZO LEMMOU?» — ES EL PROTOCOLO, MEDIDO (2026-08-23)
+
+> **Hallazgo más importante de la sesión.** Código: `2_codigo/protocolo_lemmou.py`. Salida:
+> `4_resultados/resultados_protocolo_lemmou/comparacion_protocolos.csv`.
+> **El mismo corpus, el mismo vectorizador, el mismo clasificador. Lo único que cambia es el
+> protocolo de evaluación.**
+
+| Protocolo | Exactitud | Exact. balanceada | macro-F1 |
+|---|---|---|---|
+| **L (Lemmou): 1-NN coseno, mundo cerrado, leave-one-out, SIN train/test** | **0,8387** | 0,8188 | **0,8055** |
+| L + **LSA** (TruncatedSVD 100) — literalmente su método | 0,8387 | 0,8188 | 0,8055 |
+| P1 (estratificado: separa notas, **no** plantillas), 50 semillas | 0,8365 | 0,8143 | 0,8020 ± 0,0308 |
+| **P2 (grupos: separa PLANTILLAS) — el de la tesis**, 50 semillas | 0,5813 | 0,5529 | **0,4958 ± 0,0733** |
+
+### El mecanismo, cuantificado
+
+- **71 de las 155 notas (45,8 %) tienen como vecina más cercana a una nota de su MISMA
+  plantilla.**
+- Acierto cuando la vecina es su casi-duplicada: **0,9577**.
+- Acierto cuando la vecina es de **otra** plantilla: **0,7381** ← esto es lo que P2 mide.
+
+> **Traducción:** el 181/182 de Lemmou et al. (2021) sale de buscar cada nota contra una base
+> **que contiene esa misma nota o su gemela**. No es clasificación de una plantilla no vista:
+> es **recuperación de casi-duplicados en mundo cerrado**. Sobre NUESTRO corpus, ese mismo
+> protocolo da **macro-F1 0,8055**. La caída a 0,4958 **no es del método: es del protocolo**,
+> que separa plantillas a propósito para que la nota de prueba nunca tenga a su gemela en
+> entrenamiento.
+
+**Dato extra:** el LSA (SVD 100) da **exactamente el mismo resultado** que el coseno crudo
+(0,8055). Coherente con el negativo de embeddings: en este corpus la reducción dimensional no
+agrega nada.
+
+### Qué se escribe con esto — y cambia el relato del capítulo
+
+1. **La respuesta al «no se puede clasificar»: SÍ se puede, a macro-F1 0,8055, si se acepta el
+   mundo cerrado.** El 0,4958 es **el precio de medir generalización a plantillas no vistas**.
+   Son dos preguntas distintas y hay que reportar las dos.
+2. **Es la comparación honesta y cuantificada con el trabajo previo**, que hasta ahora solo se
+   podía argumentar: «bajo el protocolo de Lemmou et al. nuestro método alcanza macro-F1
+   0,8055 sobre 30 familias; bajo train/test con separación de plantillas cae a 0,4958±0,0733.
+   La diferencia es enteramente el protocolo».
+3. ⚠️ **El 0,8055 NO es un resultado de generalización y no se puede citar como el resultado de
+   la tesis.** Es leave-one-out sobre corpus cerrado: reportarlo como tal sería exactamente el
+   error que la tesis evita. Va como **medición de comparabilidad**, con esta advertencia
+   pegada.
+4. Recordar el otro punto ya fijado: su **F = 0,920 es la tarea BINARIA** nombre-de-nota frente
+   a nombre-benigno, **no** familia por nombre. Son tres cifras distintas de ese paper y se
+   confunden fácil: 181/182 (familia, mundo cerrado), F=0,920 (binaria de nombre), y nada
+   comparable a un macro-F1 bajo train/test.
+
+### Y explica por qué P1 ≈ L
+
+P1 (0,8020) queda **casi igual que L (0,8055)** porque el estratificado deja casi-duplicadas
+repartidas entre entrenamiento y prueba: en la práctica es también mundo cerrado. **La única
+partición que mide algo distinto es P2.** Eso valida a posteriori la decisión de usar P2 como
+protocolo principal de la tesis.
+
+## ★★★ EL TECHO POR FAMILIA: LO QUE MANDA ES QUE ALGO SE REPITA ENTRE PLANTILLAS (2026-08-23)
+
+> Pregunta de Romina: «si una familia tiene solo 2 plantillas, ¿no es casi imposible estudiar
+> una para identificar la otra, salvo que haya similitud en el nombre de archivo o metadatos?»
+> **La conclusión es correcta, pero el mecanismo resultó ser OTRO — y es más accionable.**
+> Código: `2_codigo/techo_por_familia.py`. Salida:
+> `4_resultados/resultados_techo_por_familia/techo_por_familia.csv`.
+
+### El hallazgo, contraintuitivo y medido
+
+| Grupo | Coseno medio entre plantillas | Nombres que CRUZAN plantillas | IOCs que CRUZAN plantillas |
+|---|---|---|---|
+| **8 familias de 2 plantillas** | **0,7105** | **0** | **6** |
+| 17 familias de ≥4 plantillas | 0,4423 | 6 | **67** |
+
+**Las familias de 2 plantillas tienen las plantillas MÁS parecidas entre sí** (0,71 contra
+0,44). O sea que **la hipótesis «son imposibles porque sus dos plantillas son muy distintas» es
+FALSA.** Lo que les falta es lo otro: **un marcador o un nombre de archivo que se repita de una
+plantilla a la otra.** Y eso es exactamente lo que una regla necesita para cruzar la partición
+de P2: un IOC que aparece en UNA sola plantilla no sirve, porque si esa plantilla está en
+prueba, su valor no está en el diccionario de entrenamiento.
+
+**La correspondencia con el Δ de M.6 es directa:**
+
+| Familia | Plantillas | nombres que cruzan | IOCs que cruzan | Δ M.6 |
+|---|---|---|---|---|
+| BLACKBASTA | 4 | 0 | 3 | **+0,4473** |
+| DHARMA | 6 | 2 | 7 | **+0,2240** |
+| RYUK | 4 | 1 | 0 | +0,1021 |
+| LORENZ | 3 | 0 | 2 | +0,1005 |
+| CERBER | 8 | 0 | 21 | +0,0518 (ya estaba en 0,85) |
+| **las 8 de 2 plantillas** | 2 | **0** | 0-2 | **+0,000 a +0,007** |
+
+### Casos límite que conviene citar
+
+- **CRYPTOLOCKER**: 2 plantillas, coseno 0,4129 entre ellas, **0 nombres y 0 IOCs que cruzan**
+  → F1 **0,0773** y M.6 no la mueve. Es la familia estructuralmente más difícil del corpus, y
+  además su nota **no existe como archivo** (`SIN_ARCHIVO` confirmado). Caso de manual.
+- **NOTPETYA**: coseno 0,8149 entre sus 2 plantillas —o sea, se parecen bastante— y aun así F1
+  0,3798. Alta cohesión **no** alcanza: con 1 plantilla en entrenamiento frente a 29 clases
+  más, el clasificador no tiene con qué.
+- **WASTEDLOCKER**: coseno máximo 0,9065 entre plantillas, al borde del umbral de
+  casi-duplicado. Su F1 0,6370 es más alto de lo que sugería el relato de «familia
+  irrecolectable».
+
+### ⚠️ DISCREPANCIA CON B.3 QUE HAY QUE RESOLVER ANTES DE ESCRIBIR
+
+Acá el Spearman(coseno entre plantillas ; F1) da **+0,2872 (p = 0,12), NO significativo** —
+y con M.6 baja a +0,1488 (p = 0,43). **B.3 había reportado ρ +0,704 (p = 2,0·10⁻⁵).**
+
+**No es una contradicción: son F1 distintos.** B.3 correlacionó su cohesión con el **F1 por
+familia de B.1 (P2ret, k=todo, 100 repeticiones)**, y acá se usa el **F1 de P2 con LinearSVC,
+50 semillas**. Además la cohesión de B.3 promedia pares de notas y esta promedia
+**representantes de plantilla**. **Hay que decidir cuál de las dos se cita en el capítulo y
+declarar la definición exacta**; citar «ρ +0,704» al lado de esta tabla sin aclarar la
+diferencia sería un error.
+
+### Consecuencia accionable: el camino para esas 8 familias NO es más plantillas
+
+B.1 ya midió que la curva satura en k≈2 (2→3 vale +0,011 no significativo). **Lo que les
+falta es un nombre de archivo, y no lo tienen:** las 8 suman **0 nombres que cruzan
+plantillas**. Y varias de ellas —BADRABBIT, NOTPETYA, CRYPTOLOCKER— tienen sus notas como
+`corpus-existente` con fuente «NapierOne/varios», o sea **sin procedencia rastreable**.
+
+> **Esto le da un valor nuevo y concreto a la auditoría B.2 (las 34 notas sin fuente, ya
+> pendiente): establecer su procedencia es la única vía para recuperarles el nombre de archivo,
+> y son justamente las familias que más lo necesitan.** No es una tarea de prolijidad
+> bibliográfica: es la única palanca identificada para el grupo de familias que hoy está en
+> 0,3958.
+
+## ★★★ AUDITORÍA B.2 EJECUTADA: 13 de 18 CON PROCEDENCIA, Y 4 PROBLEMAS DE INTEGRIDAD (2026-08-23)
+
+> Búsqueda **por el TEXTO** de cada nota huérfana (18 notas de las 8 familias de 2 plantillas),
+> con un verificador adversarial por lote que abrió cada URL. Datos crudos:
+> `3_datos/nombres_notas/procedencia_2026-08-23.json`. **13 confirmadas · 3 rechazadas · 2 sin
+> fuente.** Es la primera ejecución real del item **B.2**, pendiente desde
+> `DIAGNOSTICO_2026-07-27.md` punto A4.
+
+### (1) Lo que se recuperó
+
+**6 nombres de archivo nuevos, cada uno declarado por la fuente de ESA nota:**
+
+| Familia | Nota | Nombre declarado |
+|---|---|---|
+| CUBA | `pcrisk_cuba_variant2.txt` | `!! READ ME !!.txt` |
+| BLACKMATTER | `note_pcrisk.txt` | `[random_string].README.txt` |
+| SUNCRYPT | `note_pcrisk.txt` y `suncrypt.html` | `YOUR_FILES_ARE_ENCRYPTED.HTML` |
+| DARKSIDE | `note_pcrisk_variant.txt` | `README.[victim's_ID].TXT` |
+| NETWALKER | `note_pcrisk.txt` | `[random-string]-Readme.txt` |
+
+**Y una CORRECCIÓN importante que atrapó el verificador:** se había propuesto NOTPETYA como
+`SIN_ARCHIVO`, y **es falso**. La propia página que la fila citaba (Amigo-A, Petya NSA-EE,
+27-06-2017) tiene dos encabezados literales «Содержание текстовой записки **README.TXT**
+(один вариант / другой вариант)», cada uno seguido de este mismo texto. **NotPetya SÍ deja
+archivo, y se llama `README.TXT`** — coincide con lo que ya decía CCN-CERT. Sin el verificador
+se escribía un negativo falso.
+
+**Fuente oficial nueva para CRYPTOLOCKER:** FBI PSA del 28-10-2013,
+`https://www.ic3.gov/PSA/2013/PSA131028.pdf`.
+
+### (2) ⛔ CUATRO PROBLEMAS DE INTEGRIDAD, uno por uno
+
+**(a) `BADRABBIT/badrabbit_note2.txt` es una PARÁFRASIS de `note1`, no una nota independiente.**
+Verificado leyendo los dos archivos completos: comparten los mismos datos (0,05 BTC ≈ 280 USD,
+40 horas, el mismo `.onion caforssztxqzf2nm`) reescritos con otras palabras, y note2 pierde la
+línea de apertura «Oops! Your files have been encrypted.» que **las dos** versiones documentadas
+sí traen. Las frases de su segunda mitad («Your personal installation key is required for
+authentication», «a limited time window of 40 hours») **no aparecen en ninguna publicación**
+(se buscaron entre comillas en pcrisk, Amigo-A, Securelist, Talos, Varonis).
+> **Consecuencia: BADRABBIT tiene 1 plantilla real, no 2.** Pasa al grupo de WASTEDLOCKER
+> (inevaluable bajo P2 por construcción). Hay que decidirlo con el tutor porque cambia el
+> conteo de plantillas y la tabla del techo por familia.
+
+**(b) `CRYPTOLOCKER/cryptolocker_note2.txt` NO tiene fuente, y su cuerpo está reescrito.**
+Se buscaron 6 frases distintivas entre comillas: cero resultados. Dice «safely encrypted on
+this PC» y «RSA-2048 **and AES-256** ciphers», cuando el CryptoLocker real declara **solo
+RSA-2048** y su lista es «photos, videos, documents, etc.». **Mismo patrón que
+`chimera_note2.txt`.** De las 2 notas de CRYPTOLOCKER solo `note1` es verificable — y explica
+por qué esa familia tiene el F1 más bajo del corpus (0,0773).
+
+**(c) DOS placeholders sintéticos sin documentar.** Barrido sobre las 155 notas: solo 2 archivos
+traen placeholders en estilo `[MAYUSCULAS_CON_GUION]`:
+`BADRABBIT/badrabbit_note1.txt` → `[RANDOM_KEY_PLACEHOLDER_A1B2C3D4E5F6]` y
+`NOTPETYA/notpetya_note1.txt` → `[UNIQUE_KEY_PLACEHOLDER]`. **No los produce el malware ni son
+la convención de un curador público.** Lo más probable es que sean **redacción de la clave de
+instalación** hecha por quien armó el corpus fundacional — defendible, pero **hoy no está
+declarado en ningún lado**, así que un lector no puede distinguir redacción de fabricación.
+⚠️ Ojo: `notpetya_note1.txt` **ya está confirmada como auténtica** por OCR contra una imagen
+independiente (coseno 0,925), así que acá el problema es de documentación, no del texto.
+
+**(d) `CUBA/cuba.txt`: cuerpo documentado, correo primario que no aparece en ninguna fuente.**
+Su `roselondon@cock.li` no figura en pcrisk ni en Amigo-A (que sí listan `cloudkey@cock.li`,
+`waterstatus@cock.li`, `filebase@cock.li`, `belingmor@cock.li` y otros). Probablemente sea una
+variante auténtica no publicada, pero **la procedencia queda NO establecida.**
+
+**Y un matiz sobre `BLACKMATTER/blackmatter.txt`:** su fuente real es **ThreatLabz** (como ya
+decía el manifiesto), no la página de Amigo-A que un agente propuso. La versión del corpus es
+**distinta** de la que publican pcrisk y Amigo-A: le falta la línea «We have downloaded 1TB
+from your fileserver.» y todo el bloque «>> Data leak includes», y trae `[snip]` en la ruta
+`.onion`. No es un error del corpus: es que el repo público redacta.
+
+### (3) 📌 EL PATRÓN SISTEMÁTICO, y qué falta revisar
+
+Siete familias tienen el par `<familia>_note1.txt` / `_note2.txt`, todas del lote fundacional.
+**De los 7 `note2`, ya hay CUATRO con problema confirmado:**
+
+| `note2` | Estado |
+|---|---|
+| CHIMERA | ⛔ reescritura del alemán + contenido agregado (documentado 2026-08-19) |
+| NOTPETYA | ⛔ párrafo «IMPORTANT» que no está en la imagen (documentado 2026-08-19) |
+| **BADRABBIT** | ⛔ **paráfrasis de note1, sin fuente** (hoy) |
+| **CRYPTOLOCKER** | ⛔ **sin fuente, cuerpo reescrito** (hoy) |
+| HELLOKITTY | ❓ **sin revisar** |
+| JIGSAW | ❓ **sin revisar** |
+| WANNACRY | ❓ **sin revisar** |
+
+> **Ya no es una sospecha caso por caso: es un patrón del lote fundacional.** Los archivos
+> `*_note2.txt` son sistemáticamente sospechosos. **Quedan 3 por revisar (HELLOKITTY, JIGSAW,
+> WANNACRY) y es lo próximo de B.2.** También hay 87 apariciones de `[snip]` que son la
+> convención de redacción de ThreatLabz: legítimas, pero **hay que declararlas en la tesis**
+> porque significan que varios artefactos vienen parcialmente redactados de origen.
+
+### (4) El control ya impide que esto se repita
+
+`2_codigo/validar_procedencia.py` (commit `94c45c4`) falla si entra una nota sin fuente
+citable, si la deuda crece, si una transcripción no trae URL, o si manifiesto y disco no
+coinciden 1:1. La deuda heredada quedó congelada en `3_datos/deuda_procedencia.json`: **de 47
+detectadas bajó a 34** al completar las 13 URLs de pcrisk que faltaban, y con las 13
+procedencias de hoy puede bajar más. **Solo puede bajar.**
+
+## ★★★★ B.2 CERRADA: DE 47 SIN FUENTE A 8, Y 9 NOTAS SON REESCRITURAS DE OTRAS DEL CORPUS (2026-08-23)
+
+> Segunda tanda: las 26 notas restantes, búsqueda **por el TEXTO** con verificador adversarial
+> por lote. **18 de 26 confirmadas.** Datos crudos:
+> `3_datos/nombres_notas/procedencia_lote2_2026-08-23.json`.
+
+### (1) El saldo de procedencia
+
+| Momento | Sin fuente |
+|---|---|
+| Al correr el control por primera vez | **47** |
+| Tras completar 13 URLs de pcrisk que faltaban en el manifiesto | 34 |
+| Tras la 1ª tanda de auditoría (8 resueltas) | 26 |
+| **Tras la 2ª tanda (18 resueltas) — hoy** | **8** |
+
+**De 47 a 8: se resolvió el 83 % de la deuda de procedencia en un día.** El 24 % del corpus sin
+fuente rastreable que arrastraba el proyecto desde `DIAGNOSTICO_2026-07-27.md` queda en **5 %**.
+
+### (2) Nombres de archivo rescatados: **18**
+
+| Familia | Nota | Nombre declarado por su fuente |
+|---|---|---|
+| AVOSLOCKER | `note_pcrisk.txt` | `GET_YOUR_FILES_BACK.txt` |
+| BLACKMATTER | `note_pcrisk.txt` | `[random_string].README.txt` |
+| CUBA | `pcrisk_cuba_variant2.txt` | `!! READ ME !!.txt` |
+| DARKSIDE | `note_pcrisk_variant.txt` | `README.[victim's_ID].TXT` |
+| **LOCKBIT** | `lb20` / `lb30b` / `lb40` / `lb50` | `Restore-My-Files.txt` · `[ID].README.txt` · `[rand].README.txt` · **`ReadMeForDecrypt.txt`** |
+| MAZE | `malware_notes_maze.txt` | `DECRYPT-FILES.txt` |
+| MEDUZALOCKER | `note_pcrisk.txt` | `HOW_TO_RECOVER_DATA.html` |
+| NETWALKER | `note_pcrisk.txt` | `[random-string]-Readme.txt` |
+| PHOBOS | `note_pcrisk_hta.txt` / `_txt.txt` | `info.hta` · `info.txt` |
+| RYUK | `note_pcrisk.txt` | `RyukReadMe.txt` |
+| SUNCRYPT | `note_pcrisk.txt` / `suncrypt.html` | `YOUR_FILES_ARE_ENCRYPTED.HTML` |
+| WASTEDLOCKER | `note_pcrisk_bba` / `_rlh` | `[original].bbawasted_info` · `[original].rlhwasted_info` |
+
+**Nombres usables para M.6 pasan de 64 a ~82 de 155.** LOCKBIT gana 4 (tenía 0 que cruzaran
+plantillas) y PHOBOS gana `info.hta` **con procedencia propia**, lo que refuerza la colisión ya
+documentada con DHARMA.
+
+**8 `SIN_ARCHIVO` confirmados** (es resultado, no hueco): BADRABBIT note1 · CRYPTOLOCKER note1 y
+`pcrisk_cryptolocker_1` · **JIGSAW note1 y note2** · NOTPETYA note1 · **WANNACRY note1 y note2**.
+
+### (3) ⛔⛔ EL HALLAZGO GRAVE: 9 NOTAS SON REESCRITURAS O DUPLICADOS DE OTRAS DEL CORPUS
+
+Ya no es el patrón `_note2`: es más amplio y **cruza el nombre de archivo**.
+
+| Nota del corpus | Es reescritura / duplicado de |
+|---|---|
+| `BADRABBIT/badrabbit_note2.txt` | `badrabbit_note1.txt` |
+| `CHIMERA/chimera_note2.txt` | `chimera_note1.txt` |
+| `CRYPTOLOCKER/cryptolocker_note2.txt` | `cryptolocker_note1.txt` |
+| `NOTPETYA/notpetya_note2.txt` | `notpetya_note1.txt` |
+| **`MAZE/malware_notes_maze.txt`** | **`MAZE/DECRYPT-FILES.txt`** (mismo directorio) |
+| **`RYUK/note_variant_email.txt`** | **`RYUK/note_pcrisk.txt`** y `RYUK/ryuk.txt` |
+| **`WASTEDLOCKER/note_pcrisk.txt`** | **`note_pcrisk_bba.txt`** |
+| **`LOCKBIT/lb20.txt`** | **`lockbit2.txt`** — duplicado EXACTO, no paráfrasis |
+| **`LOCKBIT/lb30b.txt`** | **`[id].README.txt`** — mismo texto defangueado y TRUNCADO |
+
+> **Por qué el agrupador de casi-duplicados no los detectó:** el umbral de 0,90 sobre TF-IDF
+> char 3-5 no captura una **reescritura** (parafrasear baja el coseno por debajo de 0,90) ni un
+> texto **truncado** (el truncado baja la similitud — trampa ya medida en este proyecto el
+> 2026-08-19 con JIGSAW). Así que estas 9 cuentan hoy como plantillas distintas **y no lo son.**
+
+**Consecuencia directa sobre las cifras:** de las 106 plantillas, **hasta 9 podrían ser
+espurias**. Y golpea justo donde más duele:
+- **BADRABBIT, CRYPTOLOCKER y NOTPETYA pasarían de 2 plantillas a 1** → se suman a WASTEDLOCKER
+  como **inevaluables bajo P2 por construcción** (F1 0 por diseño, límite declarado de B.1).
+- Cambia la tabla del techo por familia, el conteo de 8 familias de 2 plantillas, y todas las
+  cifras de P2 / M.1 / M.6.
+
+⚠️ **NO se tocó nada.** Sacar o fusionar notas cambia el capítulo 4 completo: es decisión de
+Romina y del tutor. Pero **hay que decidirlo antes de escribir las cifras finales.**
+
+### (4) Las 8 que quedan sin fuente — y 5 de ellas son de las reescrituras
+
+`BADRABBIT/badrabbit_note2` · `CHIMERA/chimera_note1` y `note2` · `CRYPTOLOCKER/cryptolocker_note2`
+· `HELLOKITTY/hellokitty_note1` y `note2` · `NOTPETYA/notpetya_note2` · `RYUK/note_variant_email`.
+
+**HELLOKITTY es el caso más serio que queda:** sus DOS notas fundacionales no tienen fuente
+(`note1` dio *no encontrado*, `note2` *parecido pero distinto*), **y las dos tienen sus
+marcadores reemplazados por placeholders sintéticos** (`[EMAIL_ADDRESS]`, `[VICTIM_ID]`,
+`[BACKUP_EMAIL]`, `[KEY_ID]`), con lo cual quedan con **cero IOCs**. Era uno de los dos
+controles negativos de M.1 con cobertura 0,000: **ahora se sabe que su cobertura nula es un
+artefacto del corpus, no una propiedad de la familia.**
+
+**Y la respuesta al pedido puntual sobre los tres `_note2` que faltaban:**
+- **JIGSAW: LIMPIA.** note1 y note2 son textos independientes, los dos con procedencia y los dos
+  `SIN_ARCHIVO` (ventana con temporizador).
+- **WANNACRY: LIMPIA.** Ídem, los dos con procedencia y `SIN_ARCHIVO`.
+- **HELLOKITTY: PROBLEMA.** Ninguna de las dos tiene fuente.
+
+### (5) Placeholders sintéticos: barrido completo
+
+**8 notas** del lote fundacional traen marcadores reemplazados por placeholders en estilo
+`[MAYUSCULAS]`: `[EMAIL_ADDRESS]`, `[BITCOIN_ADDRESS]`, `[ONION_ADDRESS]`, `[VICTIM_ID]`,
+`[UNIQUE_KEY]`, `[KEY_ID]`, `[ADDRESS]`, `[BACKUP_EMAIL]`,
+`[RANDOM_KEY_PLACEHOLDER_A1B2C3D4E5F6]`. **5 de ellas quedan con CERO IOCs extraíbles.**
+Familias afectadas: BADRABBIT, CHIMERA (×2), CRYPTOLOCKER, HELLOKITTY (×2), JIGSAW, NOTPETYA.
+
+⚠️ Matiz honesto: los placeholders explican **5 de las 30** notas del corpus sin ningún IOC. Las
+otras 25 son casos legítimos — los `[]` con que el repo de Lemmou normalizó el ID de víctima
+(DHARMA `FILES ENCRYPTED.txt`, GANDCRAB `[]-DECRYPT`) y las redacciones con `-` de pcrisk.
+
+**Aparte, `[snip]` × 87:** es la convención de redacción del repo público de ThreatLabz.
+Legítima, pero **declararla en la tesis**: varios artefactos vienen parcialmente redactados de
+origen, y eso limita cuántos IOCs se pueden extraer.
+
+## 📌 ORIGEN DE LAS NOTAS SINTÉTICAS: DOS PISTAS VERIFICADAS Y DESCARTADAS (2026-08-23)
+
+> Pregunta de Romina: «¿en algún momento se crearon notas sintéticas y se creó así?». Se
+> investigó con evidencia. **La respuesta corta: el patrón es real, pero el origen sigue sin
+> identificarse, y las dos pistas disponibles quedaron descartadas.** Anotado para que nadie
+> las vuelva a seguir.
+
+### ⛔ PISTA 1 DESCARTADA — `gitlab.com/kipziptie/ai_ransomware_note_detection`
+
+Era la pista que `DIAGNOSTICO_2026-07-27.md` (punto F3) dejó anotada: «parte de las 37 notas
+NapierOne/varios podría venir de ahí». **Verificado leyendo el repo por la API de GitLab
+(solo texto, sin descargas): NO es el origen.**
+
+- El repo existe (Kim Trujillo, marzo 2022, 46 commits) y su tesis asociada está en UPC Commons
+  (`https://upcommons.upc.edu/handle/2117/386579`, abril 2023): tarea **binaria** nota-vs-no-nota
+  con 59 + 59 muestras, árboles de decisión y SVM.
+- **`RESEARCHER_GENERATED_SAMPLES/` contiene UN solo archivo**, `Kims_first_ransomnote.txt`, y
+  es una **nota en broma**: firma «jobhopper gang», pide **10 galletitas** de rescate y trae el
+  correo real de la estudiante. Es una prueba de juguete, no un corpus sintético.
+- **`python_preprocessor/rawNotes/` tiene 126 notas y NINGUNA** es de las 6 familias con
+  problema (BADRABBIT, CHIMERA, CRYPTOLOCKER, HELLOKITTY, NOTPETYA, RYUK).
+- `NEW_RANSOMNOTE_SAMPLES/` trae 10 notas (mountlocker, darkside, babuk, cuba, conti, revil,
+  BlackMatter…), tampoco coinciden.
+- **No usa placeholders** del estilo `[EMAIL_ADDRESS]`.
+- Y usa **la misma colección de Lemmou** que este corpus ya tiene verificada por MD5.
+
+### ⛔ PISTA 2 DESCARTADA — que la convención de placeholders venga de un dataset publicado
+
+Búsqueda de las cadenas literales `"RANDOM_KEY_PLACEHOLDER"` y `"UNIQUE_KEY_PLACEHOLDER"`:
+**cero resultados** en la web indexada. Ninguna colección publicada usa esa convención.
+
+> **Esto INVIERTE la hipótesis que se había planteado.** Si los placeholders vinieran heredados
+> de otro dataset, la convención aparecería publicada en alguna parte. No aparece. **Lo más
+> probable es que se hayan producido ad hoc**, no que se hayan heredado. Sigue sin poder
+> establecerse **quién** ni **cuándo**: el manifiesto no tiene historia porque `3_datos/` está
+> fuera de git por regla del proyecto (y esa regla es correcta: es malware real).
+
+### Lo que queda comprobado, y cómo hay que escribirlo
+
+**Probado:** 8 notas del lote fundacional tienen sus marcadores reemplazados por placeholders
+que no produce el malware ni son la convención de ThreatLabz (`[snip]`); 9 notas son
+reescrituras o duplicados de otras del propio corpus; y en varias el texto auténtico está
+publicado y **difiere**.
+
+**No probado:** quién las produjo y con qué intención. **No corresponde afirmarlo en la tesis.**
+Lo que sí corresponde es **declarar el hallazgo con su evidencia** y decir que la procedencia de
+esas 8 no pudo establecerse. La auditoría en sí es un aporte metodológico.
+
+### Pistas que quedan sin agotar
+
+1. **Kaggle «Ransomware Note Dataset Collection»** (`abiprasanth`): **no se pudo inspeccionar**
+   —la página es JS y pide sesión—. Romina sí puede abrirla con su navegador.
+2. **Preguntarle a Carlos.** `Pruebas.xlsx` es material compartido y el lote fundacional es
+   anterior al seguimiento de procedencia. Es la vía más directa.
+3. **Group-IB, «Notes From the Most Active Ransomware Groups»**
+   (`https://www.group-ib.com/resources/ransomware-notes/`): colección de notas de vendor que
+   apareció en la búsqueda y **no está en la lista blanca todavía**. Sirve como fuente de
+   procedencia y como material de recolección futura.
+
+⚠️ Apareció también **`ransomizer.com`**, un generador de notas de rescate. Se anota por
+completitud: **NO hay ninguna evidencia que lo vincule con este corpus**, y no debe citarse como
+hipótesis sin evidencia.
+
+## 📌 PISTA 3 y 4 VERIFICADAS: KAGGLE Y GROUP-IB TAMPOCO SON EL ORIGEN (2026-08-23)
+
+### ⛔ PISTA 3 DESCARTADA — dataset de Kaggle «Ransomware Note Dataset Collection»
+
+Romina lo descargó (`Downloads/archive/_label_ransomwareOnly.txt`, 769 notas en formato
+fastText, 818 KB, **un solo `.txt`, sin ejecutables**). Comparado contra el corpus con criterio
+estricto: **coincidencia de ≥200 caracteres normalizados** (minúsculas, sin puntuación),
+descartando las líneas de menos de 150 caracteres.
+
+- **72 de las 155 notas del corpus (46 %) están en ese dataset.** Era esperable: los dos beben
+  de las mismas fuentes públicas (ThreatLabz, Lemmou, pcrisk), así que **el solapamiento NO
+  prueba que el corpus haya copiado de ahí**.
+- **De las 8 sin fuente, solo 1 aparece:** `RYUK/note_variant_email.txt` (línea 211), y ya se
+  sabía que es `RYUK/note_pcrisk.txt` **sin la primera línea**. **Las otras 7 NO están.**
+
+> ⚠️ **Corrección de un error propio, para que quede el número bueno:** una primera pasada
+> reportó «3 de 8» y «41 de 155». **Estaba mal**: el criterio de subcadena matcheaba contra una
+> línea del dataset que tiene **un solo carácter**, así que daba positivo con cualquier texto.
+> Las cifras válidas son las de arriba (72/155 y 1/8), con umbral de 200 caracteres.
+
+**Dos subproductos que sí valen:**
+
+1. **`hellokitty_note2.txt` tiene camino de procedencia.** En Kaggle (línea 244) hay una nota
+   **casi idéntica** pero con el **correo real `moremo123123@cock.li`** y con `[snip]` —la
+   convención de ThreatLabz—. O sea: **ese texto existe con sus marcadores reales**, y la
+   versión del corpus es esa misma con los marcadores sustituidos por `[EMAIL_ADDRESS]` y
+   `[VICTIM_ID]`. Refuerza que los placeholders son **sustitución posterior**, no fabricación
+   del texto.
+2. **Chequeo cruzado independiente del conteo de plantillas.** Varias notas del corpus colapsan
+   a la **misma línea** de Kaggle: 6 archivos de CERBER → línea 70 · 3 de DARKSIDE → línea 92 ·
+   3 de NETWALKER → línea 85 · 3 de RYUK → línea 211 · 5 de GANDCRAB → línea 22. Es evidencia
+   **externa** de que esos grupos son la misma plantilla, y coincide con las reescrituras
+   detectadas por la auditoría. **Sirve como validación de la limpieza que se decida hacer.**
+
+### ⛔ PISTA 4 DESCARTADA (para esto) — Group-IB «Notes From the Most Active Ransomware Groups»
+
+Publica **texto completo** de notas de **43 grupos ACTIVOS** (LockBit, Black Basta, Cl0p, Akira,
+BianLian, Medusa, Everest, y de 2025 Dire Wolf, Devman, FunkSec). **No incluye ninguna de las 6
+familias con problema** —BadRabbit, Chimera, CryptoLocker, HelloKitty, NotPetya, Ryuk—, y es
+coherente: cubre grupos vigentes, no históricos.
+
+> ✅ **PERO es material de primera para el experimento de EXTENSIÓN a familias nuevas** (item
+> «Ext.» de `EXPERIMENTOS_PENDIENTES.md`, pendiente de decisión con Cappo): 43 grupos con texto
+> completo y vendor reconocido, mejor fuente que scrapear. **Evaluar sumarlo a la lista blanca.**
+
+### 📄 Fuente identificada en `Downloads`: CCN-CERT ID-20/17
+
+`ccn-certid-20-17ransomnotpetya1499243530.pdf` es el **informe oficial del CCN-CERT (España),
+ID-20/17, «Código dañino Ransom.Petya/NotPetya», julio de 2017**. Es el respaldo citable de
+`README.TXT` como nombre de nota de NotPetya. **Mover a `5_bibliografia/` y citarlo.**
+
+### Estado del rastreo de origen: CERRADO SIN RESULTADO
+
+**Cuatro pistas verificadas y descartadas** (repo GitLab de Trujillo · convención de
+placeholders publicada · dataset de Kaggle · Group-IB). **7 de las 8 notas no aparecen en
+ninguna fuente revisable.** Lo que queda es **preguntarle a Carlos**: `Pruebas.xlsx` es material
+compartido y el lote fundacional es anterior al seguimiento de procedencia.
+
+⚠️ Se mantiene la nota de honestidad: apareció `ransomizer.com` (generador de notas) en una
+búsqueda. **No hay evidencia que lo vincule con este corpus y NO debe citarse como hipótesis.**
+
+## ⛔⛔⛔ ERROR DE ETIQUETA CONFIRMADO: `hellokitty_note2.txt` ES UNA NOTA DE DHARMA (2026-08-25)
+
+> **Lo encontró Romina buscando a mano.** Es el hallazgo más importante de la auditoría: no es
+> un problema de procedencia, es una **etiqueta de familia equivocada**, y afecta el
+> entrenamiento del clasificador.
+
+### La evidencia
+
+**`ransomlook.io/notes/dharma`** publica una nota **atribuida a Dharma** que empieza textual:
+
+> «All your files have been encrypted! All your files have been encrypted due to a security
+> problem with your PC. If you want to restore them, write us to the e-mail
+> **moremo123123@cock.li**»
+
+`3_datos/corpus_v2/HELLOKITTY/hellokitty_note2.txt` es **ese mismo texto**, con los marcadores
+sustituidos: el correo por `[EMAIL_ADDRESS]`, el ID por `[VICTIM_ID]` y el correo alternativo
+por `[BACKUP_EMAIL]`.
+
+**Confirmación cruzada independiente:** el dataset de Kaggle (línea 244) trae la MISMA nota con
+el **correo real `moremo123123@cock.li`** y con `[snip]` (convención ThreatLabz). Y la auditoría
+por búsqueda ya había avisado que su frase de apertura devuelve una plantilla que las fuentes
+atribuyen **siempre a Dharma/CrySiS o Phobos, nunca a HelloKitty**.
+
+⚠️ **Un detalle a verificar contra la página real antes de citar:** el resumen automático de
+ransomlook menciona «hasta 5 archivos» de descifrado gratuito y la nota del corpus dice «up to
+3 files». Puede ser variante distinta del mismo molde Dharma (Dharma tiene muchas) o un error
+del resumen. **La identificación NO depende de ese detalle** —el correo y la apertura verbatim
+son concluyentes— pero conviene mirarlo.
+
+### Consecuencias, y por qué esto sí hay que resolverlo antes de escribir cifras
+
+1. **HELLOKITTY tiene 5 notas y una es de otra familia.** Su F1 es de los más bajos del corpus
+   (0,1622 base · 0,2023 con M.6) y ahora hay una causa concreta: se le pide al modelo aprender
+   una clase contaminada. **Es el mismo patrón que se documentó el 2026-08-19 con MEDUZALOCKER**
+   (2 notas de Medusa dentro de MedusaLocker), y aquel caso se resolvió retirándolas.
+2. **Contamina la confusión DHARMA↔HELLOKITTY** y probablemente también PHOBOS, que comparte el
+   molde. Conecta con la colisión `info.hta` DHARMA/PHOBOS ya documentada.
+3. **Es un error de ETIQUETA, no de procedencia:** aunque se le encuentre fuente, la nota sigue
+   estando en la carpeta equivocada.
+
+### Acción propuesta (decisión de Romina + Cappo, NO se tocó nada)
+
+Mover `hellokitty_note2.txt` a `3_datos/descartados_integridad/` —el mismo procedimiento
+reversible que se usó con las 2 notas de Medusa el 2026-08-19, con README que documente motivo
+y fuente— **o** reetiquetarla como DHARMA. Lo primero es más conservador: sumarla a DHARMA
+requeriría confirmar que la variante es de Dharma y no de Phobos, que comparten molde.
+**Efecto:** HELLOKITTY 5→4 notas, corpus 155→154, y cambian las cifras de esa familia.
+
+### Fuente nueva a evaluar para la lista blanca: `ransomlook.io`
+
+Publica notas con atribución de familia y **ya está en la cadena del proyecto**: figura entre
+los `authors` del propio catálogo MISP que envió el tutor. Sirvió para resolver este caso y
+puede servir para las 6 notas sin fuente que quedan.
+
+### 🔴 AMPLIACIÓN: `hellokitty_note1.txt` TAMBIÉN es del linaje Dharma/Phobos (2026-08-25)
+
+Al abrir `hellokitty_note1.txt` completa apareció que **su cierre es el boilerplate del linaje
+Dharma/Phobos**. Barrido sobre las 155 notas buscando las dos frases
+(«Do not try to decrypt your data using third party software, it may cause permanent data
+loss» / «Decryption of your files with the help of third parties may cause increased price»):
+
+| Familia | Notas con ese cierre |
+|---|---|
+| **DHARMA** | **12** (los 11 `.hta` + `dharma.txt`) |
+| **PHOBOS** | 2 |
+| **HELLOKITTY** | **2 — exactamente las dos fundacionales sin fuente** |
+| LOCKBIT | 2 (solo la segunda frase; más débil, puede ser fraseo común) |
+
+**Ninguna de las otras 3 notas de HELLOKITTY lo trae**: `pcrisk_hellokitty_1.txt`
+(`read_me_unlock.txt`, ataque a CD Projekt), `pcrisk_hellokitty_2.txt` (`read_me_ldk.txt`) y la
+de ThreatLabz son del estilo de **caza mayor** («more than 200 GB of critical data»), que es lo
+que ransomlook publica como nota de HelloKitty. **Son dos cosas distintas dentro de la misma
+clase.**
+
+**Niveles de certeza, que hay que respetar al escribirlo:**
+- `hellokitty_note2.txt` → **CONFIRMADO Dharma**: ransomlook lo atribuye a Dharma y el correo
+  `moremo123123@cock.li` coincide.
+- `hellokitty_note1.txt` → **fuerte sospecha, no confirmado**: comparte el boilerplate del
+  linaje, no se le encontró fuente, usa los mismos placeholders y está en la misma carpeta que
+  la confirmada. **No hay una fuente que la atribuya explícitamente a Dharma.**
+
+> **Explica el F1 de HELLOKITTY (0,1622 base · 0,2023 con M.6), uno de los más bajos del
+> corpus: 2 de sus 5 notas son de otro linaje.** Es el tercer caso del mismo patrón, después de
+> MEDUZALOCKER (2 notas de Medusa, resuelto el 2026-08-19) y CRYPTOLOCKER (Crypt0l0cker =
+> TorrentLocker). **Conviene revisar el resto del corpus con este método** —buscar boilerplate
+> compartido entre familias— porque encontró en un paso lo que las búsquedas por texto no
+> habían resuelto.
+
+### ✋ `ransomlook.io`: CARACTERIZACIÓN CORREGIDA (2026-08-25)
+
+> **Corrección de una afirmación mía que era demasiado dura.** Yo había escrito que ransomlook
+> «no alcanza el estándar de fuente citable». **Romina lo cuestionó y tenía razón.**
+
+**Lo que sí se verificó a favor:**
+- **MISP lo usa como fuente:** aparece **589 veces** en el catálogo que envió el tutor y figura
+  entre sus `authors`.
+- Tiene **atribución de familia por grupo** — es lo que permitió identificar que
+  `hellokitty_note2.txt` es de Dharma.
+- Es un proyecto abierto con procedencia conocida, que es literalmente el criterio de
+  `CLAUDE.md` («paper, dataset oficial, **repo con procedencia conocida**»).
+
+**Sus limitaciones reales, que son otras:**
+- **No trae autor ni fecha por nota**, a diferencia de pcrisk (Tomas Meskauskas, con fecha) o de
+  un advisory oficial.
+- **A veces republica material de terceros sin declararlo.** Verificado en el acto: su nota de
+  HelloKitty es **exactamente** `HELLOKITTY/[File_Name].README_TO_RESTORE` del corpus, incluidos
+  los `[snip]` y el `[binary_data]` — o sea, **es la nota de ThreatLabz reproducida**, no
+  material propio.
+
+> **Caracterización correcta:** fuente **secundaria de agregación**, usable **con la limitación
+> declarada**, y **hay que verificar caso por caso si el material es suyo o espejo de otro**. Es
+> el mismo trato que el proyecto le da a `id-ransomware.blogspot` (en lista blanca porque SANS
+> lo recomienda). **No es «no citable».**
+
+**Decisión de alcance de Romina, que se mantiene:** no se incorporan notas de ransomlook al
+corpus. Pero el fundamento es de alcance, no de calidad de la fuente.
+
+**Y el hallazgo del error de etiqueta no depende de ella**, lo cual sigue siendo lo importante:
+se sostiene con el dataset de Kaggle (línea 244, correo real `moremo123123@cock.li`) y sobre
+todo con **el propio corpus** (boilerplate compartido con 12 notas de DHARMA y 2 de PHOBOS, y
+con ninguna otra de HELLOKITTY). **Al escribirlo, apoyarse en esa última.**
+
+## ★★★★ RE-MEDICIÓN COMPLETA SOBRE EL CORPUS LIMPIO: 149 NOTAS (2026-08-25)
+
+> **Se AGREGA, no reemplaza.** Todas las corridas sobre 155 quedan intactas con su propia base;
+> esto es una re-medición sobre el corpus **después de la limpieza de integridad** del 24-25 de
+> agosto. Salidas en carpetas NUEVAS con sufijo `_149`.
+> ⚠️ Hay además una corrida intermedia `resultados_notas_150` y
+> `resultados_grafo_marcadores_150` que quedó **SUPERADA** (se hizo antes de retirar
+> `LOCKBIT/lb20.txt`). No citarla.
+
+### (1) Qué se limpió, y por qué el corpus pasó de 155 a 149
+
+**Seis notas retiradas** a `3_datos/descartados_integridad/` (movidas, no borradas; reversible)
+y **tres incorporadas** transcritas verbatim. Detalle completo en el README de esa carpeta.
+
+| # | Nota | Motivo |
+|---|---|---|
+| 1 | `HELLOKITTY/hellokitty_note2.txt` | **CONFIRMADO: es de Dharma.** ransomlook lo atribuye a Dharma con el correo real `moremo123123@cock.li`; Kaggle lo trae con ese correo; comparte el boilerplate con 12 notas de DHARMA |
+| 2 | `HELLOKITTY/hellokitty_note1.txt` | linaje Dharma/Phobos (mismo boilerplate, sin fuente) — **sospecha fuerte, no confirmada** |
+| 3 | `CHIMERA/chimera_note1.txt` | alemán sintético; la auténtica (`hns_chimera_aleman.txt`) **ya estaba en el corpus** |
+| 4 | `CHIMERA/chimera_note2.txt` | inglés sintético; la auténtica (`pcrisk_chimera_ingles_autentico.txt`) ya estaba |
+| 5 | `CRYPTOLOCKER/cryptolocker_note2.txt` | sintética; dice «RSA-2048 **and AES-256**» y CryptoLocker no dejaba archivo de nota |
+| 6 | `LOCKBIT/lb20.txt` | **duplicado por defanging**: mismo texto que `lockbit2.txt` (477 car. los dos), solo cambia `hxxp`→`http` y `.oni0n`→`.onion` |
+
+**Tres incorporadas, verbatim desde Amigo-A** (`tipo=transcripcion`), reemplazando material
+sintético de BADRABBIT y NOTPETYA: `idr_badrabbit_pantalla_2017.txt` (SIN_ARCHIVO, `key#1`),
+`idr_badrabbit_readme_2017.txt` (`README.txt`, `key#2`) e
+`idr_notpetya_readme_var2_2017.txt` (`README.TXT`, «otra variante»).
+
+**Erratas de la fuente conservadas a propósito** (corregirlas sería repetir el error que se
+está limpiando): `key#l` con **ele minúscula** (byte `0x6c`) en la pantalla de BadRabbit, y
+`waste your **tine**` en la variante 2 de NotPetya. Y las **truncaduras son de la fuente**
+(`ZORqoZdoI+vr6*****`, `*****`, `***`), no del corpus — eso es lo que las distingue de los
+placeholders sintéticos retirados.
+
+**NO incorporada, y hay que decir por qué:** la «una variante» de NotPetya está **corrupta en
+la propia fuente** (líneas desordenadas, falta la dirección de correo). Incorporarla habría
+reintroducido el problema.
+
+**Deuda de procedencia: 47 → 0.** Las 149 notas tienen fuente citable.
+
+### (2) Las cifras nuevas, contra las de 155
+
+| | 155 | **149 (limpio)** |
+|---|---|---|
+| Notas · plantillas | 155 · 106 | **149 · 99** |
+| P2 base (texto solo, M.6, 50 semillas) | 0,4958 ± 0,0733 | **0,4593 ± 0,0752** |
+| **M.6** (IOCs privados + nombre) | 0,5471 | **0,5191** |
+| **Δ pareado** | +0,0513 [+0,0453; +0,0573] | **+0,0599 [+0,0530; +0,0668]**, 50/50 |
+| Cobertura (de la cual por nombre) | 0,4547 (0,1155) | **0,4546 (0,1180)** |
+| Acierto donde aplica | 0,9805 | 0,9755 |
+| Aporte aislado del nombre | +0,0088 [+0,0062; +0,0114] | **+0,0108 [+0,0077; +0,0138]** |
+| L (protocolo Lemmou) | 0,8055 | **0,7767** |
+| P1 | 0,8020 | **0,7889** |
+
+> **M.6 salió MÁS FUERTE en el corpus limpio** (+0,0599 contra +0,0513), y el aporte del nombre
+> también subió. Los valores absolutos bajan porque se retiraron notas; **lo que mide el método
+> mejoró.**
+
+**Clasificador canónico sobre 149** (`resultados_notas_149`): P2 grupos+combinado+LinearSVC
+**macro-F1 0,468 ± 0,100** · bal.acc 0,528 · acc 0,580. P1 estratificado+combinado **0,799 ±
+0,026** (caracteres 0,805). **Grafo B.3 sobre 149:** 99 plantillas → 101 nodos, marcadores URL
+153 · ONION 98 · EMAIL 79 · CLAVE 33 · BTC 6 · ID 6, **13 plantillas sin ningún marcador**.
+
+### (3) ★ EL CERO ESTRUCTURAL, AHORA MEDIDO — y cómo hay que reportarlo
+
+**BADRABBIT y CRYPTOLOCKER quedaron con 1 plantilla y su F1 es exactamente 0,0000.** El propio
+`clasificador_notas_v2.py` lo advierte solo: «familias con un único grupo de contenido (con el
+protocolo grupos nunca aparecen en train y test a la vez, su F1 tenderá a 0)».
+
+**Y en las tres es una propiedad REAL del malware, no un hueco de recolección:**
+
+| Familia | Plantillas | Por qué 1 |
+|---|---|---|
+| WASTEDLOCKER | 1 molde | 4 notas de **3 víctimas** y **2 fuentes**; solo cambian víctima y correos |
+| BADRABBIT | 1 | las dos variantes auténticas (pantalla y `README.txt`) son el mismo texto: difieren solo en `key#1` vs `key#2` |
+| CRYPTOLOCKER | 1 | era una **ventana** con un solo mensaje |
+
+| Conjunto | Familias | F1 base | F1 M.6 |
+|---|---|---|---|
+| Todas | 30 | 0,4593 | 0,5191 |
+| **Evaluables (sin las de 1 plantilla)** | **28** | **0,4921** | **0,5562** |
+
+> **+0,037 de macro-F1 solo por dejar de promediar dos ceros estructurales.** No es un truco: es
+> no contar como fracaso del método algo que el método **no puede evaluar por construcción**.
+> **Reportar las dos cifras**, con la lista de familias inevaluables y la prueba de que su única
+> plantilla es propiedad del malware (varias víctimas / varias fuentes / mismo molde).
+
+### (4) ⚠️ UNA PREDICCIÓN MÍA QUE FALLÓ: HELLOKITTY no subió
+
+Se predijo que HELLOKITTY subiría al retirarle las 2 notas de linaje Dharma. **No pasó:**
+F1 base 0,1622 → **0,1714**, con M.6 0,2023 → **0,1741**. Prácticamente igual.
+
+**Por qué:** su cohesión entre plantillas es **0,2643** — las 3 notas que quedan (el ataque a CD
+Projekt, `read_me_ldk`, y la de ThreatLabz) son de campañas y víctimas distintas y se parecen
+poco entre sí. **HELLOKITTY es genuinamente difícil, no solo estaba contaminada.** La limpieza
+se justifica por corrección, **no por rendimiento**, y así hay que escribirlo.
+
+### (5) Error de código encontrado y corregido
+
+`techo_por_familia.py` leía las columnas de F1 desde la corrida de M.6 de **155** con una ruta
+fija, así que la primera pasada sobre 149 salió con columnas viejas. Se le agregó `--m6`. **Al
+re-medir cualquier cosa, verificar de dónde lee cada script sus insumos.**
+
+### (6) Lo que queda pendiente de re-correr
+
+`curva_aprendizaje_notas.py` (B.1) y `cascada_ioc_notas.py` (M.1) sobre 149, y
+`resumen_para_capitulo4.py` para regenerar las tablas del capítulo.
+
+### ✅ LA LIMPIEZA SÍ FUNCIONÓ: 166 CONFUSIONES ELIMINADAS (2026-08-25, matriz de confusión)
+
+> **Corrige la lectura anterior de que «la limpieza se justifica por corrección, no por
+> rendimiento».** Es demasiado pesimista: el efecto es grande y medible, solo que no se ve en el
+> F1 de HELLOKITTY. Fuente: `m6_diagnostico_nota_por_nota.csv` de las corridas 155 y 149.
+
+**Invasiones a HELLOKITTY** (notas de OTRAS familias predichas como HELLOKITTY, variante
+adoptada, 50 semillas):
+
+| | 155 (contaminado) | 149 (limpio) |
+|---|---|---|
+| **Total** | **314** | **47** |
+| desde DHARMA | **146** | **0** |
+| desde PHOBOS | 20 | **0** |
+| desde CUBA | 49 | 0 |
+
+**Las 146 confusiones DHARMA→HELLOKITTY y las 20 de PHOBOS desaparecieron por completo.** Era
+exactamente el efecto que causaban las 2 notas de linaje Dharma metidas en HELLOKITTY, y la
+limpieza lo eliminó.
+
+### Por qué el F1 de HELLOKITTY no subió igual: precisión sí, recall no
+
+El F1 mezcla dos cosas y solo una mejoró.
+- **Precisión: mejoró mucho** (314 → 47 invasiones).
+- **Recall: sigue malo.** De sus propias notas acierta solo el **15 %**. Sus 3 notas se dispersan
+  a MAZE (19 %), RANSOMEXX (17 %), BLACKBASTA (13 %) y CLOP (10 %).
+
+> **El clasificador ya no confunde otras familias CON HelloKitty, pero sigue sin reconocer A
+> HelloKitty.** Y eso es el problema estructural de siempre: 3 plantillas con cohesión 0,2643,
+> de campañas y víctimas distintas (CD Projekt, `read_me_ldk`, ThreatLabz). Bajo P2 con 2
+> pliegues entrena con una o dos y evalúa en la otra.
+
+**Cómo escribirlo:** la limpieza de integridad **mejoró la precisión de forma masiva** y eso hay
+que reportarlo con estas cifras; el recall de HELLOKITTY es un límite de dato (pocas plantillas,
+poco cohesionadas) que ninguna limpieza puede arreglar. **Un F1 plano puede esconder una mejora
+grande** — reportar precisión y recall por separado en las familias afectadas.
+
+## 📌 RESULTADO M.3 — ABSTENCIÓN POR UMBRAL DE CONFIANZA (2026-08-25)
+
+> **Base: 149 notas · 99 plantillas · 30 familias · P2 · 50 semillas.** Código:
+> `2_codigo/abstencion_notas.py`. Salidas en `4_resultados/resultados_abstencion_149/`.
+> **Predicción preregistrada (PLAN_MEJORAS.md §M.3, escrita antes de implementar): «no sube el
+> macro-F1, cambia el reporte». SE CUMPLE.**
+
+**Cómo se mide la confianza:** LinearSVC no da probabilidades, así que se usa el **margen entre
+la primera y la segunda clase** de `decision_function`. Arquitectura: si la regla exacta de M.6
+aplica se contesta siempre (ya mide 0,9755 de acierto); si no aplica, decide el texto y ahí se
+aplica el umbral.
+
+### La curva precisión-vs-cobertura — M.6 (reglas + texto)
+
+| Umbral | Cobertura | **Acierto donde contesta** | macro-F1 de las respondidas | Abstiene |
+|---|---|---|---|---|
+| 0,00 (sin abstención) | 1,0000 | 0,6601 | 0,5191 | 0 |
+| 0,10 | 0,8244 | 0,7796 | 0,6292 | 26 |
+| 0,30 | 0,7019 | 0,8649 | 0,7500 | 44 |
+| **0,50** | **0,6459** | **0,9000** | 0,7938 | 53 |
+| 1,00 | 0,5495 | **0,9687** | 0,9129 | 67 |
+| 1,50 | 0,4681 | 0,9763 | 0,9365 | 79 |
+
+**La frase para la defensa:** «el sistema **contesta el 65 % de las veces y acierta el 90 %**»
+(umbral 0,50). O, si se prefiere más conservador: «contesta el 55 % y acierta el 97 %».
+
+### Y el mismo ejercicio sin la capa de reglas, que prueba que M.6 aporta
+
+| A cobertura ≈ 65 % | Acierto |
+|---|---|
+| **M.6 (reglas + texto)**, umbral 0,50 | **0,9000** |
+| solo texto, umbral 0,20 (cobertura 0,6536) | 0,7620 |
+
+**A igual cobertura, M.6 acierta +0,14 más que el texto solo.** Es una segunda demostración
+independiente del valor de la cascada, distinta del Δ de macro-F1.
+
+**Piso de cobertura:** la capa de reglas resuelve **67,7 notas de 149 (45 %)** en toda semilla,
+así que la cobertura de M.6 nunca baja de ~0,47 aunque el umbral suba. El texto solo, en cambio,
+degenera: a umbral 1,50 contesta 5,5 notas de 149 (cobertura 0,037).
+
+### Lectura honesta, para no sobrevender
+
+1. **El macro-F1 global NO mejora.** A umbral 0 es exactamente 0,5191, el valor de M.6. El
+   macro-F1 «de las respondidas» sube hasta 0,9365 pero **se calcula solo sobre las notas que
+   contesta**: no es comparable con el macro-F1 del sistema completo y **no debe citarse como
+   si lo fuera**. Lo que cambia es **qué afirma el sistema**, no cuánto sabe.
+2. **La abstención no resuelve el mundo cerrado.** Una nota de una familia fuera de las 30 puede
+   caer con margen alto y ser respondida con confianza y error. Esto **reduce** el problema, no
+   lo elimina; el mundo cerrado sigue siendo una limitación declarada.
+3. El umbral es un **parámetro de despliegue**, no un hiperparámetro ajustado a los datos: se
+   reporta la curva completa y el punto de operación se elige según el costo del error.
+
+**Estado: M.3 CERRADO.** Sale de `EXPERIMENTOS_PENDIENTES.md`.
+
+## 📌 RESULTADO M.1 — CASCADA IOC→TEXTO RE-MEDIDA SOBRE 149 (2026-08-28)
+
+> **Base: 149 notas · 99 plantillas · 30 familias · P2 · 10 semillas.** Salidas en
+> `4_resultados/resultados_cascada_149/`, log en `4_resultados/_log_cascada_149.txt`. La
+> corrida sobre 155 (`resultados_cascada_155/`) queda **intacta con su propia base**: esto se
+> AGREGA. **Veredictos idénticos a los de 155: sin circularidad SE ADOPTA, con circularidad NO.**
+
+### ⚠️ Antes hubo que arreglar el script: la puerta de entrada estaba clavada en 155
+
+`cascada_ioc_notas.py` tenía `BASE_MACRO_F1 = 0.5265` (base 155) con `TOL_BASE = 0.003` y un
+`sys.exit`. Sobre 149 la capa de texto da 0,4680, o sea 0,059 de diferencia: **el script abortaba
+sin escribir nada**. Es el mismo patrón que se encontró en `techo_por_familia.py`. Arreglado con
+`--base-desde <corrida_canonica_resumen.csv>`, que lee la fila `grupos/combinado/LinearSVC` del
+**mismo** corpus que se está midiendo, más `--base` / `--base-std` / `--tol` para declararla a
+mano; los valores por defecto siguen siendo los de 155, así que reproducir la corrida vieja no
+cambia. El manifiesto ahora registra la base **realmente usada** y su fuente. Commits `f09151e`
+y `4b0febc` en develop (el segundo saca el «base 155» fijo del encabezado impreso).
+
+**Puerta de entrada superada exactamente:** capa de texto sola **0,4680 ± 0,1003**, diferencia
+**0,0000** contra la base leída de `resultados_notas_149/corrida_canonica_resumen.csv`. La
+partición es la misma, así que el Δ pareado por semilla es válido.
+
+**IOCs en el corpus de 149** (patrones canónicos de `normalizacion_marcadores.PATRONES`):
+URL 219 · ONION 121 · EMAIL 87 · CLAVE 35 · ID 8 · BTC 6. **15 de 149 notas no tienen ningún
+IOC** (sobre 155 eran 18).
+
+### (1) Las tres columnas del Exp. 2b — 149 contra 155
+
+| Variante | Base | Cobertura | Acierto donde aplica | macro-F1 combinado | Exactitud |
+|---|---|---|---|---|---|
+| texto solo | 155 | — | — | 0,5265 ± 0,0490 | 0,6026 |
+| texto solo | **149** | — | — | **0,4680 ± 0,1003** | **0,5799** |
+| sin circularidad | 155 | 0,2613 ± 0,0264 | 0,9814 ± 0,0241 | 0,5453 ± 0,0485 | 0,6348 |
+| **sin circularidad** | **149** | **0,2523 ± 0,0392** (37,6 notas) | **0,9561 ± 0,0635** | **0,4959 ± 0,0994** | **0,6208** |
+| con circularidad | 155 | 0,2419 ± 0,0287 | 0,9719 ± 0,0370 | 0,5323 ± 0,0486 | 0,6239 |
+| con circularidad | **149** | 0,2302 ± 0,0376 (34,3 notas) | 0,9450 ± 0,0883 | 0,4742 ± 0,1058 | 0,6067 |
+
+**Δ pareado por semilla contra la base (t de Student, df=9):**
+
+| Variante | Base | Δ macro-F1 | IC 95 % | sem. Δ>0 | Δ exactitud | IC 95 % |
+|---|---|---|---|---|---|---|
+| sin circularidad | 155 | +0,0188 | [+0,0128; +0,0248] | 10/10 | +0,0323 | [+0,0236; +0,0410] |
+| **sin circularidad** | **149** | **+0,0279** | **[+0,0124; +0,0434]** | **10/10** | **+0,0409** | [+0,0255; +0,0564] |
+| con circularidad | 155 | +0,0058 | [−0,0013; +0,0130] | 6/10 | +0,0213 | [+0,0120; +0,0305] |
+| con circularidad | **149** | +0,0062 | [−0,0024; +0,0148] | 8/10 | +0,0268 | [+0,0162; +0,0375] |
+
+Exactitud balanceada sobre 149: base 0,5281 → **0,5575** (sin circularidad) · 0,5328 (con).
+
+**El Δ CRECIÓ con el corpus limpio: +0,0188 → +0,0279.** Es el mismo comportamiento que M.6
+(+0,0513 → +0,0599): los valores absolutos bajan porque se retiraron notas, y **lo que mide el
+método mejora**. Tercera corrida independiente que muestra el mismo signo.
+
+**Donde la regla aplica sigue ganándole al texto, y por más:** acierto de la regla **0,9561**
+contra **0,7932** del clasificador de texto sobre esas mismas notas → **+0,1629** (sobre 155 era
++0,1244). La regla no cubre lo fácil: cubre notas que el texto erraba en 1 de cada 5.
+
+### (2) Veredicto contra el criterio preregistrado — sin cambios respecto de 155
+
+- **SIN filtro de circularidad → SE ADOPTA.** Δ +0,0279, IC 95 % [+0,0124; +0,0434] excluye el
+  cero, **10/10 semillas** positivas.
+- **CON filtro → NO se adopta.** Δ +0,0062, IC 95 % [−0,0024; +0,0148] **incluye** el cero
+  (8/10 semillas). Sigue siendo regla de alta precisión y baja cobertura que no mueve el agregado.
+- **Los dos controles negativos siguen sin ser tocados por la regla en ninguna semilla:** RYUK y
+  HELLOKITTY con Δ exactamente 0,0000 en las dos variantes. El mecanismo queda probado otra vez,
+  ahora sobre el corpus donde HELLOKITTY ya no tiene las dos notas de Dharma.
+
+**F1 por familia con IC 95 % que excluye el cero (sin circularidad, 149):** LORENZ +0,129
+[+0,034; +0,224] · BLACKBASTA +0,101 [+0,019; +0,183] · PHOBOS +0,078 [+0,024; +0,133]. Suben
+pero con IC que incluye el cero: TESLACRYPT +0,041 · SODINOKIBI +0,034 · CLOP +0,029. Sin
+movimiento: BLACKMATTER, NOTPETYA, GANDCRAB, NETWALKER (Δ exactamente 0,000).
+
+### (3) Diagnóstico post-hoc (NO preregistrado, NO adoptable) — solo IOCs privados
+
+Descartando del diccionario los valores que en el entrenamiento aparecen en más de una familia
+(el filtro de genéricos de B.3), que es lo que mide cuánta cobertura bloquean las URLs de Tor:
+
+| Variante post-hoc | Cobertura | Acierto donde aplica | macro-F1 | Δ | IC 95 % |
+|---|---|---|---|---|---|
+| sin circ. + solo privados | **0,3872** (57,7 notas) | **0,9686** | 0,5237 | +0,0557 | [+0,0381; +0,0732] |
+| con circ. + solo privados | 0,3235 (48,2 notas) | 0,9581 | 0,4961 | +0,0281 | [+0,0139; +0,0423] |
+
+Sigue valiendo la lectura de 155: **el filtro de genéricos casi duplica la cobertura sin perder
+precisión**, y es el camino que M.6 ya adoptó. No es adoptable por sí mismo porque se decidió
+después de ver los resultados.
+
+### (4) ⚠️ Hallazgo colateral que hay que declarar: la dispersión creció
+
+> ⛔ **CORREGIDO el mismo día con 50 semillas.** El 0,1003 de abajo es una estimación de 10
+> semillas y **sobreestima**: sobre el mismo corpus de 149, con 50 semillas el desvío es
+> **0,0752** y la media **0,4593** (no 0,4680). La dispersión es **1,53× la de 155**, no el
+> doble. Lo que sigue valiendo: es más alta, los IC son más anchos, y **para cifras finales van
+> 50 semillas**. Detalle en el bloque «RESULTADO CON 50 SEMILLAS» de la decisión de alcance.
+
+La base P2 pasó de **0,5265 ± 0,0490** (155, 10 semillas) a **0,4680 ± 0,1003** (149, 10
+semillas): el desvío **casi se duplicó con esa estimación** (ver la corrección de arriba). El F1 por semilla de la capa de texto va de **0,2954**
+(semilla 3) a **0,5988** (semilla 0). Consecuencia práctica: **todos los IC 95 % de 149 son más
+anchos que los de 155** — el de M.1 pasó de ±0,006 a ±0,016 de semiancho. Los veredictos no
+cambian, pero cualquier Δ chico medido sobre 149 con 10 semillas va a tener IC que incluya el
+cero. **Para cifras finales sobre 149, usar 50 semillas** (es lo que ya hacen M.6 y M.3).
+
+**Dato relacionado, medido, pero que NO alcanza para explicarlo.** El control de corrección de
+`curva_aprendizaje_notas.py --validar` reporta cuántas familias quedan **sin ninguna nota de
+entrenamiento** en promedio bajo P2: **2,8 sobre 155** (`resultados_extension_155/log_curva.txt`)
+contra **3,9 sobre 149** (`_log_curva_149_validar.txt`). Subió, y 2 de esas 3,9 son BADRABBIT y
+CRYPTOLOCKER, que con 1 sola plantilla caen enteras en un pliegue **en toda semilla**. Pero eso
+es un aporte *constante*: baja la media, no agrega varianza. **La causa del salto de dispersión
+queda sin establecer** — anotado como pregunta abierta, no como explicación. El control de
+corrección sí pasó exacto en las dos bases (P1 y P2 reproducen el evaluador canónico con
+diferencia 0,00e+00), así que no es un error de partición.
+
+**Estado: M.1 re-medido y cerrado sobre 149.** Falta la curva B.1 y el resumen del capítulo 4.
+
+## ⛔ CORRECCIÓN AL TRASPASO: SON **DOS** FAMILIAS DE 1 PLANTILLA, NO TRES (2026-08-28)
+
+> El traspaso `HANDOFF_2026-08-25_limpieza_y_proximos_pasos.md` §3(b) dice «las tres familias de
+> 1 plantilla: WASTEDLOCKER · BADRABBIT · CRYPTOLOCKER». **Medido contra el agrupador de
+> casi-duplicados (coseno char 3-5 > 0,90, el mismo de todas las corridas): son DOS.** El
+> traspaso ya quedó corregido.
+
+| Familia | Notas | Plantillas | Cosenos internos medidos |
+|---|---|---|---|
+| **BADRABBIT** | 2 | **1** | 0,9490 → colapsan (las 2 variantes auténticas difieren en `key#1` vs `key#2`) |
+| **CRYPTOLOCKER** | 2 | **1** | 0,9883 → colapsan |
+| WASTEDLOCKER | 4 | **3** | 0,8861 · 0,8879 · 0,8957 · 0,8977 · 0,8995 · **0,9742** (solo este último par colapsa) |
+
+**Lo que NO cambia:** el número que va a la decisión de reporte. Verificado sobre
+`resultados_cascada_combinada_149/m6_por_familia.csv`: las únicas familias con F1 = 0,0000 en
+base **y** en variante son **BADRABBIT y CRYPTOLOCKER**, en las cuatro variantes de M.6. Las
+**28 evaluables** dan base **0,4921** y M.6 **0,5562** (contra 0,4593 y 0,5191 sobre 30):
+**+0,0328 en la base y +0,0371 en M.6**. La propuesta para Cappo se sostiene igual.
+
+**Lo que sí cambia, y es lo interesante:** WASTEDLOCKER **es evaluable**, y su caso es el opuesto
+al que decía el traspaso. Sus 4 notas están **pegadas al umbral por debajo** (0,886 a 0,900; una
+a **0,8995**, tres milésimas del corte). Cualitativamente son el mismo molde —eso era correcto—,
+pero el agrupador las cuenta como 3 plantillas. Es una familia cuyo conteo de plantillas
+**depende del umbral**, no una familia de plantilla única. Como argumento para Cappo es más
+fuerte planteado así: BADRABBIT y CRYPTOLOCKER son inevaluables por propiedad del malware, y
+WASTEDLOCKER muestra que el umbral de 0,90 tiene casos de frontera.
+
+**Contexto que además cambió con la limpieza:** sobre 155 **ninguna** familia tenía 1 sola
+plantilla (8 tenían 2); sobre 149 hay **2 con una** y 7 con dos. La distribución completa de
+plantillas por familia: 155 → `{2:8, 3:5, 4:13, 5:1, 6:2, 8:1}`; 149 → `{1:2, 2:7, 3:6, 4:12,
+5:1, 6:1, 8:1}`. Eso es lo que hace estructuralmente inevaluables a esas dos familias bajo P2.
+
+### Y de paso, una corrección al §5-3 del traspaso: una de las 4 reescrituras SÍ infla el conteo
+
+El traspaso afirma que las 4 reescrituras conservadas «no inflan el conteo, porque su coseno con
+el original es ≥ 0,90 y el agrupador ya las colapsa». **Medido: vale para 3 de las 4.**
+
+| Reescritura | Coseno máx. con una hermana | ¿La colapsa el agrupador? |
+|---|---|---|
+| `RYUK/note_variant_email.txt` | 0,9861 | sí (grupo de 3) |
+| `MAZE/malware_notes_maze.txt` | 0,9837 | sí (grupo de 2) |
+| `LOCKBIT/lb30b.txt` | 0,9132 | sí (grupo de 2) |
+| **`WASTEDLOCKER/note_pcrisk.txt`** | **0,8977** | **NO — es plantilla propia (grupo 145)** |
+
+Esa nota es, ella sola, la razón por la que WASTEDLOCKER cuenta 3 plantillas y no 2. Sigue
+declarada como reescritura, pero **hay que declarar también que aporta una plantilla al conteo**,
+porque la moneda de B.1 son las plantillas.
+
+## ★★★ B.1 RE-MEDIDA SOBRE 149: EL CORTE SE MUEVE DE 4 A 3 PLANTILLAS (2026-08-28)
+
+> **Base: 149 notas · 99 plantillas · 30 familias.** R = 100 repeticiones de retención para
+> P2ret y los subconjuntos; R = 10 para P1 y P2 sin retención. Salidas en
+> `4_resultados/resultados_curva_149/` y `4_resultados/resumen_cap4_149/`; logs
+> `_log_curva_149_validar.txt`, `_log_curva_149.txt`, `_log_resumen_cap4_149.txt`.
+> **Con esto queda cerrada la re-medición del frente de notas sobre el corpus limpio.**
+
+**Control de corrección exacto en las dos ramas:** P1 canónico 0,804779 vs curva 0,804779 ·
+P2 canónico 0,468038 vs curva 0,468038, **diferencia 0,00e+00** en las dos. La partición y el
+evaluador son los mismos que los del clasificador canónico, así que la curva es comparable.
+
+### (1) La respuesta al pedido del tutor cambió de número: son 3 textos distintos, no 4
+
+⚠️ **Y no es efecto de la limpieza: es OTRA BASE.** La B.1 cerrada el 2026-08-19 era sobre
+**144 notas / 95 plantillas**. Entre esa corrida y esta hubo recolección (hasta 155 notas / 106
+plantillas) **y después** la limpieza de integridad (149 / 99). Lo que cambió el corte es tener
+más plantillas repartidas en más familias, no haber retirado 6 notas. Prueba: las familias con
+≥ 4 plantillas pasaron de **11 a 15**, y las con ≥ 5 de **5 a 3**.
+
+**Los tres conjuntos concuerdan: el último paso que mueve la aguja es 2 → 3.**
+
+| Conjunto (149) | Δ 1→2 | Δ 2→3 | Δ 3→4 (o 3→todo) |
+|---|---|---|---|
+| 30 familias · P2ret · plantillas | **+0,0786** [+0,0643; +0,0928] sí | **+0,0146** [+0,0054; +0,0237] sí | **−0,0057** [−0,0130; +0,0015] **NO** |
+| «11fam» = **15 familias** con ≥4 · P2ret | **+0,1069** [+0,0820; +0,1317] sí | **+0,0604** [+0,0393; +0,0815] sí | **−0,0014** [−0,0177; +0,0149] **NO** |
+| «5fam» = **3 familias** con ≥5 · P2ret | +0,0581 [+0,0128; +0,1034] sí | **+0,1074** [+0,0586; +0,1561] sí | +0,0254 [−0,0095; +0,0604] **NO** |
+| 30 familias · P1 · plantillas | +0,1252 [+0,1054; +0,1449] sí | +0,0253 [+0,0125; +0,0381] sí | +0,0065 [−0,0076; +0,0205] **NO** |
+| 30 familias · P2 · plantillas | +0,0354 [+0,0200; +0,0507] sí | −0,0034 [−0,0237; +0,0170] **NO** | +0,0005 **NO** |
+
+Sobre 144 el último paso significativo era **3 → 4** (+0,0297 [+0,0039; +0,0554] en el conjunto
+de 5 familias). Sobre 149 ese paso ya no lo es en ningún conjunto. **P2 sin retención satura
+todavía antes: en 2 plantillas.**
+
+**Lo que eso cambia en el costo de recolección — a la mitad y algo más:**
+
+| Objetivo | Plantillas nuevas | Familias a completar |
+|---|---|---|
+| todas las familias con **3** plantillas | **11** | **9** |
+| todas con 4 plantillas | 26 | 15 |
+| (sobre 144, para llegar a 4) | 33 | 19 |
+
+### (2) El techo estimado, que es la cifra más fuerte del capítulo
+
+Ajuste de ley de potencia con bootstrap, solo donde el conjunto de clases es constante:
+
+| Curva (149) | Techo estimado de macro-F1 | ¿Llega a 0,70? | ¿Llega a 0,50? |
+|---|---|---|---|
+| 30 fam · **P1** · plantillas | **0,822** [0,803; 0,847] | sí, con 1,2 plantillas/fam | sí, con 0,7 |
+| 30 fam · **P2ret** · plantillas | **0,651** [0,639; 0,663] | **NO ALCANZABLE** (0 % del bootstrap) | sí, con 0,9 |
+| 30 fam · **P2** · plantillas | **0,470** [0,411; 0,527] | **NO ALCANZABLE** | **NO ALCANZABLE** (16 % del bootstrap) |
+
+**La frase citable, con su métrica y su base:** bajo P2 sobre 149 notas, el techo que estima el
+ajuste es **macro-F1 0,470** y **ni siquiera 0,50 es alcanzable agregando notas**. P1 llega a
+0,80 con 2,9 plantillas por familia (99 % del bootstrap). Es la forma cuantitativa de la
+conclusión que ya tenían B.3 y el protocolo Lemmou: **lo que limita no es el modelo, es el
+protocolo de evaluación** — y ahora está con techo, IC y probabilidad de bootstrap.
+
+### (3) Hallazgo NUEVO que estaba mal etiquetado: pasado el corte, sumar notas EMPEORA
+
+El script marcaba como «indistinguible de cero» cualquier paso que no fuera significativamente
+positivo, incluidos los que tienen el IC 95 % **entero por debajo del cero**. Sobre 149 hay
+cinco, y no son ruido:
+
+| Paso (30 fam · P2ret) | Δ macro-F1 | IC 95 % |
+|---|---|---|
+| 4 → 6 notas | −0,0069 | [−0,0136; −0,0002] |
+| 6 → 8 notas | −0,0082 | [−0,0140; −0,0024] |
+| 8 → 12 notas | −0,0085 | [−0,0154; −0,0015] |
+| 12 → todo | −0,0067 | [−0,0118; −0,0016] |
+| **4 → 5 plantillas** | **−0,0084** | **[−0,0149; −0,0020]** |
+
+**Pasado el punto de saturación, agregar material no es neutro: mide peor, de forma
+medible.** Refuerza la regla práctica de B.1 (contar textos distintos, no notas) con un
+argumento más fuerte que «no aporta»: aporta negativo. Arreglado en el código (etiqueta de tres
+casos, commit `ad05071`), y el CSV `b1_deltas_pareados.csv` ahora trae la columna
+`significativo_negativo`.
+
+### (4) ⚠️ TRAMPA DE NOMENCLATURA que hay que declarar al citar
+
+Las etiquetas `11fam` y `5fam` son **nombres históricos, no conteos**. Sobre 149 esos
+subconjuntos tienen **15 y 3 familias**, así que su azar es **0,067 y 0,333**, no 0,091 y 0,200.
+El resumen **imprimía los valores viejos** porque estaban escritos en el código: corregido para
+que los lea de `manifiesto_b1.json` y avise cuando el nombre ya no coincide (commit `db9aab4`).
+Las tres curvas no son comparables entre sí; toda tabla tiene que decir cuántas familias y qué
+azar.
+
+**Dos ajustes de extrapolación salieron degenerados y NO se pueden citar:** «11fam · P2ret ·
+plantillas» da techo 3,669 y «5fam · P2ret · plantillas» 3,661 — un macro-F1 mayor que 1 es
+imposible; el ajuste no converge con 3-4 puntos sobre una curva que todavía sube. El script
+ahora los marca «⚠ AJUSTE NO VÁLIDO: techo > 1, NO CITAR» en pantalla y con la columna
+`ajuste_valido` en el CSV (commit `2c04e07`).
+
+### (5) La lista de recolección sobre 149, y dos confirmaciones que salen de ella
+
+F1 por familia de la misma corrida (30fam · P2ret · k=todo · 149 notas) — **es F1 de la familia,
+NO el macro-F1**:
+
+| Familia | Plantillas | Faltan → 3 | F1 hoy |
+|---|---|---|---|
+| BADRABBIT | 1 | 2 | **0,000 ± 0,000** |
+| CRYPTOLOCKER | 1 | 2 | **0,000 ± 0,000** |
+| CHIMERA | 2 | 1 | **0,010 ± 0,100** |
+| NOTPETYA | 2 | 1 | 0,480 ± 0,040 |
+| CUBA · BLACKMATTER · NETWALKER · DARKSIDE · SUNCRYPT | 2 | 1 | 0,994 a 1,000 |
+| HELLOKITTY | 3 | 0 | 0,157 ± 0,346 |
+| LORENZ | 3 | 0 | 0,735 ± 0,401 |
+| CONTI | 3 | 0 | 0,851 ± 0,156 |
+| SODINOKIBI | 3 | 0 | 0,860 ± 0,185 |
+| AVOSLOCKER | 3 | 0 | 0,983 ± 0,073 |
+| **WASTEDLOCKER** | **3** | 0 | **0,984 ± 0,092** |
+
+Ya en 4 o más, 15 familias: BLACKBASTA, RYUK, WANNACRY, JIGSAW, MAZE, MEDUZALOCKER, CLOP,
+LOCKBIT, DHARMA, GANDCRAB, PHOBOS, RANSOMEXX, TESLACRYPT, BLACKCAT, CERBER.
+
+1. **Confirma la corrección del traspaso por una vía independiente:** WASTEDLOCKER aparece con
+   **3 plantillas y F1 0,984 ± 0,092**. No es una familia inevaluable — es una de las que mejor
+   rinden. Las únicas con F1 0,000 son BADRABBIT y CRYPTOLOCKER.
+2. **CHIMERA es ahora la peor familia con material: F1 0,010 ± 0,100 con 2 plantillas.** Tiene
+   explicación medida: sus dos notas son la alemana y la inglesa, con **coseno 0,2535** entre
+   sí. Dos plantillas que no se parecen en nada no le enseñan la familia al modelo; es el caso
+   extremo de la correlación cohesión→F1 de B.3.
+
+**Estado: paso (a) del traspaso COMPLETO.** M.1, curva B.1 y resumen del capítulo 4 re-medidos
+sobre 149. Lo que sigue es la decisión de reporte para Cappo (28 evaluables) y el frente de
+archivos (Exp. 2d + A.3).
+
+## ★★★★ DONDE QUEDA MARGEN EN NOTAS: NO ES MÁS NOTAS, ES OTRO CANAL (2026-08-28)
+
+> **Base: 149 notas · 99 plantillas · 30 familias.** Código: `2_codigo/margen_frente_notas.py`
+> (commit `a3cd306` en develop). Salidas en `4_resultados/margen_notas_149/`, log
+> `_log_margen_149.txt`. Cruza tres fuentes ya medidas —`resultados_curva_149`,
+> `resultados_cascada_combinada_149`, `resultados_techo_por_familia_149`— sin correr nada nuevo.
+> **Pregunta que contesta:** con la curva re-medida y M.6 adoptado, ¿en qué conviene gastar el
+> esfuerzo que queda?
+
+### (1) La trampa que había que cerrar antes de concluir cualquier cosa: efecto propio vs ajeno
+
+El tope `k` de la curva B.1 se aplica a **todas** las familias a la vez. Para una familia con
+`n` plantillas y el paso `k → k+1`:
+
+- si **n ≥ k+1**, el paso le agrega una plantilla **propia**: el Δ mide lo que gana esa familia
+  con más dato **suyo**. Es lo único que sirve para decidir si conviene recolectar para ella.
+- si **n ≤ k**, el tope **no le muerde** ni antes ni después: su entrenamiento es idéntico y el Δ
+  mide solo el efecto **ajeno** (que las OTRAS familias tengan más dato).
+
+Leer el segundo como si fuera el primero lleva a la conclusión contraria. Ejemplo real: en el
+paso 2→3, BLACKMATTER (+0,030), CUBA (+0,027) y DARKSIDE (+0,029) «suben» — pero tienen 2
+plantillas, así que **no recibieron ninguna plantilla nueva**: lo que mejora es que las demás
+familias dejan de robarles notas. Recolectar para ellas no está probado por ese número.
+
+### (2) Cuánto paga de verdad una plantilla más (solo efecto PROPIO, 100 repeticiones)
+
+| Paso | Familias | SUBE | BAJA | sin efecto | Δ mediano |
+|---|---|---|---|---|---|
+| **1 → 2** | 28 | **22** | 1 | 5 | **+0,0673** |
+| **2 → 3** | 21 | 7 | 2 | 12 | +0,0211 |
+| **3 → 4** | 15 | **1** | **3** | 11 | +0,0014 |
+
+- **La segunda plantilla es la que vale:** 22 de 28 familias suben, hasta +0,227 (MAZE), +0,210
+  (CERBER), +0,207 (MEDUZALOCKER), +0,194 (SODINOKIBI), +0,185 (RANSOMEXX), +0,183 (JIGSAW).
+- **La tercera paga en una minoría:** LOCKBIT +0,184 · CLOP +0,086 · BLACKBASTA +0,080 ·
+  DHARMA +0,061 · TESLACRYPT +0,040 · CONTI +0,021 · WASTEDLOCKER +0,019. Y **baja** en dos:
+  HELLOKITTY −0,108 y WANNACRY −0,059.
+- **La cuarta es neutral o mala:** sube en una sola (CERBER +0,046) y **baja en tres**
+  (MEDUZALOCKER −0,039 · BLACKCAT −0,023 · TESLACRYPT −0,023).
+
+**El caso más elocuente es CHIMERA:** su segunda plantilla le **bajó** el F1 **−0,202**
+[−0,301; −0,104]. Es la única familia cuyo paso 1→2 es negativo, y sus dos plantillas tienen
+coseno **0,2535** entre sí (alemana vs inglesa). Un texto que no se parece a la familia no
+enseña la familia: la confunde.
+
+**Y CHIMERA es además la familia más atropellada por las demás:** en efecto ajeno pierde
+−0,093 (2→3), −0,143 (3→4) y −0,123 (4→5). Cada vez que las otras familias tienen más dato,
+CHIMERA pierde notas. Es el perfil exacto de una clase con poco material y sin cohesión.
+
+### (3) La cohesión predice el NIVEL de F1, no el valor de la próxima nota
+
+Esto corrige una inferencia que parece razonable y es falsa:
+
+| Relación (Spearman) | ρ | p | n |
+|---|---|---|---|
+| cohesión vs **F1 base** | **+0,481** | **0,0096** | 28 |
+| n_plantillas vs F1 base (30 familias) | +0,381 | 0,0376 | 30 |
+| n_plantillas vs F1 base (**sin las 2 de 1 plantilla**) | +0,231 | 0,2365 | 28 |
+| **cohesión vs Δ PROPIO** (valor marginal de una plantilla más) | **+0,010** | **0,9319** | 70 |
+
+Dos lecturas, las dos importantes:
+
+1. **El efecto aparente de «más plantillas» se lo llevan las dos familias de 1 plantilla.**
+   Sacando BADRABBIT y CRYPTOLOCKER, la cantidad de plantillas **deja de predecir** el F1 base
+   (p = 0,24). La cohesión sí lo predice (ρ +0,481, p = 0,0096), confirmando B.3 sobre 149.
+2. **Pero la cohesión NO sirve para priorizar recolección** (ρ +0,010, p = 0,93). Predice dónde
+   está el techo, no cuánto sube con la próxima nota. **No usar la cohesión como criterio de
+   recolección** — era la conclusión tentadora y los datos la rechazan.
+
+### (4) Donde SÍ hay margen: 11 de 30 familias tienen cobertura de regla EXACTAMENTE 0
+
+Cobertura de la regla de M.6 (`privados_sin_circ_MAS_NOMBRE`, 50 semillas) por familia:
+
+**Cobertura 0 — dependen 100 % del texto (11 familias):** BADRABBIT, CRYPTOLOCKER, CUBA,
+DARKSIDE, HELLOKITTY, JIGSAW, MEDUZALOCKER, NOTPETYA, SUNCRYPT, WANNACRY, WASTEDLOCKER.
+
+Y el acierto del texto solo en esas notas dice cuánto duele: HELLOKITTY **0,153** · JIGSAW
+0,300 · SUNCRYPT 0,420 · CUBA 0,480 · NOTPETYA 0,520 · MEDUZALOCKER 0,600 · DARKSIDE 0,640 ·
+WANNACRY 0,710 · WASTEDLOCKER 0,800 · BADRABBIT y CRYPTOLOCKER 0,000.
+
+**El peor caso de todos es RYUK, y no está en esa lista:** cobertura 0,153, y donde la regla no
+cubre el texto acierta **0,087**. Es la peor combinación del corpus: el 85 % de sus notas caen
+al texto y el texto se equivoca en 9 de cada 10.
+
+**Cota superior DECLARADA del canal** — supuesto explícito y falsable: que las familias no
+cubiertas alcancen el F1 medio de las 12 que hoy tienen cobertura ≥ 0,50, que es **0,6751**.
+**No es una predicción**, es una cota, y se reporta como tal (igual que la tercera columna del
+Exp. 2d):
+
+| Escenario | macro-F1 | Δ sobre 0,5191 |
+|---|---|---|
+| si el canal llegara a las 11 de cobertura 0 | 0,6319 | **+0,1128** |
+| si llegara a las 7 de cobertura < 0,50 | 0,5669 | +0,0478 |
+| si llegara a las dos cosas | 0,6797 | **+0,1605** |
+
+Las que más aportarían: BADRABBIT +0,0225 · CRYPTOLOCKER +0,0225 · HELLOKITTY +0,0167 ·
+RYUK +0,0132 · NOTPETYA +0,0127 · JIGSAW +0,0108 · SUNCRYPT +0,0090 · MAZE +0,0088.
+
+### (5) La comparación que ordena el trabajo que queda
+
+| Palanca | Valor | Costo | Estado |
+|---|---|---|---|
+| **Extender el canal (IOC/nombre) a las 11 de cobertura 0** | cota **+0,113** | M.2 rediseñado | 🟡 |
+| Extender el canal a las 7 de cobertura baja (RYUK primero) | cota **+0,048** | ídem | 🟡 |
+| Recuperar el nombre original de las **32 notas `sin_verificar`** | no medido, alimenta lo de arriba | 32 búsquedas | 🟢 acotado |
+| **2.ª plantilla para CRYPTOLOCKER** (candidata en 8 imágenes en disco) | cota +0,0225 | 1 decisión de alcance + OCR | 🔴 decisión |
+| 2.ª plantilla para BADRABBIT | cota +0,0225 | sin candidata hallada | ⛔ |
+| 3.ª plantilla para las 7 familias de 2 plantillas | medido: paga en 1 de 3 casos, ~+0,02 de F1 propio ⇒ ~+0,001 de macro cada una. **CHIMERA empeoraría** | 7 notas | 🟡 poco |
+| 4.ª plantilla para cualquiera | medido: **neutral o negativo** (3 familias bajaron) | — | ⛔ **no hacer** |
+
+**Un orden de magnitud de diferencia, medido:** el canal vale ~+0,11 de cota; toda la
+recolección de notas que queda en el núcleo de 30 vale ~+0,01. **El frente de notas dejó de
+estar limitado por cuántas notas hay y pasó a estar limitado por cuántos canales se usan.**
+
+### (6) El estado del canal de nombre, que es el que se puede mover
+
+Auditoría sobre las **149** (`3_datos/nombres_notas/auditoria_nombres_corpus.csv`):
+
+| Procedencia del nombre | Notas | ¿Sirve? |
+|---|---|---|
+| `curador` (inventado por quien recolectó) | 53 | ⛔ circular |
+| **`sin_verificar`** | **32** | ⚠️ **recuperable de la fuente** |
+| `genuino_renombrado` | 26 | ✅ con el nombre original del repo |
+| `genuino` | 21 | ✅ |
+| `genuino_de_la_fuente` | 17 | ✅ |
+
+**64 notas de 149 tienen nombre usable, en 14 familias** — pero el canal de nombre solo dispara
+en **6**: DHARMA 0,518 · GANDCRAB 0,520 · MAZE 0,200 · RYUK 0,153 · LOCKBIT 0,149 · PHOBOS
+0,025. Tener nombre no alcanza: el nombre además tiene que ser **discriminante** (visto en
+entrenamiento y apuntando a una sola familia), y ahí pegan las colisiones ya documentadas
+(`README.txt` en 5 familias, `Info.hta` en DHARMA y PHOBOS).
+
+**Las 32 `sin_verificar` son el lote acotado que queda**, repartidas en 22 familias: CERBER 4 ·
+RANSOMEXX 3 · CLOP, GANDCRAB, LOCKBIT, LORENZ, MAZE 2 cada una · y 1 en cada una de las otras
+15. Recuperar su nombre original de la fuente es trabajo finito y no requiere recolectar notas
+nuevas.
+
+### (7) Qué NO aportan las fuentes nuevas al núcleo de 30 (y para qué sí sirven)
+
+- **Group-IB** (43 grupos activos con nota completa y atribución): verificado, **no cubre
+  ninguna de las 30**. Sirve **solo** para el experimento de extensión.
+- **Kaggle**: ya descartado y no reabrir — sin etiquetas de familia (`__label__ransomware`), y
+  72 de las notas del corpus ya están ahí, así que tampoco es independiente.
+- **MISP** (1.375 referencias sin usar): su valor **no** es la vista de nombre —eso ya se midió
+  y se cae— sino la **bibliografía** y el análisis año-vs-F1 que pidió Cappo.
+- **id-ransomware / Amigo-A**: agotado para las 5 familias trabadas, con una excepción abierta:
+  la **ventana de pago de CryptoLocker**, que dio TEXTO NUEVO (coseno 0,344 contra la nota que
+  ya está) y quedó en decisión de alcance —¿una interfaz de pago es una nota?—. Es la única
+  plantilla nueva identificada que le cambiaría el resultado a una familia estructuralmente
+  inevaluable. **Las 8 imágenes fuente están en disco**
+  (`3_datos/recoleccion_2026-08/CRYPTOLOCKER/imagenes/`) pero **el texto transcripto no se
+  guardó**: vive solo en un chat viejo. Hay que volver a hacer el OCR.
+
+## ★★★ DECISIÓN DE ALCANCE: LA VENTANA DE PAGO DE CRYPTOLOCKER CUENTA COMO NOTA (2026-08-28)
+
+> **Decisión de Romina**, tomada el 2026-08-25: *«que cuente como nota, es lo único que hay»*.
+> Cierra la decisión de alcance que quedó abierta el 2026-08-20 en
+> `6_notas_trabajo/extension_notas_id-ransomware_2026-08-20.md`.
+> **Se implementa como BASE PARALELA de 150 notas, no reemplazando el corpus canónico de 149.**
+
+### (1) Qué se incorporó, y por qué esa pantalla y no otra
+
+CryptoLocker no deja archivo de nota: muestra una interfaz. De las **8 capturas** del original
+2013 en `3_datos/recoleccion_2026-08/CRYPTOLOCKER/imagenes/`, seis son pantallas de pago (una por
+método: MoneyPak, paysafecard, Ukash, cashU, Bitcoin, más la del desplegable vacío). **Se
+incorporó una sola: la de Bitcoin** (`cryptolocker_original_8.png`), porque es la **única con
+texto escrito por el malware y con un IOC**. Las otras cinco tienen como cuerpo la descripción
+comercial del proveedor de pago (Green Dot, Ukash, paysafecard, cashU), no texto del atacante.
+
+Archivo: `CRYPTOLOCKER/idr_cryptolocker_ventana_pago_bitcoin_2013.txt` (673 caracteres),
+`tipo=transcripcion`, fuente id-ransomware.blogspot.com (Amigo-A / Andrew Ivanov),
+`extension_original=.txt` con `nombre_genuino=SIN_ARCHIVO`.
+
+### (2) La transcripción está verificada por checksum, no por lectura
+
+La nota contiene la dirección **`1KP72fBmh3XBRfuJDMn53APaqM6iMRspCh`**. Una dirección Bitcoin
+lleva 4 bytes de checksum (doble SHA-256 sobre el cuerpo), así que **un solo carácter mal leído
+rompe la validación**. Verificado: **Base58Check VÁLIDA**, checksum leído `fd747ed2` = calculado
+`fd747ed2`, 25 bytes, versión P2PKH mainnet. **La transcripción del dato crítico no depende de
+mi lectura: depende de la aritmética.** Es el control que conviene repetir con cualquier IOC que
+entre por OCR.
+
+### (3) El verificador de casi-duplicados: TEXTO NUEVO, pero con una señal de alarma
+
+`python verificar_nota_nueva.py` sobre el corpus de 149:
+
+| | |
+|---|---|
+| Veredicto | **TEXTO NUEVO** — plantillas **99 → 100** |
+| Coseno con `cryptolocker_note1.txt` | **0,3801** |
+| Coseno con `pcrisk_cryptolocker_1.txt` | **0,3848** |
+| **Vecino más cercano en TODO el corpus** | **JIGSAW/`jigsaw_note1.txt` 0,4729** |
+| Siguientes vecinos | WANNACRY 0,4107 · CHIMERA 0,4024 · DHARMA ×5 (0,387-0,394) |
+| **Cohesión que le queda a CRYPTOLOCKER** | **0,3824** con 2 plantillas |
+
+⚠️ **La alarma hay que declararla:** la plantilla nueva **se parece más a JIGSAW que a su propia
+familia**. Es el patrón exacto de CHIMERA —cuya segunda plantilla, con coseno 0,2535 contra la
+primera, le **bajó** el F1 **−0,202**— aunque menos extremo (0,382 contra 0,254). Lo que se
+espera, entonces, no es que CRYPTOLOCKER pase a rendir bien: es que **deje de ser
+estructuralmente inevaluable**. Que eso mejore o empeore el macro-F1 es una pregunta empírica y
+se mide, no se argumenta.
+
+### (4) Dos consecuencias de método que hay que declarar en la tesis
+
+1. **El primer párrafo de la nota no lo escribió el atacante.** Es la descripción genérica de
+   Bitcoin («Bitcoin is a cryptocurrency where the creation and transfer of bitcoins is based on
+   an open-source cryptographic protocol…»). Al ser CRYPTOLOCKER la única familia del corpus con
+   texto así, el clasificador podría aprenderlo como firma de CryptoLocker — un discriminante
+   **perfecto y vacío**, de la misma clase que el duplicado por *defanging* que se limpió el
+   24-25 de agosto. **Hay que declararlo**, y conviene medir la variante sin ese párrafo antes de
+   citar cualquier mejora como mérito del método.
+2. **La decisión fija un precedente que hay que aplicar de forma uniforme.** El documento del
+   2026-08-20 había fijado el criterio contrario para MAZE («el wallpaper entra, el sitio de pago
+   no»). Si una interfaz de pago cuenta como nota, ese criterio queda **inconsistente** y hay que
+   revisar dos cosas: el sitio de pago de Maze, y **M.5** (los fragmentos de 6 tokens
+   solo-contacto de RYUK, que es la misma pregunta con otra forma). O se aplica a los tres, o el
+   criterio es *ad hoc*. **Queda como punto para Cappo.**
+
+### (5) Por qué base PARALELA y no cambio del corpus canónico
+
+`CORPUS_DIR` es una variable de entorno (`clasificador_notas_v2.py:77`), así que se puede medir
+otro corpus sin tocar el de 149:
+
+- Corpus: `3_datos/corpus_v2_150ventana/` (copia de `corpus_v2` + la nota nueva).
+- Manifiesto: `3_datos/manifiesto_corpus_v2_150ventana.csv` (150 filas; el de 149 sigue intacto
+  y sigue pasando `validar_procedencia.py`).
+- Salidas: sufijo **`_150ventana`**, no `_150` — **las carpetas `_150` que ya existen son otro
+  corpus** (el previo a retirar `lb20.txt`) y están superadas. El sufijo dice qué las distingue.
+
+Ventaja concreta: **todas las cifras de 149 medidas hoy siguen siendo reproducibles**. Si el
+número sobre 150 convence, promover la nota a canónica es copiar un archivo y agregar una fila.
+
+### (6) RESULTADO CON 50 SEMILLAS: la ventana de pago NO mueve el macro-F1, y eso está bien
+
+> Corridas: `resultados_notas_149_50sem/` y `resultados_notas_150ventana_50sem/`
+> (`clasificador_notas_v2.py --solo-canonica --semillas 50`, commit `90017f5`; para la base de
+> 150, con `CORPUS_DIR` apuntando a `corpus_v2_150ventana`). Logs `_log_clas_149_50sem.txt` y
+> `_log_clas_150ventana_50sem.txt`.
+
+| P2 · grupos·combinado·LinearSVC | 149 | 150 con la ventana |
+|---|---|---|
+| 10 semillas | 0,4680 ± 0,1003 | 0,4862 ± 0,0624 |
+| **50 semillas** | **0,4593 ± 0,0752** | **0,4694 ± 0,0621** |
+
+**Contraste con 50 semillas:** diferencia de medias **+0,0102**, Welch **t = +0,74, p = 0,4623**
+→ **NO detectable**. Varianzas: F = 1,464, **p = 0,1856** → la reducción de dispersión **tampoco**
+es detectable. Con 10 semillas la diferencia parecía +0,0182; con 50 se reduce a +0,0102 y sigue
+dentro del ruido.
+
+**Control de consistencia que vale registrar:** esta corrida (semillas 0-49) da **0,4593 ±
+0,0752**, y la capa de texto de M.6 (semillas 100-149, otro script) dio **0,4593 ± 0,0752**. Son
+conjuntos de semillas **disjuntos** y coinciden en las cuatro cifras; el error estándar de la
+media es 0,011, así que el acuerdo en el último decimal es suerte, pero la base queda confirmada
+por dos caminos independientes.
+
+**Lo que sí cambió, por familia (50 semillas):**
+
+| Familia | 149 | 150 | Δ |
+|---|---|---|---|
+| **CRYPTOLOCKER** | **0,0000** | **0,0610** | **+0,0610** |
+| BADRABBIT | 0,0000 | 0,0000 | 0,0000 |
+| HELLOKITTY | 0,1710 | 0,1920 | +0,0210 |
+| JIGSAW | 0,3280 | 0,3150 | −0,0130 |
+| CHIMERA | 0,1380 | 0,1130 | −0,0250 |
+| WANNACRY | 0,6430 | 0,6160 | −0,0270 |
+
+El riesgo que se había anticipado —que la plantilla nueva, más parecida a JIGSAW (0,473) que a su
+propia familia, le robara notas— **se materializó pero es chico: JIGSAW −0,0130.**
+
+**Familias con F1 exactamente 0,0000: de 2 a 1.** Queda solo BADRABBIT.
+
+### (7) El efecto real no es de rendimiento, es de honestidad — y hay que reportarlo así
+
+| Conjunto | 149 | 150 con la ventana |
+|---|---|---|
+| Todas (30 familias) | 0,4593 | 0,4694 |
+| **Evaluables** | **28 → 0,4921** | **29 → 0,4856** |
+
+Leer las dos filas juntas es lo que da la conclusión correcta: al incorporar la ventana, el
+macro-F1 de **todas** sube un poco (no detectable) y el de las **evaluables baja** (0,4921 →
+0,4856), porque CRYPTOLOCKER entra al conjunto evaluable con 0,061 y le baja el promedio.
+
+**O sea: la ventana de pago no mejora el método. Lo que hace es convertir un cero estructural en
+un fracaso medido.** Y eso, para la defensa, es una posición más fuerte que la anterior:
+
+- Antes: «CRYPTOLOCKER no se puede evaluar bajo P2, hay que excluirla» — un argumento que hay que
+  defender.
+- Ahora: «CRYPTOLOCKER se evalúa y da macro-F1 0,061: el método falla en esta familia, y la razón
+  está medida — sus dos plantillas tienen coseno 0,38 entre sí y la nueva se parece más a JIGSAW
+  que a ella misma».
+
+Y la lista de inevaluables que hay que explicarle a Cappo **se reduce de 2 familias a 1**.
+
+**Recomendación de reporte:** promover la nota a canónica **es defendible pero no urgente**, y la
+decisión se puede tomar con este número a la vista. Si se promueve, hay que re-medir todo sobre
+150 (M.1, M.6, M.3, curva, protocolo Lemmou, grafo) y renumerar la base en el capítulo 4. Si no se
+promueve, queda como **experimento de alcance declarado**: «con la ventana de pago incorporada,
+CRYPTOLOCKER deja de ser inevaluable y el macro-F1 no cambia de forma detectable (+0,0102, p =
+0,46)» — que es una frase citable y responde la pregunta sin tocar el capítulo.
+
+### (8) ⚠️ CORRECCIÓN al bloque de M.1 de este mismo día: el desvío de P2 no se duplicó
+
+El bloque «RESULTADO M.1 — CASCADA IOC→TEXTO RE-MEDIDA SOBRE 149», sección (4), dice que la
+dispersión **se duplicó** (0,0490 sobre 155 → 0,1003 sobre 149). **Ese 0,1003 es una estimación
+de 10 semillas y sobreestima.** Medido con 50 semillas sobre el mismo corpus de 149, el desvío es
+**0,0752**. Contra el 0,0490 de la base de 155 (que también es de 10 semillas, así que también es
+ruidoso) la razón es **1,53×**, no 2×.
+
+Lo que se sostiene: **la dispersión sobre 149 es mayor que la de 155 y los IC son más anchos**, y
+la recomendación práctica no cambia — **para cifras finales, 50 semillas**. Lo que hay que corregir
+es la magnitud: no digas «se duplicó», decí «es 1,5 veces mayor», y citá siempre con cuántas
+semillas se midió. La media también se movió con las semillas: 0,4680 (10) frente a **0,4593**
+(50).
+
+## ★★★★ PRUEBA CON UNA NOTA REAL FUERA DEL CORPUS: EL MODELO NO LA RECONOCE, Y AVISA (2026-08-28)
+
+> Nota de un incidente real, traída por Romina el 2026-08-28: captura de un `cat` sobre
+> `/opt/zimbra/data/ldap/mdb/db/!README_RECOVER.txt` en un servidor de correo Zimbra
+> comprometido, más su transcripción (`readme_recover.txt`, 1.033 caracteres). Es el primer
+> caso de **inferencia sobre una nota que no está en el corpus**, y salió el mejor ejemplo
+> disponible de la limitación de mundo cerrado. Código nuevo: `2_codigo/clasificar_nota_suelta.py`
+> y `2_codigo/validar_direccion_cripto.py` (commit `f0ae154`).
+
+### (1) Qué contestó el modelo
+
+Entrenado sobre las 149 notas con la configuración canónica (TF-IDF combinado + LinearSVC):
+
+| | |
+|---|---|
+| Predicción | **BLACKBASTA** |
+| **Margen (1.ª vs 2.ª clase)** | **0,0501** |
+| En el punto de operación de M.3 (umbral 0,50) | **SE ABSTIENE** |
+| Vecino más cercano (coseno char 3-5) | 0,5004 — `RYUK/pcrisk_ryuk_1.txt` (el umbral de casi-duplicado es 0,90) |
+| ¿Aplica la regla exacta de M.6? | **No.** Ninguno de sus 2 IOCs se vio en el corpus |
+
+**Y los dos datos que convierten esto en un «no sé» y no en un error silencioso:**
+
+1. **Ninguna de las 30 clases da `decision_function` positiva** (máximo −0,6965, mínimo −1,1003).
+   En las 149 notas del corpus, **siempre** hay al menos una clase positiva: **0 de 149** quedan
+   sin ninguna. Es decir: ningún clasificador uno-contra-resto la reclama.
+2. **Su margen, 0,0501, es más bajo que el de cualquier nota del corpus**: mínimo 0,129, mediana
+   1,646, percentil 10 en 1,234. **0 de 149** notas del corpus tienen un margen tan chico.
+   ⚠️ Esos márgenes del corpus están medidos **en muestra** (el modelo se entrenó con ellas), así
+   que son una referencia optimista; sirven como contraste cualitativo, no como distribución nula.
+
+**Lectura:** el modelo está obligado a nombrar una de las 30 y nombra BLACKBASTA, pero lo hace con
+un margen 25 veces menor que su caso más dudoso y sin que ninguna clase la reclame. **En el punto
+de operación reportado se abstiene**, que es la respuesta correcta. La nota no es de ninguna de las
+30: es de doble extorsión (sitio de filtración, rescate en **50 XMR**, contacto en `proton.me`),
+un perfil que no existe en el corpus.
+
+**Para la tesis esto vale como demostración, no como anécdota:** M.3 se cerró midiendo abstención
+**dentro** del corpus, con notas cuya familia sí estaba entre las 30. Este es el caso que M.3 no
+podía probar —una familia fuera del conjunto cerrado— y el mecanismo se comporta como se
+esperaba. Va al capítulo de limitaciones junto con el mundo cerrado.
+
+**No es candidata al corpus:** no hay atribución de familia. Sin etiqueta verificable no entra
+(regla de fuentes). Sirve como caso de prueba, no como dato de entrenamiento.
+
+### (2) Hallazgo de integridad: la transcripción tiene 2 caracteres mal en la dirección Monero
+
+La nota pide **50 XMR** a una dirección de 95 caracteres. La transcripción y la captura **no
+coinciden**, y el checksum resuelve cuál es la correcta sin depender de la lectura de nadie.
+
+Las direcciones Monero llevan 4 bytes de checksum = primeros 4 bytes de **Keccak-256** del cuerpo.
+No hay librería de Keccak en el entorno (`hashlib.sha3_256` **no** sirve: usa el relleno de NIST
+`0x06`, y Monero usa el Keccak original `0x01`), así que se implementó en
+`validar_direccion_cripto.py`, **con autotest contra dos vectores públicos que corre antes de
+dictaminar**.
+
+| | Dirección | Checksum |
+|---|---|---|
+| **Correcta** | `…iegPesnddiVw47XdwZs1MZ68LFVjayY2` | **VÁLIDO** (`7b217faf` = calculado) |
+| La del `.txt` | `…iegPe3nddiVw47XdwZs1HZ68LFVjayY2` | **NO válido**, y ninguna corrección de un solo carácter lo arregla |
+
+Diferencias exactas: **posición 68**, el `.txt` dice `3` y va `s`; **posición 83**, dice `H` y va
+`M`. Dirección completa correcta:
+
+```
+45EQACa2DVwHEMP2TcvhrgQgCeDUiwLnbcWrTmbUrHqZ1pFu8KJodc93PwXwEKeiegPesnddiVw47XdwZs1MZ68LFVjayY2
+```
+
+Byte de red `0x12` = mainnet estándar, 69 bytes: **es una dirección real y bien formada**, no un
+placeholder. Y de paso quedó confirmado que mi propia lectura de la captura también tenía un error
+—leí `l` (ele) donde va `1`—, imposible en Base58, que excluye `l`, `I`, `0` y `O`. **Moraleja
+operativa: cualquier dirección que entre al corpus por OCR se valida por checksum, no por
+lectura.** El mismo control ya se aplicó a la dirección BTC de la ventana de pago de CryptoLocker.
+
+### (3) Hueco en el extractor de IOCs: no hay patrón de Monero
+
+`normalizacion_marcadores.PATRONES` tiene `[BTC]` = `\b[13][a-km-zA-HJ-NP-Z1-9]{25,34}\b`, que
+**solo cubre Bitcoin legacy**. Consecuencia medida en esta nota: la dirección Monero cayó en
+`[CLAVE]` (el cajón genérico de cadenas base64 de 40+ caracteres), no en un marcador de
+criptomoneda. **Faltan dos patrones:**
+
+- **Monero:** `\b[48][1-9A-HJ-NP-Za-km-z]{94}\b` (95 caracteres; 106 si es *integrated address*).
+- **Bitcoin bech32:** `\bbc1[a-z0-9]{25,62}\b` — tampoco lo cubre el patrón actual.
+
+Impacto real sobre lo ya medido: **ninguno**, porque en el corpus de 149 hay 6 marcadores `[BTC]`
+y ninguna nota trae Monero (son familias de 2013-2022, cuando el rescate se pedía en BTC). Pero
+**sí importa para la extensión a familias nuevas y para cualquier caso de 2023 en adelante**, donde
+XMR es la moneda dominante: hoy esas direcciones no se contarían como IOC de criptomoneda. Anotado
+como arreglo pendiente, con la advertencia de que **tocar `PATRONES` cambia B.3, M.1 y M.6**: si se
+agregan, hay que re-medir los tres y declarar la base.
+
+### (4) Intento de atribución AGOTADO por las dos vías locales, y un criterio de mundo abierto que aparece de regalo
+
+**(a) Entrenando con más familias: no la reconoce, y el aviso es el mismo.** Código:
+`2_codigo/reconocer_con_expansion.py` (commit `0241caa`). Se entrenó la misma configuración
+canónica con el espacio de etiquetas ampliado a los repos que ya están en disco:
+
+| Entrenamiento | Notas | Familias | Plantillas | Clases con `decision_function` > 0 | Máx. coseno |
+|---|---|---|---|---|---|
+| corpus canónico | 149 | 30 | 99 | **0 de 30** | 0,5004 (RYUK) |
+| **Lemmou** (`RansomNoteFiles`) | 183 | **68** | 127 | **0 de 68** | 0,4696 (CRYPTFILE2) |
+| Lemmou + ThreatLabz + pcrisk + corpus | **773** | **291** | 495 | **0 de 291** | 0,5253 (AILOCK) |
+
+**Ninguna clase la reclama en ninguno de los tres espacios de etiquetas**, y el vecino más
+parecido de todo el disco queda en 0,5253, muy por debajo del umbral de casi-duplicado de 0,90.
+Ampliar el catálogo de 30 a 291 familias **no la hace reconocible**: el problema no es el tamaño
+del catálogo.
+
+**(b) En el catálogo MISP tampoco está.** Sobre
+`3_datos/misp_ransomware_galaxy/misp_galaxy_ransomware_2026-08-20.json`: **2.135 entradas**, de
+las cuales **298 traen `ransomnotes-filenames`**. Buscados el nombre del archivo, el correo, la
+dirección Monero y cinco frases de la nota: **ningún acierto**. Los 80 nombres con «recover» del
+catálogo (34 familias) son de otro formato — `!Recovery_[random_chars].txt` (CryLocker, CryptXXX,
+Sage 2.0), `readme_to_recover_files` (MedusaLocker), `read_me_for_recover_your_files.txt`
+(StorageCrypter) —, ninguno es `!README_RECOVER.txt`. `proton.me` aparece en la entrada `crynox`,
+pero es coincidencia de proveedor de correo, no atribución.
+
+**Conclusión: la nota no se puede atribuir con nada local.** Y por eso mismo **no entra al
+corpus**: sin etiqueta de familia verificable no hay dato de entrenamiento, solo un caso de
+prueba. Lo que sí queda es su caracterización: doble extorsión, rescate en 50 XMR, contacto
+únicamente por correo (`proton.me`) y **sin URL ni `.onion` del sitio de filtración que la propia
+nota menciona**.
+
+### (5) ▶ CANDIDATO A EXPERIMENTO NUEVO: «ninguna clase positiva» como criterio de mundo abierto
+
+Sale de esta prueba y merece medirse. M.3 detecta la duda con un **umbral sobre el margen**, que
+obliga a elegir un número y depende de cuántas clases haya. Los datos de esta noche sugieren un
+criterio más simple:
+
+| | Clases con `decision_function` > 0 |
+|---|---|
+| la nota fuera de catálogo, con 30 / 68 / 291 familias | **0**, en los tres casos |
+| las 149 notas del corpus (en muestra) | **0 de 149** quedan sin ninguna clase positiva |
+
+O sea: «**si ninguna clase da puntaje positivo, contestar “no sé”**» separó el caso de fuera del
+catálogo de todos los de dentro, **sin umbral que elegir** y de forma estable frente a un cambio
+de 30 a 291 clases. Además el margen de la nota (0,0501) quedó por debajo del mínimo de las 149
+(0,129), así que los dos criterios apuntan igual.
+
+**Lo que falta para que sea reportable** (no está medido, es una propuesta):
+1. Medir la regla **fuera de muestra**, con validación cruzada sobre las 149: cuántas veces el
+   máximo queda ≤ 0 en notas cuya familia SÍ está. Si es ~0 %, la regla cuesta casi nada de
+   cobertura. La comparación de esta noche usa márgenes **en muestra**, que son optimistas.
+2. Conseguir **más notas fuera de catálogo** para estimar la otra cara (cuántas veces la regla NO
+   avisa cuando debería). Con un solo caso no se puede.
+3. Preregistrar antes de correr, con criterio de adopción, como el resto.
+
+Encaja con el pedido explícito de Romina (2026-08-28): *«siempre debe poder decir no sé, por si
+acaso»*. Hoy el sistema puede abstenerse; esto lo haría sin depender de un umbral elegido a mano.
+
+## ★★★★ BÚSQUEDA EXHAUSTIVA DE LA NOTA DEL INCIDENTE, Y DOS HALLAZGOS QUE VALEN MÁS QUE ELLA (2026-08-28)
+
+> Continuación del bloque anterior. Romina pidió buscar la nota en todas las fuentes
+> disponibles, incluidas las que estaban citadas en el `.bib` pero **no** en disco. Se agotó la
+> búsqueda. **La nota no se puede atribuir con ninguna fuente pública disponible** — y tampoco
+> la reconoce ID Ransomware, que es la herramienta de producción hecha para esto (probado por
+> Romina).
+
+### (1) Todas las fuentes consultadas, y lo que dio cada una
+
+| Fuente | Tamaño | Cómo se buscó | Resultado |
+|---|---|---|---|
+| Corpus canónico | 149 notas · 30 fam. | texto + nombre | 0 de 30 clases positivas · coseno máx. 0,5004 |
+| **Lemmou** `RansomNoteFiles` | 183 notas · 68 fam. | texto + nombre | 0 de 68 · coseno máx. 0,4696 |
+| **ThreatLabz** `ransomware_notes` | 422 notas · 223 fam. | texto + nombre | sin coincidencia · coseno máx. 0,5253 (AILOCK) |
+| `notas_pcrisk` | 19 notas · 13 fam. | texto + nombre | sin coincidencia |
+| **MISP galaxy** (JSON local) | **2.135 entradas** · 298 con nombre de nota | nombre, correo, dirección XMR, 5 frases | **ningún acierto** |
+| **`albertzsigovits/malware-notes`** (bajado hoy) | `_ransom_notes.md`, 28 familias | texto completo | **ningún acierto**; no contiene ni la palabra «XMR» (son notas de 2019-2020) |
+| **`f6-dfir/Ransomware`** (bajado hoy) | **182 notas · 32 familias de 2023-2025** | texto + nombre | 0 de 31 clases positivas · coseno máx. **0,4401** (PROTON) |
+| Tabla de nombres citables propia | 137 nombres · 30/30 fam. | nombre | sin coincidencia |
+| **ID Ransomware** (servicio) | producción | Romina subió la nota | **NO la detecta** |
+| **`codingo/Ransomware-Json-Dataset`** (bajado hoy) | **411 familias**, 217 con `ransomNoteFilenames` | nombre de nota + frases | **ningún acierto** (sus 38 nombres con «recover» son de familias de 2016-2017) |
+| **Group-IB** «Ransomware Notes» (leído hoy) | **47 grupos activos**, con el TEXTO COMPLETO de cada nota | texto, nombre, moneda, contacto | **ningún acierto**: ni `README_RECOVER.txt`, ni XMR, ni contacto por correo |
+| **TODAS JUNTAS** | **955 notas · 320 familias · 630 plantillas** | un solo modelo | **0 de 320 clases positivas** · coseno máx. **0,5151** (AILOCK) |
+
+**La cifra definitiva:** entrenando un solo modelo con **las cinco fuentes juntas**
+—955 notas, **320 familias**, 630 plantillas distintas— **ninguna clase da
+`decision_function` positiva** (máximo −0,7235) y el vecino más parecido de todo el
+material disponible queda en **0,5151**. Log: `4_resultados/_log_reconocer_todo.txt`.
+Pasar de 30 a 320 familias no cambia el veredicto: **el problema no es el tamaño del
+catálogo, es que esta familia no está en ninguno.**
+
+**La única pista fue el NOMBRE, y no aguantó el texto.** `!README_RECOVER.txt` es casi idéntico a
+`README-RECOVER.txt` de **KRYBIT** y a `README-RECOVER-[rand].txt` de **QILIN** (ThreatLabz). Pero
+el coseno del texto es **0,1260 con KRYBIT y 0,2252 con QILIN**: no es ninguna de las dos. La nota
+de Qilin viene firmada («`-- Qilin`»), trae dos `.onion` de su blog y lista los datos robados; la
+del incidente no tiene nada de eso. **Es un buen ejemplo de la limitación ya documentada del canal
+de nombre: `README-RECOVER` es genérico y lo usan familias sin relación.**
+
+**Y una caracterización que sale de comparar con Group-IB:** en sus 47 grupos activos las
+notas mandan a un **chat en Tor** y piden **Bitcoin**. La del incidente hace lo contrario:
+pide **Monero**, da **solo un correo** (`proton.me`) y **no incluye ninguna `.onion`** — aunque
+amenaza con un sitio de filtración. Eso la vuelve **atípica para un grupo profesional de 2026**
+y apunta más a un actor chico, nuevo, o a una plantilla genérica reutilizada. Es
+caracterización, no atribución.
+
+### (1.bis) Cómo se comparó en cada fuente — la distinción importa al declararlo
+
+No todas las fuentes se buscaron igual, porque no todas contienen lo mismo. Al escribir
+esto en la tesis hay que decir **qué se comparó**, no solo cuántas familias se revisaron:
+
+| Tipo de comparación | Alcance |
+|---|---|
+| **Por TEXTO completo** (TF-IDF char_wb 3-5 + coseno, y modelo entrenado) | **1.112 notas**: corpus 149 · Lemmou 183 · ThreatLabz 422 · f6-dfir 182 · pcrisk 19 · **MISP 136** (campo `ransomnotes`, 117 entradas lo tienen) · **Zsigovits 21** |
+| Por nombre de archivo y metadatos | codingo (411 familias, 217 con `ransomNoteFilenames`) y el resto de las 2.135 entradas de MISP — **esos datasets NO traen el texto de la nota**, solo nombre, extensiones y referencias: no hay texto que comparar |
+| Lectura de página | Group-IB, 47 grupos activos con el texto completo publicado |
+
+**Coseno máximo en todo el material comparado por texto: 0,5151** (AILOCK, ThreatLabz), contra un umbral de casi-duplicado de 0,90. En la extracción de MISP + Zsigovits el máximo fue **0,4107** (Lockergoga).
+
+⚠️ **Corrección de proceso:** en la primera pasada MISP y Zsigovits se buscaron **solo** con grep de nombre y frases, aunque los dos tenían texto disponible. Se cerró después extrayendo los 157 textos y comparándolos con el criterio del proyecto. La conclusión no cambió, pero el hueco era real: **una fuente con texto se compara por texto, no por frases.**
+
+### (2) ★ El dato que importa para la tesis: ID Ransomware TAMPOCO la detecta
+
+Nuestro modelo se abstiene; la herramienta de referencia —la del 71,93 % con la que se compara el
+trabajo (`Pruebas.xlsx`, 41/57 notas de 22 familias)— **tampoco la identifica**. Eso reencuadra la
+limitación de mundo cerrado: **no es una debilidad de este método, es el estado del campo.** Sobre
+un caso real de 2026, ni el clasificador propio ni el servicio de producción pueden nombrar la
+familia, porque la familia no está en ningún catálogo público. Es una frase para el capítulo de
+limitaciones que antes no se podía escribir con evidencia.
+
+### (3) ★★★ FUENTE NUEVA INCORPORADA: 182 notas de 32 familias de 2023-2025
+
+`3_datos/fuentes_notas/f6dfir_ransom_notes/` (683 KB, **fuera de git**). Del repo público
+`f6-dfir/Ransomware`, de una empresa de DFIR, organizado por familia con subcarpeta
+`ransom_notes/`. Familias: **3119, BadRep, Bearlyfy, C77L, CyberSex, Enmity, Fonix, HardBit,
+HeadMare, HsHarada, LokiLocker, Masque, MorLock, Muliaka, PE32, Procrustes, Proton, Proxima,
+RCRU64, Sauron, Sezar7, Shadow, Sojusz, Surtr, THOR, TeslaRVNG, ToxUnit, VoidCrypt, Werewolves,
+Zgut, hacking_cat, kann**.
+
+**Es exactamente el hueco del corpus:** las 30 familias canónicas son de 2013-2022 y piden BTC;
+estas son de 2023-2025. Sirve para el experimento **Ext.** (que está 🔴 esperando decisión de
+Cappo), y como control externo del canal de nombre. **Descarga acotada por regla:** solo rutas con
+`/ransom_notes/`, solo `.txt/.html/.hta`, solo menores a 20 KB → 182 de 587 archivos. **Los otros
+405 no se bajaron** (descifradores `.py/.cs/.bin`, herramientas, y archivos cifrados). 25 fallaron
+por caracteres especiales en el nombre (`#`), recuperables si hacen falta.
+
+### (4) ⚠️⚠️ HAY QUE RE-VERIFICAR UNA LIMITACIÓN DECLARADA: archivos cifrados fuera de NapierOne
+
+`EXPERIMENTOS_PENDIENTES.md` afirma, como límite externo citable: *«No hay extensión posible a más
+familias: no existen archivos cifrados públicos fuera de NapierOne»*. **Ese repo parece ser un
+contraejemplo.** Su listado incluye archivos con extensión de familia y ~3 MB cada uno:
+
+`.enc` (6) · `.ryk` (2) · `.blackbit` (2) · `.hardbit4` (2) · `.black` (2) · `.nigra` (2) ·
+`.surtr` (2) · `.secles` (2) · `.clear` (2) · `.demo` (2) · `.3ae00608` · `.qgvsrdbp` ·
+`.0000000000000000` · `.b4pahv` · `.tb56ez` · `.l8rt4whox` · `.hmc` · `.pe32c`…
+
+⚠️ **NO se descargó ninguno** (regla del proyecto: nada de muestras ni binarios) y por lo tanto
+**esto NO está verificado**: se vieron nombres y tamaños en el listado de la API, no el contenido.
+Podrían ser archivos de prueba cifrados por el equipo de DFIR y no muestras de víctimas, y en ese
+caso no serían equivalentes a NapierOne. Pero **la afirmación “no existen archivos cifrados
+públicos fuera de NapierOne” es, como mínimo, demasiado fuerte y hay que revisarla antes de
+escribirla en la tesis.** Si resulta que sirven, cambia una limitación declarada del frente de
+archivos y habilita el Exp. 2d sobre más familias. **Decisión de Romina + Cappo**, porque implica
+bajar archivos cifrados y eso toca la regla de fuentes y el antivirus.
+
+### (6) ✅ RESUELTO POR OTRA VÍA: la nota SÍ está documentada, y su familia NO TIENE NOMBRE
+
+> Fuente que faltaba, sugerida por Romina: el foro de soporte de BleepingComputer
+> (`bleepingcomputer.com`, **ya estaba en la lista blanca**). Hilo:
+> `bleepingcomputer.com/forums/t/818309/unknown-ransomware-with-elock-extension-readme-recovertxt/`
+
+**El título del hilo es la respuesta: «unknown ransomware».** La nota está documentada
+públicamente —misma frase de apertura, mismo `!README_RECOVER.txt`, mismos 50 XMR, mismo
+correo— y **ningún investigador del hilo le pone nombre de familia**. Por eso no apareció en
+ninguno de los catálogos: **no es que falte en nuestras fuentes, es que la familia todavía no
+tiene nombre.**
+
+| Dato | Valor |
+|---|---|
+| Nota | `!README_RECOVER.txt` |
+| **Extensión de los archivos cifrados** | **`.elock`** ← dato nuevo, no estaba en la nota |
+| Rescate | 50 XMR |
+| Contacto | `cccsitadm@proton.me` |
+| **Vector de entrada** | **CVE-2024-45519** (Zimbra postjournal RCE) — hipótesis de un respondedor, con víctimas en Zimbra 8.8.11 y 8.8.15 |
+| Estado de la campaña | **activa**: posts de «ayer» y «hoy», ataques referidos al 27 de agosto |
+| Familia | **sin identificar** |
+
+**★ Confirmación externa de la dirección Monero.** El foro publica la dirección así:
+
+```
+45EQACa2DVwHEMP2TcvhrgQgCeDUiwLnbcWrTmbUrHqZ1pFu8KJodc93PwXwEKeiegPesnddiVw47XdwZs1MZ68LFVjayY2
+```
+
+**Es exactamente la que el checksum Keccak-256 había reconstruido**, no la de la transcripción.
+O sea: el control por checksum acertó, y ahora está corroborado por una fuente independiente. Es
+el argumento más fuerte posible para la regla «toda dirección que entre por OCR se valida por
+checksum, no por lectura».
+
+⚠️ **Cuidado con el hilo, que es contenido de usuarios:** la atribución del CVE es la hipótesis
+de un respondedor, no un análisis publicado, y en el hilo circula al menos un identificador de
+CVE aparentemente inventado. Sirve como pista y como corroboración de los IOCs; **no como fuente
+citable de atribución**. Y **la nota sigue sin ser candidata al corpus**: sin nombre de familia no
+hay etiqueta.
+
+### (7) Lo que esto significa para el capítulo de limitaciones
+
+Tres sistemas independientes dieron el mismo resultado sobre el mismo caso real:
+
+| Sistema | Respuesta |
+|---|---|
+| **Este clasificador** (30, 68, 291 y 320 familias) | **se abstiene** — 0 clases positivas, margen 0,05 |
+| **ID Ransomware** (producción, el 71,93 % de referencia) | no la detecta |
+| **La comunidad** (foro de BleepingComputer) | «unknown ransomware» |
+
+**La abstención del modelo no fue un fracaso: fue la respuesta correcta, y la única correcta
+disponible.** Es la validación externa que M.3 no podía tener midiendo solo dentro del corpus, y
+convierte la limitación de mundo cerrado en un resultado documentado con un caso real, activo y
+multi-víctima de agosto de 2026 — no en una advertencia teórica.
+
+**Y refuerza el orden de prioridades medido**: contra una familia nueva, ni más notas ni más
+familias en el catálogo ayudan (se probó de 30 a 320). Lo que ayuda es **poder decir «no sé»**, que
+es lo que Romina pidió y para lo que ya hay un criterio candidato en la sección (5).
+
+### (8) El hilo completo: 6-7 víctimas, una sola dirección, y CIFRADO PARCIAL
+
+Segunda lectura del hilo (15 posts, 2 páginas). Datos que no estaban en la nota:
+
+| Indicador | Valor |
+|---|---|
+| Víctimas distintas | **6-7**, todas servidores **Zimbra sobre Linux** |
+| Fecha de los ataques | **27 de agosto de 2026**, a horas parecidas |
+| **Dirección Monero** | **la MISMA para todas las víctimas** |
+| **Correo** | **el MISMO para todas** (`cccsitadm@proton.me`) |
+| Extensión | `.elock` |
+| SHA1 de muestra | `92eb29d03bc6038dfe8e591576eae67f4d95e392` (⚠️ **no se descargó**: regla de fuentes) |
+| Clave pública RSA | publicada por un respondedor en el hilo |
+| Versiones afectadas | Zimbra 8.8.11 y 8.8.15 |
+| Estado | sin descifrador |
+
+**★ Hallazgo 1: una sola dirección y un solo correo para 6-7 víctimas.** Una operación
+profesional emite billetera e identificador **por víctima** —es lo que permite saber quién pagó—.
+Compartir una sola dirección entre todas las víctimas de la campaña indica un actor **poco
+sofisticado**, y convierte la dirección en un IOC **de campaña**, no de víctima. Encaja con la
+caracterización que ya salió al comparar con Group-IB (XMR + solo correo + sin `.onion`, al revés
+de los 47 grupos activos).
+
+**★★★ Hallazgo 2, y es el que le sirve a la tesis: el cifrado es PARCIAL.** Un respondedor, tras
+analizar el binario, reporta que **«only beginning of each file is somehow encrypted»** — solo el
+principio de cada archivo queda cifrado. Dos consecuencias:
+
+1. **Para el incidente:** los archivos grandes podrían ser **recuperables en su mayor parte**. Es
+   lo más accionable de todo el hilo.
+2. **Para el frente de archivos de esta tesis:** el clasificador de bytes lee **512 bytes del
+   principio + 512 del final** (`clasificador_bytes.py`). Sobre un archivo cifrado así, la
+   ventana del principio vería datos cifrados y **la del final vería texto claro**. O sea que el
+   diseño de características de esta tesis **se comporta de una forma predecible y medible frente
+   al cifrado parcial**, y este es un caso real para ilustrarlo. Conecta directamente con A.1
+   (ablación de ventana) y con el Exp. 2d.
+3. **Y con la bibliografía del mismo día:** el rastreo automático del 2026-08-28 trajo
+   *«Intermittent File Encryption in Ransomware: Measurement, Modeling, and Detection»*
+   (arXiv 2510.15133), que modela exactamente este fenómeno **y usa NapierOne**. El caso real
+   exhibe el fenómeno que ese paper mide. Es la razón para leerlo, y sube su prioridad respecto
+   de la que le puse en el triage.
+
+⚠️ Las dos son afirmaciones **de un foro**: el análisis del binario es de un respondedor, no un
+informe publicado. Para la tesis hay que verificarlo con el paper y con NapierOne, no citar el
+foro como evidencia técnica. Para el incidente, en cambio, alcanza para intentar la recuperación
+parcial.
+
+## ★★★★★ IDENTIFICAR NO ES CLASIFICAR: LOS CEROS ESTRUCTURALES SE IDENTIFICAN PERFECTO (2026-08-28)
+
+> **La idea es de Romina:** *«una nota no nos sirve para clasificar, pero sí para descubrir
+> quién es, si el texto es similar»*. Es exacta, y medirla cambia cómo hay que reportar los
+> ceros. Código: `2_codigo/identificar_vs_clasificar.py`.
+
+**Son dos tareas distintas con requisitos de dato distintos:**
+
+| | Clasificar (lo que mide P2) | Identificar por similitud |
+|---|---|---|
+| Cómo funciona | se entrena un modelo, se evalúa con StratifiedGroupKFold sobre grupos | se busca el vecino más cercano en un catálogo y se devuelve su familia |
+| Plantillas mínimas por familia | **2** (si no, nunca está en train y test a la vez) | **1** |
+| Qué hace ID Ransomware, y el paso de LSA de Lemmou | — | esto |
+
+**Medido sobre las 149 (1 vecino, dejando una NOTA afuera cada vez):**
+
+| | Valor |
+|---|---|
+| Acierto global identificando | **0,8188** (122 de 149) |
+| macro-F1 clasificando (P2) | 0,4680 |
+| Coseno del vecino cuando ACIERTA | mediana **0,932** · mínimo 0,437 |
+| Coseno del vecino cuando FALLA | mediana **0,543** · máximo 0,956 |
+
+**★ Y el resultado que reordena el argumento de los ceros:**
+
+| Familia | F1 clasificando | Identifica |
+|---|---|---|
+| **BADRABBIT** | **0,000** | **2 de 2 = 1,000** |
+| **CRYPTOLOCKER** | **0,000** | **2 de 2 = 1,000** |
+
+**Su F1 = 0 es una propiedad DEL PROTOCOLO, no del dato.** Con una sola plantilla no puede
+haber entrenamiento y prueba a la vez, pero sus dos notas **se reconocen entre sí sin
+problema** (cosenos 0,9490 y 0,9883). Esto es más fuerte que la propuesta de reportar «28
+evaluables»: no hace falta excluirlas ni pedir disculpas por ellas — hay que decir **qué tarea
+no pueden hacer y cuál sí**.
+
+Y no es un caso aislado: **7 familias más ganan más de 0,30 identificando respecto de
+clasificar** (BLACKMATTER, CUBA, DARKSIDE, NETWALKER, NOTPETYA 1,000 contra 0,34-0,63;
+SODINOKIBI 1,000 contra 0,290; MAZE 1,000 contra 0,409; TESLACRYPT 1,000 contra 0,548;
+DHARMA 1,000 contra 0,578).
+
+**Dónde identificar es PEOR, y hay que declararlo:** CHIMERA **0,000** (sus 2 plantillas tienen
+coseno 0,2535 entre sí: no se reconocen) y HELLOKITTY **0,000**. En esas dos, el modelo
+entrenado le gana a la búsqueda por vecino.
+
+⚠️ **Límites de esta medición:** (a) es *leave-one-out* sobre **notas**, no sobre plantillas, así
+que aprovecha que una familia tenga dos notas casi iguales — que es exactamente el punto, pero
+hay que decirlo; (b) el mundo cerrado **sigue valiendo**: para una nota de fuera del catálogo el
+vecino más cercano va a ser incorrecto, y la separación de cosenos (0,932 al acertar contra
+0,543 al fallar) es la que da el criterio de corte; (c) no reemplaza P2 ni es la métrica del
+método propuesto: es otra tarea, y se reporta como tal.
+
+**Para la tesis:** habilita escribir una sección corta y fuerte —«clasificación frente a
+identificación»— que convierte dos limitaciones en una distinción de tareas, y conecta con el
+protocolo Lemmou (L = 0,7767) que ya está medido.
+
+## ★★★ EL PAPER DE CIFRADO INTERMITENTE MIDE, SOBRE NAPIERONE, EL PUNTO DÉBIL DE NUESTRO DISEÑO (2026-08-28)
+
+*Intermittent File Encryption in Ransomware: Measurement, Modeling, and Detection* — Ineza,
+Jackson, Niyonkuru, Kevil, Serwadda. arXiv **2510.15133** (oct-2025, revisado ago-2026).
+Leído hoy a raíz del caso real, que cifra **solo el principio de cada archivo**.
+
+**Por qué es el paper más relevante del frente de archivos:**
+
+1. **Usa NapierOne**, el mismo corpus: ~26.500 archivos, 11 tipos, 3 clases de compresión.
+2. Caracteriza **9 familias con cifrado intermitente**, y **4 son de nuestras 30**:
+   **BLACKCAT, DARKSIDE, BLACKMATTER y LOCKBIT** (más Akira, Royal, Play, Qyick, Qilin).
+   O sea: **puede haber archivos parcialmente cifrados dentro de nuestro propio conjunto.**
+3. **★ El hallazgo que nos toca directo:** un modelo entrenado **solo con los extremos del
+   archivo** («whole-file baseline trained only on endpoints») da **61,48 %** de acierto sobre
+   cifrado parcial, mientras que trocear el archivo («chunk-level») da **97,1 %**.
+   **Nuestro `clasificador_bytes.py` lee exactamente los extremos: 512 bytes del principio +
+   512 del final.** El paper cuantifica el costo de esa decisión de diseño frente al cifrado
+   intermitente.
+4. **NO hace clasificación multiclase de familia**: solo detección binaria cifrado/no cifrado.
+   **Nuestra contribución no se solapa con la suya** — la complementa, y por eso se puede citar
+   sin debilitar el aporte propio.
+
+**Cifras citables:** 97,1 % por troceo · **61,48 % con extremos** · 84,36 % entrenando con
+cifrado intermitente pero sobre archivo completo · pendiente de entropía por tipo: **+0,35
+bits** por cada 0,1 de fracción cifrada en XLS contra **+0,0036** en MP4 (97× de diferencia) ·
+constante por formato c²_F de **0,00008 (PNG) a 0,179 (XLS)**, que fija la fracción de cifrado a
+partir de la cual un detector por KL queda ciego.
+
+**Qué habilita, en orden:**
+- **Declarar la limitación con número ajeno**, no con una conjetura: la ventana 512+512 es
+  vulnerable al cifrado intermitente, y hay un 61,48 % publicado que lo dimensiona.
+- **Un experimento nuevo y chico:** medir nuestro clasificador de bytes sobre archivos de
+  NapierOne cifrados parcialmente (head-only al 10 %, 25 %, 50 %) y ver cuánto cae. Es la
+  réplica de su Figura principal con nuestro modelo, sobre el mismo corpus. Conecta con A.1
+  (ablación de ventana) y da la contra-medida (trocear) ya validada por ellos.
+- **Revisar si BLACKCAT, DARKSIDE, BLACKMATTER y LOCKBIT** tienen archivos parcialmente
+  cifrados en nuestro subconjunto de NapierOne: si los tienen, parte del error del Exp. 2c en
+  esas familias podría explicarse por esto y no por el método.
+
+## 📌 PREREGISTRO — P2-LOGO: leave-one-template-out como protocolo ADICIONAL (2026-09-09)
+
+> **Contexto:** el tutor fijó que sin superar macro-F1 0,50 el experimento no sirve. Estado
+> verificado hoy: texto solo bajo P2 **0,4593** [IC de la media 0,4379; 0,4807]; M.6 **0,5191**
+> [0,4967; 0,5415] — la media supera 0,50 pero el IC lo roza. Se pidió un análisis desde cero.
+
+### El hallazgo del análisis desde cero
+
+`clasificador_notas_v2.py` fija `N_FOLDS = 2` con el comentario «limitado por las familias con 2
+notas». **Ese argumento excluye 3+ pliegues de k-fold, pero NO excluye leave-one-group-out
+(LOGO)**, que funciona con cualquier número de grupos ≥ 2. **LOGO nunca se probó en el frente
+de notas** (verificado: solo `analisis_bytes.py`, del frente de archivos, lo importa).
+
+**Qué cambia:** con 2 pliegues cada familia entrena con ~k/2 plantillas; con LOGO entrena con
+k−1. Para las 12 familias de 4 plantillas es 2 → 3; para CERBER (8) es 4 → 7. **Con 2 pliegues
+se descarta la mitad del entrenamiento en cada corte.** La garantía central de P2 se conserva
+intacta: **la plantilla de prueba nunca está en entrenamiento.**
+
+### Por qué es legítimo y no «buscar el número»
+
+1. LOGO es el protocolo estándar de máximo aprovechamiento para datos agrupados pequeños
+   (n = 99 grupos). Es, si acaso, **más** estándar que 2-fold para este tamaño.
+2. La justificación del 2-fold era operativa (familias con 2 notas), no metodológica, y no
+   aplica a LOGO.
+3. **Se reporta JUNTO a P2, no en su lugar.** Se agrega; no se reescribe nada.
+4. La predicción se escribe **antes** de correr, con criterio de falsación.
+
+### Predicciones (falsables)
+
+1. **Texto solo bajo LOGO sube de forma sustancial respecto de P2** (0,4593), porque el
+   entrenamiento por familia casi se duplica. Rango esperado: **0,55–0,65**. Debe quedar por
+   **debajo de P1** (0,7889), porque P1 filtra casi-duplicados en ambos lados del corte.
+   **Falsación:** si LOGO ≤ P2 + 0,03, la restricción de 2 pliegues NO era la que ataba y el
+   techo es puramente de datos.
+2. **M.6 bajo LOGO también sube**, y su Δ sobre texto-LOGO será **menor** que bajo P2 (la regla
+   de IOCs ganaba parte de su cobertura porque el texto tenía poco entrenamiento).
+3. **Las familias que más suben son las de 3-4 plantillas con F1 bajo bajo P2** (JIGSAW, MAZE,
+   SUNCRYPT, CLOP, SODINOKIBI, LOCKBIT): pasan de entrenar con 1,5-2 a entrenar con 2-3.
+4. **BADRABBIT y CRYPTOLOCKER siguen en 0,0000** (1 plantilla: bajo LOGO no hay con qué
+   entrenar). **HELLOKITTY sube poco** (cohesión 0,26: más datos no arregla heterogeneidad).
+
+### Criterio de adopción
+
+LOGO se **reporta como protocolo adicional** si la predicción 1 se cumple. **No reemplaza P2.**
+Si LOGO supera 0,50 con IC que excluye 0,50, se declara que **el umbral del tutor se supera bajo
+el protocolo de máximo aprovechamiento**, y se explica la diferencia con P2 como efecto del
+tamaño de entrenamiento, no del método.
+
+## ★★★ EL TUTOR PIDE «MÉTRICAS» PARA LA INSUFICIENCIA DE DATOS — YA ESTÁN HECHAS (2026-09-09)
+
+> **Contexto.** WhatsApp del 9/9: Romina pregunta qué pasa con las familias de una sola
+> plantilla; Cappo responde «**No se procesa**» y «**Por eso necesitamos métricas**». Además
+> circula un PDF generado por IA (`Downloads/Ransomware - Notas de rescate insuficientes.pdf`,
+> 9 pág.) con un checklist de cómo demostrar que las notas por familia son insuficientes.
+> **El checklist describe, casi punto por punto, lo que la tesis ya tiene medido — con un
+> protocolo más estricto del que el PDF propone.** Y el «50 %» que el tutor exige lo está
+> juzgando sobre el **último informe que vio (18-08): P2 = 0,435 sobre 146 notas, texto solo**.
+> No ha visto M.6, M.3, la limpieza ni nada posterior.
+
+### Cruce del checklist del PDF con lo que existe
+
+| El PDF recomienda | Estado en la tesis |
+|---|---|
+| Curvas de aprendizaje con fracciones crecientes; estimar la pendiente final | ✅ **B.1**, y más fuerte: ajuste de ley de potencia F(k)=F∞−a·k^(−b) con **techo F∞ y IC bootstrap (2.000)**. Techo P2 **0,470** [0,411; 0,527]; 0,50 «no alcanzable con más datos» |
+| IC 95 % y dispersión entre particiones, no un número suelto | ✅ En todo el frente: **50 semillas**, Δ pareado por semilla, IC 95 % t-Student |
+| F1 / precisión / recall por familia, balanced accuracy, matriz de confusión | ✅ `corrida_canonica_por_familia.csv`, `fig_confusion_canonica.png`, bal.acc en todas las tablas |
+| **MCC** | ❌ **faltaba → agregado hoy**: texto solo **0,5610 ± 0,0789**, M.6 **0,6446 ± 0,0736** (P2, 50 semillas, 149) |
+| Dispersión N vs F1 y **CV(F1) por familia** («la evidencia más fuerte») | ❌ **la tabla faltaba → hecha hoy**: `m6_cv_por_familia.csv`. **Spearman(n_plantillas ; F1) = +0,496 (p=0,005)** y **Spearman(n_plantillas ; CV) = −0,647 (p<0,001)**. Es exactamente el patrón N↓ ⇒ Var(F1)↑ que el PDF pide ver |
+| Subsampling de familias grandes para estimar N mínimo | ✅ **B.1 «tope por plantillas»** es exactamente ese experimento; corte en **3 plantillas**, paso 2→3 último significativo |
+| Baseline char n-gram TF-IDF + Linear SVM | ✅ **es el clasificador canónico** |
+| Después un Transformer / Sentence-BERT | ✅ **Exp. 3e**, `paraphrase-multilingual-MiniLM-L12-v2`: solo empeora (−0,0733), concatenado plano |
+| **Independencia de muestras**: agrupar casi-duplicados, N efectivo ≠ N crudo, split aleatorio infla | ✅✅ **Es P2 entero.** N crudo **149** → N efectivo **99 plantillas** (coseno char 3-5 ≥ 0,90). Y el «98 % falso» del PDF está **cuantificado**: P1 (split de notas) 0,7889 vs P2 (split de plantillas) 0,4593; protocolo de Lemmou (mundo cerrado) 0,7767 |
+| Imbalance ratio | ❌ **agregado hoy**: 19/2 = **9,5** |
+| Número efectivo E_n (Cui et al.) | ❌ no; marginal, se puede agregar en una línea |
+| RQ: «¿cuántas notas independientes por familia hacen falta?» | ✅ **B.1 la contesta**: corte 3 plantillas; y **más allá del corte sumar material BAJA el F1** (5 pasos con IC entero < 0) |
+
+**El único hueco real del checklist eran MCC y la tabla CV(F1). Los dos están hechos.**
+
+### Lo que hay que decirle a Cappo, en este orden
+
+1. **«No se procesa» es correcto y está medido:** BADRABBIT y CRYPTOLOCKER (1 plantilla) dan
+   **F1 exactamente 0,0000** bajo P2 — el propio script lo advierte. Y en las dos es
+   **propiedad real del malware** (WASTEDLOCKER no: tiene 3 plantillas, es el caso frontera).
+2. **Las métricas que pide existen y van más allá del checklist.** Tabla de arriba.
+3. **El 0,435 que vio es de hace un mes.** Hoy: texto solo 0,4593; **M.6 0,5191**
+   [0,4967; 0,5416]; y sobre las **28 evaluables M.6 = 0,5562 [0,5322; 0,5802] — supera 0,50
+   con el intervalo entero**.
+4. **La insuficiencia de datos no es una excusa: es el resultado central**, exactamente como el
+   PDF recomienda formularlo («convertirlo en una de las preguntas centrales del TFG»). Y el
+   techo de 0,470 con IC es la versión cuantificada de esa conclusión.
+
+⚠️ Lo que el PDF **no** contempla y la tesis sí: que **más plantillas empeora** pasado el corte
+(la curva no es monótona), que **la cohesión** entre plantillas predice el F1 mejor que N, y
+que **reglas exactas** (M.6) atraviesan el techo del texto. Eso es aporte propio.
+
+## ★★★★ RESULTADO P2-LOGO: EL PROTOCOLO QUE NADIE PROBÓ CAMBIA LA ESCALA (2026-09-09)
+
+> **Base: 149 notas · 99 plantillas · 30 familias · 10 semillas.** Código:
+> `2_codigo/protocolo_logo.py` (commits `059cf5f`, `7dd6db9`). Salidas en
+> `4_resultados/resultados_protocolo_logo_149/`. **Se AGREGA como protocolo adicional; P2 no se
+> reemplaza.** Predicciones preregistradas en el bloque anterior; **dos de cuatro fallaron** y
+> se reportan.
+
+### El resultado
+
+| Protocolo | Capa | macro-F1 | IC 95 % | exactitud | bal.acc | cobertura regla |
+|---|---|---|---|---|---|---|
+| P2 (2 pliegues, 10 sem.) | texto solo | 0,4680 ± 0,100 | entre semillas | 0,580 | 0,528 | — |
+| P2 (2 pliegues, 10 sem.) | M.6 | 0,5318 ± 0,104 | entre semillas | 0,665 | 0,589 | 0,443 |
+| **LOGO** (99 pliegues) | **texto solo** | **0,6747** | boot. notas **[0,567; 0,712]** | 0,738 | 0,718 | — |
+| **LOGO** (99 pliegues) | **M.6** | **0,7742** | boot. notas **[0,663; 0,810]** | **0,859** | **0,810** | **0,604** |
+
+**Δ pareado por semilla, LOGO − P2:** texto **+0,2067** [+0,135; +0,279], M.6 **+0,2424**
+[+0,168; +0,317], **10/10 semillas** en los dos. **M.6 sobre texto, bajo LOGO: +0,0994.**
+
+**Sobre las 28 evaluables:** LOGO texto **0,7229**, LOGO M.6 **0,8295**. Bajo LOGO-M.6, **26 de
+30 familias superan 0,50 y 22 superan 0,70**.
+
+> **Lo que esto dice, sin adornar:** mismo corpus, misma vista, mismo clasificador, misma
+> garantía (la plantilla de prueba nunca está en entrenamiento). Lo único que cambia es que el
+> modelo entrena con k−1 plantillas por familia en vez de ~k/2. **Y el macro-F1 pasa de 0,47 a
+> 0,67 (texto) y de 0,53 a 0,77 (M.6).** El «techo» de 0,470 que B.1 extrapoló era el techo
+> **de P2 con 2 pliegues**, no del problema. Con más entrenamiento el mismo método llega a 0,77.
+
+### ⚠️ La objeción que va a venir primero —«¿es fuga?»— y su respuesta
+
+1. **Los grupos son idénticos a los de P2** (casi-duplicados a coseno char 3-5 ≥ 0,90).
+2. **Comprobación directa, medida:** en los 99 pliegues, el coseno máximo entre la nota de
+   prueba y cualquier nota de entrenamiento es **0,8995** (umbral 0,90); **0 pliegues** con una
+   casi-copia en entrenamiento. En P1, en cambio, **61 de 149 notas de prueba (41 %)** tienen su
+   casi-copia en entrenamiento (semilla 0) — eso es lo que P1 mide y LOGO no. **Es la
+   cuantificación exacta del «98 % falso» que advierte el PDF del tutor.**
+3. **LOGO queda por debajo de P1** (0,6747 < 0,7889), como se predijo: P1 es el protocolo que
+   SÍ deja casi-duplicados a los dos lados del corte.
+4. **Tres familias caen a 0,000 bajo LOGO-texto** (HELLOKITTY, CHIMERA, más las dos de 1
+   plantilla). **Una fuga inflaría todo; esto corta para los dos lados.**
+
+### Balance honesto de las 4 predicciones preregistradas
+
+| # | Predicción | Resultado | Veredicto |
+|---|---|---|---|
+| 1 | texto-LOGO sube sustancialmente, rango 0,55-0,65, debajo de P1 | **0,6747**, debajo de P1 | ✅ dirección y mecanismo; **magnitud subestimada** (quedó arriba del rango) |
+| 2 | el Δ de M.6 sobre texto es **menor** bajo LOGO que bajo P2 | P2 +0,064 → LOGO **+0,099** | ❌ **FALLÓ: es mayor.** La regla aporta más cuando el texto está mejor entrenado, no menos |
+| 3 | las que más suben: 3-4 plantillas con F1 bajo (JIGSAW, MAZE, SUNCRYPT, CLOP, SODINOKIBI, LOCKBIT) | las que más suben son **las de 2 plantillas** (SUNCRYPT, NETWALKER, DARKSIDE, CUBA, BLACKMATTER → **1,000**), y SODINOKIBI, LOCKBIT | ⚠️ parcial: acertó familias, **erró el mecanismo** (ver abajo) |
+| 4 | BADRABBIT y CRYPTOLOCKER siguen en 0; HELLOKITTY **sube poco** | las dos en 0 ✓; **HELLOKITTY cae a 0,000** (era 0,214) | ⚠️ mitad: ✅ los ceros estructurales; ❌ HELLOKITTY **bajó**, no subió |
+
+### El mecanismo que las predicciones no vieron — y es el hallazgo
+
+Se predijo que LOGO ayudaría a cada familia por **su propio** entrenamiento (k/2 → k−1). Pero
+una familia de **2 plantillas** entrena con **1** plantilla propia tanto en P2 como en LOGO — y
+aun así salta de ~0,45 a **1,000**. **Lo que cambia no es su entrenamiento: es el de las otras
+29.** Con 2 pliegues, las 29 competidoras están tan mal entrenadas como ella y sus fronteras
+sangran hacia todos lados; con LOGO todas las fronteras son nítidas y **la precisión se
+dispara**. Es un efecto **global**, no por familia.
+
+Y por eso HELLOKITTY y CHIMERA-texto **bajan a 0**: con fronteras nítidas en las 29 vecinas, una
+familia cuyas 3 plantillas no se parecen entre sí **no tiene dónde esconderse** — su plantilla
+de prueba es absorbida con confianza por una vecina bien definida. Bajo P2 la confusión general
+le daba aciertos casuales. **LOGO es más honesto en los dos sentidos:** premia a las familias
+coherentes y castiga sin piedad a las heterogéneas. (CHIMERA se recupera a **0,800** con M.6:
+la regla la rescata donde el texto no puede.)
+
+### Consecuencia para la tesis, y hay que decidirla con Cappo
+
+1. **El «50 %» se supera con holgura bajo LOGO**: texto solo 0,6747 [0,567; 0,712], M.6 0,7742
+   [0,663; 0,810], **IC bootstrap entero por encima de 0,50** en los dos.
+2. **Hay que re-leer el techo de B.1.** El 0,470 era el techo *de la curva bajo P2 con 2
+   pliegues*. No estaba mal calculado; estaba midiendo otra cosa. **Con LOGO la curva de
+   aprendizaje tendría que re-correrse** (B.1 bajo LOGO) para saber si el techo real del
+   problema es ~0,77 o más.
+3. **Reportar los tres protocolos juntos**, con lo que mide cada uno: P1 (mundo casi cerrado)
+   0,79 · **LOGO (máximo entrenamiento, plantilla no vista) 0,67 / 0,77** · P2 (mitad del
+   entrenamiento, plantilla no vista) 0,46 / 0,52. La diferencia P2→LOGO es **tamaño de
+   entrenamiento**, no método ni fuga.
+4. ⚠️ **Autocrítica que hay que escribir:** P2 con 2 pliegues fue la elección canónica de todo
+   el frente de notas durante meses, justificada por «hay familias con 2 notas». Esa
+   justificación excluye k-fold con k≥3 pero **nunca excluyó LOGO**, que es el protocolo
+   estándar para exactamente este caso. **Nadie lo preguntó hasta hoy.** Todas las cifras de
+   notas del capítulo 4 están bajo P2 y son correctas *para P2*; lo que cambia es que P2 no era
+   el protocolo más informativo disponible.
+
+**Pendiente inmediato:** B.1 (curva y techo) bajo LOGO, M.3 (abstención) bajo LOGO, y 50
+semillas de P2 en el mismo proceso para que la comparación tenga la misma base que M.6-149.
+
+### RESULTADO P2-LOGO a 50 semillas (2026-09-10) — CIFRAS DEFINITIVAS del protocolo
+
+`protocolo_logo.py --n-semillas 50` (commit `84187b7`), log `4_resultados/_log_logo_149_50sem.txt`,
+salidas en `resultados_protocolo_logo_149_50sem/`. **Control de equivalencia cumplido:** la semilla 0
+reproduce P2 0,5988 / 0,6320 y LOGO 0,6747 / 0,7742 de la corrida de 10. **Control externo cumplido:**
+P2 texto da **0,4593**, exactamente la cifra canónica de `resultados_notas_149` a 50 semillas — el
+script reproduce el evaluador canónico.
+
+| Protocolo | Capa | macro-F1 | ± sd | IC 95 % | exact. | bal. | cob. regla | ¿>0,50? |
+|---|---|---|---|---|---|---|---|---|
+| P2 | texto solo | 0,4593 | 0,075 | semillas [0,438; 0,481] | 0,579 | 0,520 | — | NO |
+| P2 | M.6 | 0,5191 | 0,079 | semillas [0,497; 0,542] | 0,660 | 0,578 | 0,455 | media sí, IC toca |
+| **LOGO** | texto solo | **0,6747** | 0 | boot. notas [0,567; 0,712] | 0,738 | 0,718 | — | **SÍ** |
+| **LOGO** | M.6 | **0,7742** | 0 | boot. notas [0,663; 0,810] | 0,859 | 0,810 | 0,604 | **SÍ** |
+
+**Δ pareados por semilla (50 semillas):** LOGO − P2 texto **+0,2155** [+0,194; +0,237], 50/50;
+LOGO − P2 M.6 **+0,2550** [+0,233; +0,278], 50/50; M.6 − texto bajo LOGO +0,0994.
+⚠️ El IC de este último sale degenerado [+0,0994; +0,0994] porque LOGO es determinista: la
+incertidumbre de ese Δ hay que darla con bootstrap por notas, no por semillas; el script no
+guarda predicciones por nota, así que queda como pendiente menor (los IC de cada capa por
+separado sí están).
+
+**Por familia (texto solo), las que más ganan:** SUNCRYPT 0,40→**1,00**, CUBA 0,43→**1,00**,
+NETWALKER 0,45→**1,00**, BLACKMATTER 0,52→**1,00**, DARKSIDE 0,56→**1,00**, LOCKBIT 0,44→0,86,
+SODINOKIBI 0,36→0,75, RANSOMEXX 0,50→0,80. **Las cinco que llegan a 1,00 son familias de 2
+plantillas.** Bajo P2 de 2 pliegues cada una queda con 1 plantilla en train igual que bajo LOGO;
+lo que cambia es el resto del corpus (mitad vs. todo), o sea la nitidez global de la frontera. Es
+la evidencia por familia del mecanismo.
+**Las que no se mueven o caen:** BADRABBIT 0→0 y CRYPTOLOCKER 0→0 (plantilla única, estructural);
+HELLOKITTY 0,17→0,00 y CHIMERA 0,14→0,00 (2 plantillas disímiles entre sí: entrenar con una no
+sirve para la otra); PHOBOS 0,44→0,42 (heterogénea).
+
+**Control externo también para M.6 — y una errata mía, corregida dos veces:** escribí que el M.6
+canónico a 50 semillas daba 0,5318 y que había una «discrepancia». No la hay. El **0,5318 es real,
+pero es otra cosa**: es el P2-M.6 de `protocolo_logo.py` a **10 semillas** (media de las semillas
+0–9 de `_log_logo_149.txt`, verificada: 0.5318; texto 0.4680), la fila que
+está en la tabla del bloque anterior. Lo confundí con el canónico. El canónico de la cascada sobre
+149 a 50 semillas (`_log_m6_149.txt`) da base texto **0,4593** y variante adoptada
+`privados_sin_circ_MAS_NOMBRE` **0,5191**, Δ +0,0599 [+0,0530; +0,0668], 50/50 — **exactamente** lo
+que reproduce la columna P2 de `protocolo_logo.py` a 50 semillas (0,4593 / 0,5191). Por inspección,
+`dicc_privados` + `regla` implementan esa variante (filtro de genéricos + nivel de nombre, sin filtro
+de circularidad, unanimidad). Primera versión de esta nota decía «el 0,5318 no figura en ningún
+archivo»: también falso; figura como cifra a 10 semillas. Lección repetida dos veces en una hora:
+verificar, no recordar, y **mirar la base (n de semillas) antes de comparar dos cifras**.
+
+→ Revisión independiente: ver `6_notas_trabajo/REVISION_LOGO_2026-09-17_informe.md` (veredicto: **no adoptar LOGO como cifra principal** — el salto P2→LOGO es en un 95 % artefacto de la partición de P2 (P2bal, misma mitad de entrenamiento, da 0,6651 ± 0,032; LOGO 0,6747); el IC por plantilla [0,539; 0,722] sí excluye 0,50, pero las 5 familias en 1,00 son pares de notas contenidas una en otra y con fusión por contención ≥ 0,8 LOGO-texto cae a 0,4186 sobre 30 familias).
+
+### Nota operativa: la corrida de 50 semillas (2026-09-10)
+
+La primera corrida `protocolo_logo.py --n-semillas 50` (lanzada 17:04 del 9/9) **murió a las
+23:38 del 9/9 por apagado de la PC** (registro de eventos de Windows: 6006 a las 23:37:58 y 1074
+«Apagar» a las 23:39:36), sin llegar a escribir: log vacío y exit 4. No fue error del script.
+Antes de relanzar se verificó en `_log_logo_149.txt` que **LOGO da idéntico en las 10 semillas**
+(0,6747 / 0,7742, cuarto decimal): partición fija + LinearSVC convexo. Con eso, el script ahora
+evalúa LOGO una sola vez y lo reutiliza (commit `84187b7`), exactamente equivalente y ~4.850
+ajustes menos; la corrida de 50 pasa de horas a minutos. Relanzada el 10/9 con `python -u`
+(log línea a línea) en `resultados_protocolo_logo_149_50sem/`. Control: la semilla 0 debe
+reproducir P2 0,5988 / 0,6320 y LOGO 0,6747 / 0,7742 de la corrida de 10.
+
+### PRECISIÓN a lo anterior (2026-09-09, misma sesión): LOGO **confirma** B.1, no lo derriba
+
+Al preparar la extensión de `curva_aprendizaje_notas.py` para LOGO encontré que **B.1 ya tiene un
+protocolo de máximo entrenamiento: P2ret** (retiene UNA plantilla por familia; entrena con las
+demás, 70 plantillas; 100 repeticiones). Verificado en
+`4_resultados/resultados_curva_149/b1_curva_por_repeticion.csv` y `_log_resumen_cap4_149.txt`:
+
+| Protocolo (k=todo, texto solo) | macro-F1 | plantillas en train | **familias sin train / pliegue** |
+|---|---|---|---|
+| P1 (2 pliegues, por nota) | 0,8048 ± 0,028 | 58,8 | 0 |
+| P2 (2 pliegues, por plantilla) | 0,4680 ± 0,100 | 50,5 | **3,9** |
+| P2ret (1 plantilla/familia fuera) | **0,6433 ± 0,061** | 70,2 | 2,0 |
+| LOGO (1 plantilla fuera) | **0,6747** [0,567; 0,712] | 98 | 2,0 (solo en sus 2 pliegues) |
+
+**Corrección de lo que escribí arriba:** el «techo 0,470» de B.1 que cité es el de la **fila P2**;
+la fila P2ret ya daba **0,643 en k=todo** y un techo extrapolado de ~0,66. LOGO (0,675) está
++0,03 por encima, lo esperable por 28 plantillas más de entrenamiento. **No hace falta re-correr
+B.1 bajo LOGO**: la pregunta «¿el techo real es ~0,77 o más?» ya está contestada por P2ret para
+texto solo (~0,66) y por LOGO para M.6 (0,774; el M.6 no está en B.1).
+
+**Dos cosas nuevas que salen del CSV y van a la defensa:**
+1. **Bajo P2, 3,9 familias por pliegue quedan sin ninguna plantilla de entrenamiento** (F1
+   estructural 0). P2 no solo entrena con la mitad: borra ~4 familias del entrenamiento en cada
+   corte. Es una parte cuantificable del hueco P2→LOGO (0,468→0,675).
+2. **Bajo P2ret y LOGO quedan 2: las familias de plantilla única (BADRABBIT, CRYPTOLOCKER).** Es la
+   pregunta del tutor («¿y las de una sola plantilla?») en números: en texto puro **no se procesan,
+   F1 = 0 por construcción**; M.6 las rescata solo si comparten IOC/nombre genuino (ver tabla por
+   familia de LOGO). Familias con 2 plantillas: 7 (BLACKMATTER, CHIMERA, CUBA, DARKSIDE, NETWALKER, NOTPETYA, SUNCRYPT).
+3. **La curva P2ret ya mostraba la meseta:** 0,67 en k=3–4 notas/familia y **baja** hasta 0,643 en
+   k=todo, con IC 95 % que excluye el cero por debajo en 4→6, 6→8, 8→12 y 12→todo. Es la respuesta
+   a «¿por qué no mejora agregar más plantillas?»: a partir de 3–4 el aporte marginal es ≤0 en
+   este corpus.
+
+**La autocrítica se acota:** no es que «nadie probó máximo entrenamiento» — P2ret lo hizo y dio
+0,643. Lo que faltó fue **usarlo como cifra de cabecera y leer la diferencia P2↔P2ret como efecto
+del protocolo**, no del método. LOGO agrega el ajuste fino (una plantilla fuera, 99 pliegues
+deterministas, sin la varianza de elegir cuál retener) y la extensión a M.6.
+
+### M.3 bajo LOGO: contesta el 85 % y acierta el 94 % (2026-09-09)
+
+`abstencion_notas.py --protocolo LOGO --n-semillas 1` (commit `ecf550c`). Salidas en
+`4_resultados/resultados_abstencion_149_LOGO/`. Misma arquitectura: la regla de M.6 contesta
+siempre; el umbral de margen se aplica solo cuando decide el texto.
+
+| Umbral | Cobertura | **Acierto donde contesta** | Abstiene | resueltas por regla / por texto |
+|---|---|---|---|---|
+| 0,00 | 1,000 | 0,8591 | 0 | 90 / 59 |
+| 0,20 | 0,899 | 0,9179 | 15 | 90 / 44 |
+| **0,50** | **0,846** | **0,9444** | 23 | 90 / 36 |
+| **1,00** | **0,752** | **0,9911** | 37 | 90 / 22 |
+| 1,50 | 0,638 | 1,0000 | 54 | 90 / 5 |
+
+**Comparado con P2 (mismo umbral 0,50): cobertura 0,646 → 0,846 y acierto 0,900 → 0,944.**
+La capa de reglas resuelve **90 de 149 notas (60 %)** en todo pliegue — coincide con la
+cobertura 0,604 de `protocolo_logo.py` — así que la cobertura de M.6 nunca baja de 0,60 aunque
+el umbral suba; el texto solo degenera a 0,114 con umbral 1,50.
+
+**Frases para la defensa, bajo el protocolo de máximo entrenamiento:** «contesta el 85 % de las
+veces y acierta el 94 %» (umbral 0,50), o «contesta el 75 % y acierta el 99 %» (umbral 1,00).
+Misma advertencia que en P2: el macro-F1 *de las respondidas* no es comparable con el del
+sistema completo y no se cita como tal; la abstención reduce el problema de mundo cerrado, no lo
+elimina.
+
+---
+
+# Exp. 2d — job 3771: corrió un script VIEJO. Qué se salva y qué hay que repetir (2026-09-10)
+
+**Resumen en una línea:** el job 3771 se lanzó con la versión de
+`exp2d_nombre_extension.py` **anterior al commit d537ebd**, o sea con los hiperparámetros por
+defecto de sklearn y no con los del Exp. 2c. Sus tres columnas **no son el experimento** y hay
+que repetirlas. El **diagnóstico de la extensión sí se salva**, porque es una propiedad del
+conjunto de datos y no del modelo, y es el hallazgo más fuerte de la corrida.
+
+## Cómo se sabe que corrió el script viejo (cuatro indicios, ninguno ambiguo)
+
+1. **Fechas.** El job arrancó `Fri Aug 28 11:12:32 PM -04 2026`. El commit d537ebd
+   —«corrige los hiperparámetros, que decían ser los del Exp. 2c y eran los de sklearn por
+   defecto»— es del **2026-08-29**, el día siguiente. La corrección llegó después del job.
+2. **Los hiperparámetros viejos eran** `max_depth=None, min_samples_leaf=1,
+   max_features="sqrt"` (verificado con `git show d537ebd`), no `300/20/2/0,3`.
+3. **Falta el control de integridad en el log.** La línea «Control de integridad: ningún
+   archivo con magia de tipo conocido. OK.» se agregó en el **mismo** commit d537ebd, y en el
+   log del 3771 no aparece: después de `WASTEDLOCKER 500 archivos` viene directo el
+   diagnóstico. Confirmación independiente de la versión.
+4. **Los tiempos cierran.** 250 s por semilla para tres columnas (~83 s por evaluación) contra
+   **~560 s por semilla** del job 3648. `max_features="sqrt"` mira 32 características por corte
+   y `0.3` mira 307: diez veces más barato por corte. El script viejo tenía que ser más rápido,
+   y lo fue.
+
+**Consecuencia sobre la cancelación:** el `scancel` de las 23:28 fue, con toda probabilidad,
+**deliberado** —se detectó el error de hiperparámetros y se mató el job— y d537ebd es la
+respuesta. No se perdió nada válido. Esa versión tampoco tenía A.3, así que la curva de
+aprendizaje nunca iba a salir de ahí.
+
+## ⭐ LO QUE SÍ SE SALVA: la extensión ES la etiqueta (job 3771, semilla 0)
+
+Esto no depende de los hiperparámetros ni del modelo. Es un recuento sobre los nombres de
+15 000 archivos de las 30 familias, y por eso vale tal como está:
+
+| Medida | Valor |
+|---|---|
+| Familias con **una sola extensión** | **25 de 30** |
+| Extensiones compartidas por más de una familia | **5 de 905** |
+| **Exactitud de una tabla de consulta que solo mira la extensión** | **0,9724** |
+
+Las cinco extensiones compartidas son `.doc`, `.docx`, `.pptx`, `.xls`, `.xlsx`, y las comparten
+**BADRABBIT, NOTPETYA y JIGSAW**: son las familias que **no renombran** el archivo y dejan la
+extensión original. Las otras 25 renombran, cada una con su extensión propia y única.
+
+**Una tabla de consulta sin aprendizaje —«mirá la extensión, decí la familia más frecuente»—
+acierta 0,9724, contra 0,9019 de macro-F1 del clasificador de bytes.** Le gana por +0,07 al
+método de la tesis. Con eso, la columna (3) queda declarada como lo que el script ya decía que
+era: **memorización de un diccionario, no capacidad de identificar familias.**
+
+*Matiz que hay que escribir junto al número:* el 0,9724 se mide **dentro de la muestra** (la
+familia mayoritaria de cada extensión, evaluada sobre las mismas filas), así que para una
+extensión que aparece una sola vez acierta por construcción — es una **cota superior**. Lo que
+no es artefacto de muestreo es la parte estructural: **25 de 30 familias tienen una extensión
+única**, y para esas 25 la extensión *es* la etiqueta, sin ambigüedad posible.
+
+## Las tres columnas del job 3771 — con hiperparámetros equivocados, NO CITAR
+
+Cuatro semillas completas (0 a 3); la 4 se cortó. Media ± desvío, y delta pareado por semilla
+con IC 95 % (n = 4, t de Student):
+
+| Columna | Exactitud | macro-F1 |
+|---|---|---|
+| (1) solo bytes | 0,9018 ± 0,0025 | 0,9019 ± 0,0024 |
+| (2) bytes + forma del nombre | 0,9986 ± 0,0001 | 0,9986 ± 0,0001 |
+| (3) bytes + extensión literal | 0,9842 ± 0,0006 | 0,9840 ± 0,0007 |
+
+| Delta pareado (macro-F1) | Δ | IC 95 % | Semillas a favor |
+|---|---|---|---|
+| (2) − (1) | **+0,0967** | [+0,0928; +0,1005] | 4/4 |
+| (3) − (1) | **+0,0821** | [+0,0777; +0,0864] | 4/4 |
+| **(2) − (3)** | **+0,0146** | [+0,0134; +0,0158] | 4/4 |
+
+**Puerta de entrada: FALLA.** La columna (1) da 0,9018 ± 0,0025 de exactitud contra los
+**0,9120 ± 0,0016** publicados del Exp. 2c (job 3648). La diferencia de −0,0102 es
+exactamente lo que anticipaba el mensaje de d537ebd, y ya está explicada por el script viejo:
+no es un problema de datos ni un anómalo sin causa. **Ninguna de las tres cifras se cita.**
+
+## Lo que estas cifras sí anticipan (dirección, no magnitud)
+
+**La forma del nombre le gana a la extensión literal** por +0,0146 de macro-F1, con las 4/4
+semillas a favor y un IC que excluye el cero por lejos. Eso invierte la predicción que estaba
+escrita —«el nombre no aporta, lo que aportaba en el Exp. 2b era la extensión»— y apunta a que
+la columna (2) esté midiendo lo mismo que la (3), por otra puerta: **la forma del nombre es un
+identificador de campaña mejor que la extensión.**
+
+Tiene sentido leyendo `forma_del_nombre()`: incluye `len_ext`, `len_base`, `prop_hex`,
+`base_toda_hex`, `ext_solo_letras`, `ext_con_digitos`, `n_puntos`. Eso *es* el esquema de
+renombrado. Con 25 de 30 familias renombrando cada una a su manera, el esquema identifica la
+familia **sin mirar un solo byte del contenido**. Y el diagnóstico previo del script medía la
+circularidad de la extensión **literal**, no la de la **forma**: la columna (2) entró por la
+puerta que quedó sin vigilar.
+
+## Corrección del diseño (commiteada y pusheada)
+
+1. **Dos columnas de control SIN bytes**, misma partición, delta pareado:
+   `0a_solo_forma_del_nombre` y `0b_solo_extension_literal`. Son las que hacen interpretable la
+   columna (2):
+   - si **(0a) ≈ 0,98–0,99** → el nombre solo ya resuelve la tarea, y el +0,097 de la columna
+     (2) no es «los bytes ayudados por el nombre» sino **el nombre con los bytes de
+     acompañantes**. La columna (2) pasa a ser una segunda cota superior declarada, hermana de
+     la (3), y no un método defendible sobre este conjunto;
+   - si **(0a) queda claramente por debajo de (2)** → la combinación aporta algo que ninguna
+     parte tiene sola, y ahí la columna (2) es reportable.
+   *Predicción registrada antes de correr: (0a) entre 0,97 y 0,99.* **→ FALSADA el 17-09: dio 0,5771. Ver «EXP. 2d CERRADO — job 3937».**
+2. **Puerta de entrada** `REF_2C = 0,9120` / `TOL_2C = 0,0050`: compara la columna (1) contra el
+   Exp. 2c y avisa en el log. Si hubiera existido, el 3771 se detectaba en la primera semilla en
+   vez de a ojo.
+3. **Guardado incremental** de `exp2d_por_semilla.csv` al cerrar cada semilla. En el 3771 los
+   `to_csv` estaban todos después del bucle, así que la cancelación en la semilla 4 borró las
+   cuatro ya medidas: **el log quedó como único registro**.
+
+## El límite de fondo, que ninguna corrida va a resolver
+
+**En NapierOne cada familia corresponde a una sola campaña.** Por lo tanto ninguna medición
+sobre este conjunto puede separar «forma del nombre» de «identidad de la campaña», por más
+control que se agregue. Los controles (0a) y (0b) sirven para *acotar* cuánto de la columna (2)
+es nombre, no para rescatarla. El conjunto que separaría las dos cosas —varias campañas por
+familia— es justamente el que no se tuvo para este trabajo, que es la limitación ya escrita para
+el Exp. 2c y el objeto de `nota_limitacion_napierone.tex`.
+
+**Cómo reportar el Exp. 2d, entonces:** la columna (1) es el método; las columnas (2) y (3) son
+**dos cotas superiores declaradas** que miden hasta dónde llega un identificador de campaña, y
+el número que las vuelve honestas es el **0,9724 de la tabla de consulta**, que muestra que ese
+techo se alcanza sin aprendizaje alguno.
+
+## Pendiente
+
+- Relanzar el 2d con el script corregido (ya está en `PARA_SUBIR_AL_CLUSTER/`): cinco columnas,
+  cinco semillas, más A.3.
+- Leer, en la corrida nueva, **(0a) antes que nada**: decide cómo se reporta la columna (2).
+- Verificar que el control de integridad diga «ningún archivo con magia de tipo conocido» — si
+  aparecen los 12 JPEG de `CERBER-small`, la columna del nombre no es interpretable.
+
+---
+
+---
+
+# ✅ CERBER: CIFRADO PARCIAL VERIFICADO — cierra el «(a verificar)» del job 3772 (2026-09-10)
+
+Este bloque **no repite** el hallazgo del job 3772 (arriba, «CERBER DEJA LA CABECERA EN CLARO»).
+Cierra la verificación que ese bloque dejaba pendiente y **corrige un razonamiento** de ahí.
+
+## La medición
+
+Volcado de entropía y de los primeros 32 bytes sobre `CERBER-small`, pegado por Romina:
+
+```
+CERBER-small: 989 archivos sueltos
+  subcarpeta _sin_cifrar: 12 archivos
+con magia de tipo en claro: 989/989
+
+--QJB2Q7nF.bed4     12295B  JPEG  H(cab)=6.33  H(med)=7.59  H(cola)=7.63
+   ff d8 ff e0 00 10 4a 46 49 46 00 01 01 00 00 01 00 01 00 00 ff fe 00 3b 43 52 45 41 54 4f 52 3a
+-00CAjTujp.bed4     95142B  OLE   H(cab)=0.89  H(med)=7.58  H(cola)=7.64
+   d0 cf 11 e0 a1 b1 1a e1 00 00 00 00 ... 3e 00 03 00 fe ff 09 00
+-07I7Ci0DW.bed4    112672B  ZIP   H(cab)=0.88  H(med)=7.58  H(cola)=7.58
+   50 4b 03 04 14 00 06 00 08 00 00 00 21 00 15 f2 d8 a4 c6 01 00 00 97 09 00 00 13 00 08 02 5b 43
+```
+(los otros tres, dos ZIP y un JPEG, dan lo mismo: H(cab) 0,88-6,46 · H(med) 7,58-7,64 ·
+H(cola) 7,58-7,65)
+
+## Qué queda establecido
+
+1. **H1 CONFIRMADA — cifrado parcial, no contaminación.** Cabecera de **entropía baja**
+   (0,88-6,46) y **cuerpo y cola de entropía alta** (7,58-7,65, el techo de una ventana de 512
+   bytes). Los archivos **están cifrados**; lo que no está cifrado es el principio. La lectura
+   del job 3772 era la correcta.
+2. **Son 989 de 989, no 500 de 500.** El 500/500 del log era el tamaño de la muestra
+   (`--por-familia 500`). Sobre la carpeta completa, **todos** los archivos tienen magia en
+   claro. Sin excepciones.
+3. **Los 12 JPEG siguen apartados** en `_sin_cifrar/`, con sus 12 archivos. Era el chequeo
+   previo al lanzamiento que pedía el bloque del 3772: **cumplido**. Los 989 son otra cosa.
+4. **Cuánto se preserva: del orden de la ventana entera, no unos pocos bytes.** En OLE y ZIP la
+   entropía de los 512 bytes de cabecera es **0,88**, o sea que casi toda la ventana es
+   estructura original: cabecera OLE completa (`d0cf11e0 a1b11ae1` + relleno de ceros), o
+   cabecera local de ZIP más el nombre `[Content_Types].xml` (`13 00` = 19 caracteres, y
+   `5b 43` = `[C`). En JPEG llega a 6,33-6,46 porque después del JFIF y del marcador COM
+   (`ff fe`, con el texto `CREATOR:`) ya entra ciframiento.
+
+## ⚠ Corrección al bloque del job 3772
+
+Ese bloque dice, sobre el F1 = 1,000 de CERBER en el Exp. 2c: «*La cabecera preservada es del
+documento de origen y la comparten todas las familias, así que no discrimina*».
+
+**Eso no se sostiene contra la medición.** Las otras familias **cifran su cabecera**: en
+`d_familias_dificiles.csv` la entropía de cabecera es **7,03** para el resto de familias y
+**7,59** para las seis difíciles. La de CERBER es **0,88-6,46**. Todas las familias parten de
+documentos con cabecera, sí, pero **solo CERBER la deja legible**, así que la cabecera **sí
+discrimina**, y con margen enorme: es la diferencia entre una ventana de 512 bytes casi
+constante y una de entropía casi máxima.
+
+**Lo que no cambia:** el F1 = 1,000 sigue explicado, y ahora está **sobredeterminado** — hay
+**dos** pistas triviales independientes, el sufijo constante de 64 bytes con cobertura 1,00 del
+Exp. 2b **y** la cabecera en claro. No hace falta corregir el 0,912 por esto; hace falta que la
+tesis no diga que la cabecera no discrimina.
+
+## Lo que esto habilita
+
+CERBER es **un caso real de cifrado parcial dentro del corpus canónico**, medido y no supuesto.
+Eso conecta directo con el experimento pendiente de cifrado intermitente y con arXiv 2510.15133
+(detección solo en los extremos 61,48 % contra 97,1 % a nivel de bloque): la pregunta «¿cuánto
+degrada la ventana 512+512 con cifrado parcial?» tiene, en CERBER, una respuesta **medible sobre
+datos propios** — y del lado bueno, porque la ventana cae justo donde el texto quedó en claro.
+
+**Decisión que sigue abierta para Romina y Cappo:** si se declara como resultado sobre la
+familia (cifrado parcial documentado, con el volcado como evidencia) o si además se cambia algo
+del diseño de la ventana. Nada de esto se escribe en la tesis sin esa decisión.
+
+---
+
+---
+
+# ✅ A.3 CERRADA — curva de aprendizaje del frente de archivos (job 3772, 2026-08-29)
+
+Registrado de lo pegado por Romina el 2026-09-17, del log `slurm-exp2d-3772.out`. **El job 3772
+SÍ terminó** (Fin: Sat Aug 29 02:58:47), y sus resultados nunca se habían anotado: el registro
+quedó en «3772 corriendo». Salidas en `/scratch/ralfonzo/tesis/resultados_exp2d_job3772`.
+
+Solo bytes (la representación canónica), subconjuntos **anidados**, 5 pliegues, 3 semillas de
+submuestreo. 4434 s (74 min).
+
+| Archivos/familia | Total | Exactitud | macro-F1 |
+|---|---|---|---|
+| 10 | 300 | 0,8111 ± 0,0158 | 0,7809 ± 0,0184 |
+| 25 | 750 | 0,8627 ± 0,0074 | 0,8464 ± 0,0086 |
+| 50 | 1500 | 0,8809 ± 0,0105 | 0,8723 ± 0,0114 |
+| 100 | 3000 | 0,8918 ± 0,0070 | 0,8880 ± 0,0054 |
+| 200 | 6000 | 0,9055 ± 0,0029 | 0,9045 ± 0,0024 |
+| 350 | 10500 | 0,9102 ± 0,0008 | 0,9096 ± 0,0009 |
+| **500** | **15000** | **0,9124 ± 0,0005** | **0,9117 ± 0,0005** |
+
+## ⭐ Puerta de entrada: PASA
+
+**Con 500 archivos/familia la curva da exactitud 0,9124 ± 0,0005 contra los 0,9120 ± 0,0016
+publicados del Exp. 2c** (job 3648). Reproduce la referencia. Eso **confirma el diagnóstico**
+sobre el job 3771: su 0,9018 venía de los hiperparámetros por defecto de sklearn, no de los
+datos ni del diseño. Con `300/20/2/0,3` el número vuelve a su lugar.
+
+## Delta pareado entre tamaños consecutivos (macro-F1, IC 95 %, n = 3)
+
+| Paso | Δ | IC 95 % | |
+|---|---|---|---|
+| 10 → 25 | +0,0654 | [+0,0015; +0,1294] | aporta |
+| 25 → 50 | +0,0259 | [+0,0146; +0,0372] | aporta |
+| 50 → 100 | +0,0158 | [−0,0023; +0,0338] | indistinguible |
+| 100 → 200 | +0,0164 | [+0,0082; +0,0246] | aporta |
+| 200 → 350 | +0,0051 | [−0,0007; +0,0109] | indistinguible |
+| 350 → 500 | +0,0021 | [−0,0006; +0,0048] | indistinguible |
+
+## Cómo leerlo, con el matiz que corresponde
+
+El script concluye «el último paso que aporta de forma medible es 100 → 200». **Es correcto
+pero no hay que leerlo como un punto de saturación limpio**, y conviene decir por qué: son
+**3 semillas**, así que el t de Student vale 4,303 y los IC son anchos. Se nota en que
+50 → 100 (+0,0158) queda indistinguible mientras 100 → 200 (+0,0164) sí aporta, con deltas
+casi iguales: lo que cambia es la dispersión, no el efecto. «Indistinguible de cero» acá
+significa **no medible con tres semillas**, no «cero».
+
+La lectura que sí se sostiene, y que es la que contesta la pregunta de Cappo:
+
+> **Con 200 archivos por familia el frente de archivos ya está a 0,9045 de macro-F1. Los 300
+> archivos adicionales hasta 500 aportan +0,0072 en total, y ningún paso individual de ahí en
+> adelante se distingue de cero.**
+
+Y un dato que vale por sí solo: **con 10 archivos por familia —300 en total— ya da 0,7809 de
+macro-F1**. El frente de archivos necesita muy poca muestra, que es el contraste exacto con el
+frente de notas, donde la moneda son plantillas y hay familias con una sola.
+
+## Alcance acordado
+
+`EXPERIMENTOS_PENDIENTES.md` fija para A.3: **techo de esfuerzo UN párrafo, no se re-corre por
+ningún motivo, y si el resultado no aporta no se escribe.** Queda medida y registrada; **si va
+a la tesis y en qué forma lo decide Romina.** Si va, el párrafo es el bloque citado arriba más
+la tabla, y la comparación con B.1 (la curva del frente de notas) es lo que le da sentido:
+misma pregunta, monedas distintas.
+
+---
+
+---
+
+# ✅ EXP. 2d CERRADO — job 3937 (2026-09-10/11): la forma del nombre COMPLEMENTA a los bytes, no los reemplaza
+
+Registrado de lo pegado por Romina el 2026-09-17, del log `slurm-exp2d-3937.out`. Cinco columnas
+sobre la **misma partición**, 5 semillas, 5 pliegues, 500 archivos/familia, hiperparámetros del
+Exp. 2c (`300/20/2/0,3`). Salidas en `/scratch/ralfonzo/tesis/resultados_exp2d_job3937`.
+
+## Las cinco columnas
+
+| Columna | Exactitud | macro-F1 |
+|---|---|---|
+| (0a) **solo** forma del nombre | 0,5830 ± 0,0024 | **0,5771 ± 0,0033** |
+| (0b) **solo** extensión literal | 0,9380 ± 0,0011 | **0,9244 ± 0,0036** |
+| (1) solo bytes | **0,9128 ± 0,0012** | **0,9117 ± 0,0011** |
+| (2) bytes + forma del nombre | **0,9998 ± 0,0002** | **0,9998 ± 0,0002** |
+| (3) bytes + extensión literal | 0,9718 ± 0,0020 | 0,9699 ± 0,0024 |
+
+**Puerta de entrada: PASA.** «la columna (1) reproduce el Exp. 2c (0,9128 vs 0,9120). OK.»
+Es la tercera confirmación independiente del diagnóstico del 3771 (con A.3 del 3772 y con
+esta): el 0,9018 era por los hiperparámetros.
+
+## Delta pareado por semilla contra «solo bytes» (macro-F1, IC 95 %, n = 5)
+
+| Columna | Δ | IC 95 % | Semillas |
+|---|---|---|---|
+| (2) bytes + forma del nombre | **+0,0880** | [+0,0866; +0,0894] | 5/5 |
+| (3) bytes + extensión literal | **+0,0581** | [+0,0555; +0,0608] | 5/5 |
+| (0a) solo forma del nombre | **−0,3347** | [−0,3389; −0,3304] | 0/5 |
+| (0b) solo extensión literal | +0,0127 | [+0,0083; +0,0171] | 5/5 |
+
+(en exactitud: +0,0869 · +0,0590 · −0,3298 · +0,0251, todos con IC del mismo signo)
+
+## ❌ La predicción registrada FALLÓ — y eso decide la lectura
+
+Estaba escrito antes de correr: *«(0a) entre 0,97 y 0,99»*, y con ella la lectura de que la
+columna (2) sería «el nombre con los bytes de acompañantes», una segunda cota superior.
+
+**Dio 0,5771.** No 0,97: cuarenta puntos por debajo. **La forma del nombre sola NO resuelve la
+tarea.** Y sin embargo, sumada a los bytes, llega a 0,9998 — tres errores en quince mil.
+
+También estaba escrita la regla de decisión, con las dos ramas:
+
+> «si **(0a) queda claramente por debajo de (2)** → la combinación aporta algo que ninguna
+> parte tiene sola, y ahí la columna (2) es reportable.»
+
+Estamos en esa rama, y por lejos: 0,58 sola, 0,91 los bytes solos, **0,9998 juntos**. Es
+**complementariedad genuina**: la forma del nombre define grupos gruesos de familias (largo de
+la extensión, composición de la base) con muchas colisiones —por eso sola da 0,58—, y los bytes
+separan dentro de cada grupo. Ninguno de los dos hace el trabajo del otro.
+
+**Consecuencia: la columna (2) pasa de «cota superior declarada» a RESULTADO REPORTABLE, con
+una limitación declarada** (abajo). Es la respuesta al elemento de acción 2 del tutor, y es
+positiva: cruzar los bytes con la forma del nombre casi elimina el error del frente de archivos
+sobre NapierOne.
+
+## Lo que el control (0b) confirma sobre la extensión literal
+
+- **La extensión literal sola da 0,9244 de macro-F1, más que los bytes solos** (0,9117):
+  +0,0127 [+0,0083; +0,0171], 5/5. Un diccionario le gana al método. Se declara tal cual.
+- **0,9380 de exactitud validada contra 0,9724 de la tabla de consulta dentro de la muestra.**
+  La diferencia son las extensiones que aparecen una sola vez (SUNCRYPT asigna una por archivo):
+  dentro de la muestra aciertan por construcción, en validación cruzada no se pueden aprender.
+  El matiz que se anotó al registrar el 0,9724 era exactamente este.
+- **Sumada a los bytes rinde MENOS que la forma**: (3) 0,9699 contra (2) 0,9998. Sola, la
+  extensión literal le gana a la forma por 0,35; combinada con los bytes, pierde por 0,03. Con
+  900 columnas dispersas de one-hot y `max_features=0,3`, el bosque diluye la señal de los
+  bytes; con 18 columnas densas de forma, no. Y para las cinco familias que no renombran, la
+  extensión literal trae el **tipo del documento original**, que es ruido para identificar la
+  familia.
+
+## La limitación que va pegada al 0,9998, sin excepción
+
+**En NapierOne cada familia es una sola campaña.** Los controles descartan que «el nombre solo
+lo haga» —eso se midió y es falso—, pero **no pueden descartar que la forma del nombre sea una
+huella de la campaña** que casualmente complementa a los bytes. Si la forma generaliza a otra
+campaña de la misma familia depende de si el esquema de renombrado lo fija el código del
+malware (extensión aleatoria de largo fijo, base hexadecimal) o lo elige el operador (extensión
+con nombre). **Eso no se puede medir con este conjunto**, y es la misma limitación ya escrita
+para el Exp. 2c: el conjunto con varias campañas por familia es el que no se tuvo.
+
+**Cómo se escribe, entonces:** «sobre NapierOne, agregar la forma del nombre a los bytes lleva
+el macro-F1 de 0,912 a 0,9998 (Δ = +0,088, IC 95 % [+0,087; +0,089], 5/5 semillas). La forma
+del nombre por sí sola alcanza 0,577, de modo que la mejora es de la combinación y no del nombre.
+Con una campaña por familia, este resultado no permite afirmar que la forma del nombre
+generalice a campañas no vistas.» Las tres frases van juntas o no va ninguna.
+
+## Contexto que hay que tener presente al leer las cinco columnas
+
+- El control de integridad del 3937 disparó igual que en el 3772: **CERBER 500/500** con
+  cabecera en claro (cifrado parcial verificado el 10-09), **JIGSAW 3** y **NOTPETYA 16**
+  archivos sin cifrar con nombre original. Los 19 sin cifrar son 0,13 % y no explican un salto
+  de +0,088; CERBER ya estaba en 1,000 con bytes solos, así que no mueve los deltas.
+- **La pregunta natural que sigue, y que NO se corre sin decidirlo:** qué confusiones de los
+  bytes resuelve la forma. La hipótesis coherente con el Exp. 2c es que las seis familias
+  difíciles (NOTPETYA 0,39 · JIGSAW 0,44 · DARKSIDE 0,60 · CRYPTOLOCKER 0,60 · WASTEDLOCKER
+  0,63 · SUNCRYPT 0,74) se confunden entre sí como «ciframiento genérico» y tienen esquemas de
+  renombrado distintos. **Es hipótesis, no medición**: el 2d no guarda el reporte por familia.
+  Si Romina y Cappo quieren el dato, es agregar un `classification_report` por columna y
+  re-correr; son ~2 h de clúster. No se hace por iniciativa propia.
+
+## Estado del Exp. 2d
+
+**Cerrado y completo.** Tres corridas: 3771 (script viejo, no citable), 3772 (tres columnas +
+A.3, terminó el 29-08), 3937 (cinco columnas + A.3, terminó el 11-09). Las cifras a usar son
+**las del 3937** para las columnas y las de **cualquiera de los dos** para A.3 (misma partición,
+mismas semillas: idénticas).
+
+---
+
+---
+
+# ✓ Exp. 2d — CSV descargados y verificados contra lo registrado (2026-09-17)
+
+Romina bajó `exp2d_3772_3937.tar.gz` (6,6 KB). Extraído en
+`4_resultados/resultados_exp2d/resultados_exp2d_job3772/` y `.../job3937/`, más los dos logs
+SLURM en `4_resultados/resultados_exp2d/`. Respaldo del tar en `4_resultados/_respaldo_exp2d/`.
+Todo bajo patrones que `.gitignore` excluye.
+
+**Verificación:** `exp2d_resumen.csv` y `exp2d_deltas.csv` del 3937 coinciden **exactamente**
+con las cifras registradas desde el log pegado (las cinco columnas y los ocho deltas con IC).
+`a3_curva_resumen.csv` de 3772 y 3937 son **idénticos** al redondeo de 4 decimales, como se
+había anticipado. El manifiesto del 3937 confirma `300/20/2/0,3`, 500/familia, semillas 0-4,
+5 pliegues, y el diagnóstico de extensión (25/30 · 5/905 · 0,9724).
+
+**Un dato nuevo del manifiesto, con su base:** `archivos_con_magia_en_claro` dice
+`CERBER: 500, JIGSAW: 4, NOTPETYA: 24`. El log de la semilla 0 decía JIGSAW 3 y NOTPETYA 16.
+No es contradicción: el manifiesto guarda la **última semilla**, y cada semilla muestrea 500
+archivos distintos de cada carpeta. Entonces el «19 sobre 15.000 = 0,13 %» anotado en el
+bloque del 3772 **es de la semilla 0**; en la semilla 4 son 28. **El total de archivos sin
+cifrar en las carpetas completas de JIGSAW y NOTPETYA no está medido** — para CERBER sí
+(989/989). Queda pedido el conteo sobre carpeta completa.
+
+---
+
+---
+
+# ✅ INTEGRIDAD DEL CORPUS DE ARCHIVOS, SOBRE LAS 30 CARPETAS COMPLETAS (2026-09-17)
+
+Registrado de lo pegado por Romina. Conteo de archivos cuyo **offset 0** coincide con una de
+ocho magias de tipo en claro (JPEG, PDF, ZIP/OOXML, OLE, PNG, GIF, RTF, GZIP), sobre **todos**
+los archivos de nivel superior de cada carpeta de `Napierone-small`, excluyendo el `.pdf`
+descriptivo. Es el conteo **definitivo**: los anteriores (500/500, 3, 16, 4, 24) eran sobre la
+muestra de 500 por familia de cada semilla.
+
+| Familia | En claro | Total | % | Qué es |
+|---|---|---|---|---|
+| **CERBER** | **988** | 988 | **100 %** | cifrado parcial: cabecera original preservada, cuerpo y cola cifrados (verificado 10-09 por entropía) |
+| **NOTPETYA** | **32** | 833 | **3,8 %** | archivos **sin cifrar**, con nombre y extensión originales |
+| **JIGSAW** | **8** | 998 | **0,8 %** | archivos **sin cifrar**, con nombre y extensión originales |
+| las otras 27 | **0** | 26 857 | 0 % | — |
+| **TOTAL** | **1028** | **29 676** | 3,5 % | 988 de cifrado parcial + **40 sin cifrar** |
+
+(CERBER: 988 y no 989 porque este conteo excluye el `.pdf` descriptivo que el anterior contaba.
+Los 12 JPEG apartados en `_sin_cifrar/` siguen ahí y no entran en el 988.)
+
+## Lo que queda establecido
+
+1. **Veintisiete familias sin una sola anomalía.** El control es exacto en el offset 0 y la
+   probabilidad de falso positivo sobre ciframiento es ~2⁻²⁴ por archivo: sobre 26 857 archivos
+   se esperaban 0,002 coincidencias, y hubo cero. El detector no inventa.
+2. **Dos defectos de naturaleza distinta, que no se mezclan:**
+   - CERBER: **el 100 % de la familia**. No es un defecto del corpus, es comportamiento del
+     malware (cifrado parcial). Se declara como resultado sobre la familia.
+   - NOTPETYA y JIGSAW: **40 archivos sin cifrar** (0,13 % del corpus). Es el mismo defecto de
+     los 12 JPEG de CERBER del 2026-08-16: originales que el ransomware no procesó.
+3. **La base del «19 sobre 15.000» queda corregida.** Ese número era la muestra de la semilla 0.
+   La población es **40 sobre 29 676 = 0,13 %** (misma proporción, por casualidad). En una
+   muestra de 500/familia se esperan ~4 de JIGSAW y ~19 de NOTPETYA; las semillas dieron 3-4 y
+   16-24. Consistente.
+4. **Tamaños de carpeta desparejos**, que conviene tener anotados: BADRABBIT **857**, NOTPETYA
+   **833**, CERBER 988 (+12 apartados +1 pdf), JIGSAW 998; el resto 1000. Con `--por-familia
+   500` no afecta a ninguna corrida.
+
+## Una observación que NO es medición, y por qué importa
+
+NOTPETYA es **la peor familia del Exp. 2c (F1 0,3942)** y es también la que más archivos sin
+cifrar tiene (3,8 %). No se puede afirmar que lo uno cause lo otro: 3,8 % de la familia no
+explica un F1 de 0,39. Pero hay algo que sí conviene tener presente al leer las confusiones, si
+alguna vez se piden por familia: **la cabecera de un archivo sin cifrar (OLE, ZIP) es
+indistinguible de la cabecera de un archivo de CERBER**, porque CERBER la deja en claro. La
+mitad del vector de esos 40 archivos se parece a CERBER. Queda como hipótesis para el reporte
+por familia, si se corre.
+
+## Recomendación (la decisión es de Romina y Cappo)
+
+Tratar los 40 igual que se trató a los 12 JPEG de CERBER, **por consistencia**: moverlos a
+`NOTPETYA-small/_sin_cifrar/` y `JIGSAW-small/_sin_cifrar/` (exclusión reversible, los scripts
+ya filtran con `is_file()`), declararlo en la subsección de integridad, y **no re-correr nada**:
+apartar los 12 JPEG movió las métricas 0,001-0,003, y 40 está en el mismo orden. Lo publicado
+sigue siendo válido tal como está, con la base declarada («incluye 40 archivos sin cifrar,
+0,13 %»). Si en cambio se decide dejarlos, también es defendible: hay que declararlo igual.
+
+**Lo que NO se recomienda:** tocar CERBER. Está cifrada; la ventana lee su cabecera en claro, y
+eso se declara, no se «arregla» excluyendo la familia.
+
+**Cifra citable para la tesis**, con su base: «verificación de integridad por magia de tipo
+sobre los 29 676 archivos de las 30 familias: 27 familias sin anomalías; CERBER con cabecera
+original preservada en el 100 % de sus 988 archivos (cifrado parcial); 40 archivos sin cifrar
+(32 de NOTPETYA, 8 de JIGSAW; 0,13 % del corpus)».
+
+---
+
+---
+
+# ✅ 40 archivos sin cifrar apartados + ⚠ SOSPECHA NUEVA: el filtro `.pdf` borra muestras válidas (2026-09-22)
+
+## Cuarentena hecha
+
+```
+NOTPETYA-small apartados: 32 | quedan: 969
+JIGSAW-small   apartados:  8 | quedan: 993
+```
+
+**32 y 8, exactamente los previstos.** Quedan en `NOTPETYA-small/_sin_cifrar/` y
+`JIGSAW-small/_sin_cifrar/`, igual que los 12 JPEG de CERBER: exclusión **reversible**, los
+cinco scripts del frente filtran con `is_file()` y no bajan a subdirectorios. **No se re-corre
+nada**: apartar los 12 de CERBER movió 0,001-0,003 y 40 es del mismo orden. Lo publicado sigue
+válido; la subsección de integridad declara la base.
+
+## ⚠ Lo que delatan los «quedan», y que NO estaba visto
+
+`quedan` cuenta **todos** los archivos, incluidos los `.pdf`; el censo del 17-09 contaba
+**sin** `.pdf`. Restando:
+
+| Familia | Total | Sin `.pdf` (censo 17-09) | ⇒ con extensión `.pdf` |
+|---|---|---|---|
+| NOTPETYA | 1001 | 833 | **168** |
+| JIGSAW | 1001 | 998 | 3 |
+| BADRABBIT | ~1001 | 857 | **~144** |
+
+Los cinco scripts del frente de archivos filtran igual, con el mismo comentario:
+
+```python
+# excluir archivos que no son muestras cifradas (p. ej. el PDF descriptivo)
+archivos = [p for p in archivos if p.suffix.lower() != ".pdf"]
+```
+(`clasificador_bytes.py:131` · `exp2d_nombre_extension.py:135` · `analisis_bytes.py:98` ·
+`ablacion_ventana_extendida.py:98` · `deteccion_estructural.py:181`)
+
+**La hipótesis, coherente con lo ya escrito en el capítulo:** el filtro se diseñó para sacar
+**un** PDF descriptivo de NapierOne. Pero **NOTPETYA y BADRABBIT no cambian la extensión** —está
+escrito en §Exp. 2b, citando a Davies et al.—, así que sus documentos PDF cifrados **siguen
+llamándose `.pdf`** y el filtro **los borra a todos**. JIGSAW sí renombra, y por eso tiene 3 y
+no 168.
+
+**Si se confirma, el alcance es este, y hay que decirlo con cuidado:**
+- No es que las cifras publicadas estén mal: están medidas sobre el conjunto que el script
+  arma, y ese conjunto es reproducible. **Lo que está mal es la descripción implícita** de que
+  se usan todos los archivos de cada familia.
+- **NOTPETYA pierde ~17 % de su familia, y toda de un mismo tipo de documento.** Es la peor
+  familia del Exp. 2c (F1 0,394 ± 0,023). Que le falte sistemáticamente un tipo entero es al
+  menos un factor a considerar en su diagnóstico.
+- Toca la validación **dejar-un-tipo-fuera** (§subsec:exp2c_tipos): el pliegue `pdf` es el de
+  menos familias (**25**) y el de menor macro-F1 (**0,836**). La explicación escrita hoy es que
+  las familias que renombran no tienen tipo asignable; **si además falta el `.pdf` de las que
+  no renombran, la explicación está incompleta.**
+- El muestreo `--por-familia 500` toma de 833 y no de 1001 en NOTPETYA: el sorteo sigue siendo
+  válido, la población de la que sortea es otra.
+
+**PENDIENTE DE VERIFICAR antes de escribir una sola línea de esto:** que esos `.pdf` sean
+muestras **cifradas** (entropía de cabecera ~7,6) y no PDF descriptivos en claro. Es un comando.
+Si resultan estar en claro, no hay problema y el filtro estaba bien.
+
+---
+
+---
+
+# 🚨 CONFIRMADO: el filtro `.pdf` borraba 310 muestras cifradas (2026-09-22)
+
+Verificado sobre las 30 carpetas, pegado por Romina. **La sospecha era correcta.**
+
+| | `.pdf` | Qué son |
+|---|---|---|
+| 27 familias | **1 cada una** | `<FAMILIA>.pdf`, ~3,5 MB, cabecera `25 50 44 46 2d 31 2e 34` (`%PDF-1.4`), H(cab) **5,41**. Es la documentación de NapierOne. El filtro acertaba. |
+| **BADRABBIT** | **144** | 1 documentación + **143 muestras CIFRADAS**: `0143-pdf.pdf`, H(cab) **7,57**, cabecera `12 73 c3 f8 c9 f6 28 cc` — sin magia PDF |
+| **NOTPETYA** | **168** | 1 documentación + **167 muestras CIFRADAS**: `0167-pdf.pdf`, H(cab) **7,58**, cabecera `2e 53 43 83 df 9f 83 73` |
+| JIGSAW | 3 | 1 documentación + 2 con cabecera `%PDF-1.3`: `0090-pdf.pdf` (H 3,80, **en claro**) y `0004-pdf.pdf` (H 7,50, cabecera PDF con cuerpo de alta entropía) |
+
+**310 archivos cifrados descartados en silencio** (143 + 167), todos de las **dos únicas
+familias que no cambian la extensión**. A las 28 que renombran no les quitaba nada: sus PDF
+cifrados se llaman `.bed4`, `.encrypted`, etc. **Era un sesgo sistemático contra BADRABBIT y
+NOTPETYA**, y NOTPETYA es la peor familia del Exp. 2c (F1 0,394 ± 0,023) a la que le faltaba
+el **17 % de su familia, toda de un mismo tipo de documento**.
+
+**Corregido en los cinco scripts** (commit pusheado): `es_documentacion(p, familia)` descarta
+solo el archivo cuyo nombre base coincide con el de la familia. Probado con siete casos.
+
+## ⚠ Dos cosas que quedaron colgando
+
+1. **Los 2 `.pdf` de JIGSAW no se apartaron en la cuarentena del 22-09**, porque el comando de
+   cuarentena filtraba `.pdf` igual que los scripts. `0090-pdf.pdf` está en claro (H 3,80) y
+   debería ir a `_sin_cifrar/`. `0004-pdf.pdf` es dudoso: cabecera `%PDF-1.3` legible pero
+   H 7,50 en los primeros 512 bytes; **no clasificar sin mirarlo**. Con el filtro corregido,
+   el control de integridad los va a levantar solo en la próxima corrida.
+2. **Hipótesis sobre NOTPETYA, NO medida:** los dos `.pdf` cifrados muestreados comparten los
+   **mismos 8 primeros bytes** (`2e 53 43 83 df 9f 83 73`). Si eso es general, NOTPETYA cifra
+   de forma **determinista sin vector de inicialización por archivo**, de modo que dos archivos
+   con el mismo prefijo en claro dan el mismo prefijo cifrado. Eso explicaría por qué el
+   Exp. 2b la reporta **sin marca alguna**: el Exp. 2b exige un prefijo común a **todos** los
+   archivos de la familia, y aquí el prefijo cifrado depende del **tipo de documento**. Sería
+   una corrección a una afirmación publicada («dos familias no presentan marca alguna»).
+   **Verificar antes de escribir nada.**
+
+## Qué cambia y qué no
+
+- **No invalida ninguna cifra publicada.** Están medidas sobre el conjunto que armaba el
+  script anterior, y ese conjunto es reproducible. Lo que era inexacto es la **descripción
+  implícita** de usar todos los archivos de cada familia.
+- **Habilita volver a medir sobre el corpus completo**, y ahí sí el 0,912 puede moverse: es la
+  primera corrección que podría **subir** el número en vez de bajarlo, porque devuelve 167
+  archivos a la familia más difícil. **Decisión de Romina y Cappo.**
+- Toca la explicación del pliegue `pdf` en **dejar-un-tipo-fuera** (§subsec:exp2c_tipos), que
+  es el de menos familias (25) y menor macro-F1 (0,836). La explicación escrita ---las
+  familias que renombran no tienen tipo asignable--- **está incompleta**: además faltaban los
+  PDF de las dos que no renombran.
+
+---
+
+### P2bal — EL REPARTO DE P2 ARREGLADO. Cifra de cabecera del frente de notas (2026-09-22)
+
+`protocolo_p2bal.py --n-semillas 50`, **preregistro en el docstring, commiteado ANTES de correr**
+(`a936397`, 2026-09-22 23:17:21) — precisamente lo que le faltó a LOGO. Log `_log_p2bal_149.txt`,
+salidas en `resultados_protocolo_p2bal_149/`.
+
+**Qué es.** `StratifiedGroupKFold` optimiza un balance global y **no garantiza que cada familia
+tenga una plantilla en entrenamiento en cada pliegue**: deja 3,86 familias por pliegue con F1 = 0
+forzado, ceros que entran al macro sin que el método haya fallado. P2bal reparte las plantillas
+**dentro de cada familia** (las chicas eligen primero; empates sorteados con la semilla). Mismo
+número de pliegues, **mismo tamaño de entrenamiento (49,5 plantillas por pliegue, idéntico)** y la
+misma garantía, verificada: **0 violaciones** de plantilla en train y test a la vez, en los dos
+protocolos.
+
+| Protocolo | Capa | macro-F1 (30) | sd | IC 95 % | CV(F1) | sobre 28 evaluables | exact. | bal. | MCC | ¿>0,50? |
+|---|---|---|---|---|---|---|---|---|---|---|
+| P2 | texto | 0,4593 | 0,075 | [0,438; 0,481] | 0,164 | 0,4921 | 0,579 | 0,520 | 0,561 | NO |
+| P2 | M.6 | 0,5191 | 0,079 | [0,497; 0,542] | 0,152 | 0,5562 | 0,660 | 0,578 | 0,645 | IC toca |
+| **P2bal** | **texto** | **0,6551** | 0,034 | **[0,6454; 0,6648]** | 0,052 | **0,7019** | 0,719 | 0,703 | 0,709 | **SÍ** |
+| **P2bal** | **M.6** | **0,7417** | 0,031 | **[0,7328; 0,7505]** | 0,042 | **0,7946** | 0,812 | 0,780 | 0,804 | **SÍ** |
+
+Δ pareado: texto **+0,1959** [+0,174; +0,217], M.6 **+0,2225** [+0,199; +0,246], **50/50 semillas**.
+Familias ≥ 0,50 con M.6: **25/30**; ≥ 0,70: 21/30. Bajo 0,50 quedan BADRABBIT y CRYPTOLOCKER
+(plantilla única, cero estructural), HELLOKITTY 0,293, RYUK 0,358 y JIGSAW 0,499.
+
+**Veredicto del preregistro: 6 de 7 predicciones se cumplen. La que falla es mía y es aritmética.**
+Predije «2 familias sin entrenamiento por pliegue bajo P2bal» y da **1,00**. El valor correcto era
+1,00 desde el principio: cada familia de plantilla única está ausente del train en **uno** de los
+dos pliegues, no en los dos, así que 2 familias × ½ = 1,0 por pliegue. El protocolo se comporta
+como debía; la predicción estaba mal calculada. **Dato que sale de ahí:** de las 3,86 familias sin
+entrenamiento que pierde P2 por pliegue, **1,00 es inevitable** (plantilla única) y **2,86 son el
+defecto del reparto**. Eso es lo que arregla P2bal, y es el 96 % del Δ.
+
+Se cumplen: texto ≥ 0,60 con IC por encima de 0,50 (P1); tamaño de entrenamiento idéntico, o sea
+**la ganancia no viene de entrenar con más** (P3); las 5 familias de 2 plantillas suben entre
++0,41 y +0,56 (P4); la sd cae de 0,075 a 0,034, se va la lotería de ceros (P5); P2bal < LOGO
+0,6747, la diferencia por duplicar el entrenamiento es de solo +0,020 (P6); y la puerta de entrada
+reproduce el canónico al cuarto decimal, 0,4593 / 0,5191 (P7).
+
+**Reproducción independiente:** la revisión del 17/9 midió P2bal 0,6651 ± 0,032 a 20 semillas con
+otra implementación; acá da 0,6551 ± 0,034 a 50. Diferencia 0,010, dentro de la variación por
+semilla. Dos implementaciones separadas dan lo mismo.
+
+**Cómo se cita (obligatorio).** «macro-F1 0,6551 con texto y 0,7417 con la cascada, sobre plantilla
+no vista **según el criterio de casi-duplicado por coseno de caracteres 0,90**». Ese criterio **no
+detecta contención**: con contención ≥ 0,8 el corpus pasa de 99 a 81 plantillas y de 28 a 21
+familias evaluables, y la cifra baja (ver `REVISION_LOGO_2026-09-17_informe.md`). La limitación va
+pegada al número, no en una nota al pie lejana.
+
+**Decisión: P2bal pasa a ser el protocolo de cabecera del frente de notas.** P2 se reporta al lado
+como lo que fue, y la diferencia entre los dos se explica como defecto de reparto, no como método.
+LOGO no se escribe en la tesis (descartado el 17/9).
+
+
+---
+
+### ★★★ LAS DOS MEDICIONES QUE FALTABAN BAJO P2bal — CERRADAS (2026-09-26, local)
+
+Las dos que pedía `HANDOFF_2026-09-26_cerrar_con_la_cascada.md` §3. **Preregistro commiteado
+ANTES de correr**: `7debb3b`, 2026-09-26 19:38:50 (el código, no los resultados). Las dos tienen
+**puerta de entrada** y las dos **reprodujeron exacto** la cifra de cabecera de P2bal
+(cascada 0,8123 · texto 0,7191, diferencia 0,0000), así que no son una corrida distinta: son la
+misma corrida mirada por dentro.
+
+#### 1. Abstención (M.3) bajo P2bal — ya hay frase de despliegue citable
+
+`abstencion_notas.py --protocolo P2bal --n-semillas 50`. Log `_log_m3_149_p2bal.txt`, salidas en
+`resultados_abstencion_149_p2bal/`. **149 notas · 30 familias · 99 plantillas.**
+
+| umbral | cobertura | **acierto donde contesta** | macro-F1 de las respondidas | por regla | por texto | se abstiene |
+|---|---|---|---|---|---|---|
+| 0,00 | 1,0000 | 0,8123 | 0,7417 | 80,3 | 68,7 | 0,0 |
+| 0,20 | 0,8509 | 0,9003 | 0,8445 | 80,3 | 46,5 | 22,2 |
+| **0,50** | **0,7718** | **0,9324** | 0,8725 | **80,3** | **34,7** | **34,0** |
+| 1,00 | 0,6658 | 0,9864 | 0,9544 | 80,3 | 18,9 | 49,8 |
+
+**La frase para la tesis, con su métrica pegada:** con umbral de margen 0,50 el sistema
+**contesta el 77,18 % de las notas y, donde contesta, acierta el 93,24 %**; de cada 149 notas,
+80,3 las resuelve la capa de reglas, 34,7 el texto y se abstiene en 34,0. Base: P2bal, 149 notas,
+30 familias, 50 semillas, plantilla no vista **según coseno char 0,90**.
+
+Bajo P2 la misma frase era 0,6459 / 0,9000. **Contesta más y acierta más**: las dos cosas a la
+vez, que es lo que predecía A4.
+
+**Acierto de cada capa por separado** (columna nueva del CSV): la capa de reglas acierta
+**0,9928** y no depende del umbral —el umbral solo filtra al texto—; el texto solo acierta
+0,6025 sin umbral y 0,7966 con umbral 0,50.
+
+**VEREDICTO DEL PREREGISTRO: A1, A2, A4 y A5 cumplen; A6 FALLA.** A6 decía que la cobertura de
+la capa de reglas no cambiaría entre P2 y P2bal (~0,4546). Midió **0,5389**, o sea +0,084. El
+razonamiento preregistrado estaba incompleto: se miró solo el **tamaño** del entrenamiento (49,5
+plantillas en los dos protocolos) y no la **cobertura de familias**. P2bal le garantiza a toda
+familia con 2+ plantillas al menos una en entrenamiento, así que el diccionario de marcadores
+cubre más familias y la regla encuentra coincidencia más seguido. Se reporta el fallo tal cual.
+
+#### 2. Desglose por parecido con el entrenamiento, bajo P2bal
+
+`similitud_vs_acierto_p2bal.py --n-semillas 50` (script nuevo, no toca ningún canónico). Log
+`_log_similitud_p2bal_149.txt`, salidas en `resultados_similitud_p2bal_149/`. El parecido se mide
+por **contención de 3-shingles de palabras** contra las notas de **su propia familia que estaban
+en el entrenamiento de ese pliegue** —no contra el corpus entero, como se había hecho bajo LOGO.
+
+| tramo de contención | notas (media) | acierto texto | **acierto cascada** | brecha | coseno medio |
+|---|---|---|---|---|---|
+| sin plantilla propia en entrenamiento | 4,0 | 0,0000 | 0,0000 | 0,0000 | — |
+| [0,0; 0,3) | 61,7 | 0,5032 | 0,6337 | +0,1305 | 0,4358 |
+| [0,3; 0,5) | 29,4 | 0,7747 | 0,9774 | +0,2027 | 0,6956 |
+| [0,5; 0,7) | 17,9 | 0,9977 | 0,9682 | **−0,0295** | 0,8025 |
+| [0,7; 0,9) | 30,0 | 1,0000 | 1,0000 | 0,0000 | 0,8109 |
+| [0,9; 1,0] | 6,1 | 1,0000 | 1,0000 | 0,0000 | 0,8680 |
+
+**Corte binario, que es lo citable:**
+- **Con hermana contenida ≥ 0,5 en el entrenamiento** (54,0 notas, el 36,2 % del corpus): la
+  cascada acierta **0,9891** [0,9848; 0,9934].
+- **Sin hermana parecida** (91,0 notas, el 61,1 %): la cascada acierta **0,7434**
+  [0,7294; 0,7574], frente a **0,5839** del texto solo.
+- **Sin ninguna plantilla de su familia en el entrenamiento** (4,0 notas): **0,0000**, con texto
+  y con cascada. Es el control de sanidad B6 y salió exactamente 0: si hubiera dado más, habría
+  fuga. Son BADRABBIT y CRYPTOLOCKER, las dos de plantilla única.
+
+**Lo que hay que decir junto al número, porque un jurado lo va a mirar:** el coseno medio con el
+entrenamiento en el tramo de contención alta es **0,8143** — por debajo del umbral 0,90. O sea
+que esas notas **son plantillas distintas según el criterio declarado** y aun así están
+contenidas en algo que el sistema vio. No es que la partición esté mal; es que **el coseno no ve
+la contención**, que es justo lo que midió la revisión del 2026-09-17.
+
+**VEREDICTO: B1, B2, B3, B4 y B6 cumplen; B5 FALLA por poco.** B5 predecía que la fracción con
+hermana ≥ 0,5 bajaría a ≤ 0,35 al entrenar con la mitad de las plantillas; midió **0,3621**
+(bajo LOGO era 0,4228). Bajó, pero no tanto como lo preregistrado.
+
+#### ⚠ HALLAZGO NO PREVISTO: en el tramo fácil, la capa de reglas RESTA
+
+En el tramo [0,5; 0,7) la cascada acierta **menos** que el texto solo (0,9682 vs 0,9977, brecha
+**−0,0295**), y en el corte binario ≥ 0,5 también (0,9891 vs 0,9993). Es coherente con que la
+regla acierte 0,9928 y no 1,0000: **cuando el texto ya iba a acertar, el ~0,7 % de error de la
+regla pisa una decisión correcta.** Por familia se ve en CONTI (texto 1,0000 → cascada 0,9000) y
+AVOSLOCKER (1,0000 → 0,9400).
+
+No cambia la decisión de presentar la cascada —el balance global es +0,0866 de macro-F1 y en el
+tramo difícil la brecha es +0,1595 a favor de la cascada— pero **hay que escribirlo**: es
+exactamente el tipo de detalle que un jurado encuentra y que, si no está declarado, parece
+escondido. Y sugiere una variante medible: dejar que la regla ceda cuando el margen del texto es
+muy alto. **No está medida y no se reporta como si lo estuviera.**
+
+#### Dónde vive cada cosa
+
+- `2_codigo/abstencion_notas.py` — preregistro A1–A6 en el docstring, puerta A1 que aborta.
+- `2_codigo/similitud_vs_acierto_p2bal.py` — preregistro B1–B6 en el docstring, puerta B1.
+- CSV: `resultados_abstencion_149_p2bal/m3_curva_abstencion.csv`,
+  `resultados_similitud_p2bal_149/{similitud_tramos,similitud_binario,similitud_por_familia,similitud_por_nota}_p2bal.csv`.
+
+
+---
+
+### ★★ PEDIDO DE CAPPO DEL 2026-09-09, CONTESTADO CON NÚMERO (medido 2026-09-26)
+
+Del chat del 9 de septiembre, tres pedidos. Los tres tienen respuesta medida.
+
+#### 1. «Ver si las notas tienen algún patrón entre las que dicen que son de la misma clase. Si no hay ningún patrón, se puede deducir que el rendimiento del clasificador no será bueno»
+
+`patron_vs_acierto.py`, log `_log_patron_vs_acierto.txt`, salidas en
+`resultados_similitud_p2bal_149/patron_vs_acierto_*.csv`. **⚠ ANÁLISIS POST-HOC, NO
+PREREGISTRADO** — se escribió después de ver los resultados y se cita como tal.
+
+El «patrón interno» de una familia se mide por **contención media de 3-shingles de palabras**
+entre sus notas y las notas de su propia familia que estaban en el entrenamiento. Alto = sus
+notas se repiten entre sí; bajo = cada nota dice algo distinto.
+
+**La relación que propuso el tutor existe y es fuerte:**
+
+| | Pearson r | p | Spearman ρ | p |
+|---|---|---|---|---|
+| patrón vs acierto, **texto solo** | **+0,834** | < 0,00001 | +0,857 | < 0,00001 |
+| patrón vs acierto, **cascada** | +0,715 | 0,00002 | +0,702 | 0,00003 |
+
+Sobre las **28 familias evaluables** (las de 1 plantilla no tienen patrón interno definido).
+
+| nivel de patrón | familias | acierto texto | acierto cascada | lo que rescata la regla |
+|---|---|---|---|---|
+| sin patrón (< 0,10) | 6 | 0,4063 | 0,5702 | **+0,1639** |
+| intermedio [0,10; 0,40) | 4 | 0,5213 | 0,6934 | **+0,1720** |
+| con patrón (≥ 0,40) | 18 | 0,9209 | 0,9555 | +0,0346 |
+
+**EL MATIZ QUE IMPORTA: la correlación BAJA con la cascada (+0,834 → +0,715).** No es ruido: es
+el efecto buscado. Las capas de reglas aflojan la dependencia del patrón textual, y por eso
+existen. Donde no hay patrón, la regla aporta +0,1639; donde ya hay patrón, solo +0,0346.
+
+**Los tres casos que contradicen la regla del tutor, y explican por qué:**
+- **CHIMERA** — patrón 0,0186 (sus 2 notas no se parecen entre sí) y aun así **acierto 1,0000**:
+  la capa de reglas la resuelve el 100 % de las veces por marcadores propios.
+- **CLOP** — patrón 0,0235, texto 0,610 → cascada 0,740 (regla en el 65,5 %).
+- **RANSOMEXX** — patrón 0,0611 y texto 0,748: le alcanza con vocabulario distintivo aunque no
+  repita frases.
+
+**Y las tres que le dan la razón — el límite honesto del corpus:** HELLOKITTY (patrón 0,0043 →
+0,2267), RYUK (0,0572 → 0,2867), JIGSAW (0,0157 → 0,4200). Sin patrón de texto y sin marcadores
+reutilizables, no hay de dónde aprender. **Son exactamente las familias que quedan bajo 0,50 de
+F1 en la corrida de cabecera.** La predicción del tutor acierta en los casos donde falla el
+sistema, que es donde importa.
+
+#### 2. «Si tu clasificador da ≤ 50 % es como tirar una moneda»
+
+El criterio es de una tarea **binaria**. Acá son **30 clases**: acertar al azar es **1/30 =
+0,033**, no 0,50. Un macro-F1 de 0,5191 (la cifra que estaba vigente el 9 de septiembre, bajo el
+reparto viejo P2) es **15,6 veces el azar**, no una moneda.
+
+**La métrica que zanja la discusión sin discutirla es el MCC**, que vale 0 para un clasificador
+al azar y 1 para uno perfecto, sea binario o multiclase. Bajo P2bal la cascada da **MCC 0,8042**.
+
+Cifras vigentes de la cascada bajo P2bal, todas de `_log_p2bal_149.txt`:
+
+| métrica | cascada | azar |
+|---|---|---|
+| MCC | **0,8042** | 0,000 |
+| exactitud | 0,8123 | 0,033 |
+| exactitud balanceada | 0,7798 | 0,033 |
+| macro-F1 (30 familias) | 0,7417 [0,7328; 0,7505] | ~0,002 |
+| macro-F1 (28 evaluables) | 0,7946 | — |
+
+Además, el chat del 9-09 es **anterior a P2bal** (22-09): la cifra que motivó el comentario era
+0,5191 y hoy es **0,7417**, y el sistema no cambió — se corrigió el reparto de la partición.
+
+Y sobre «¿el clasificador debe poder decir no sé?»: ahora está medido. Con umbral de margen 0,50
+**contesta el 77,18 % y acierta el 93,24 % donde contesta**.
+
+#### 3. «Las familias con una sola plantilla no se procesan. Por eso necesitamos métricas»
+
+**Instrucción del tutor, y el proyecto ya tiene la cifra separada:** macro-F1 sobre las **28
+evaluables** = **0,7946** (cascada) y 0,7019 (texto), contra 0,7417 y 0,6551 sobre las 30.
+
+Hay además justificación medida para excluirlas, del control de sanidad B6: las 4 notas de
+BADRABBIT y CRYPTOLOCKER dan **acierto 0,0000 exacto** porque su familia nunca tiene material en
+el entrenamiento de ningún pliegue. **No es que el clasificador falle: la tarea no está definida
+para ellas.**
+
+**DECISIÓN ABIERTA para Romina + Cappo:** si «no se procesa» es la regla, la cifra de cabecera
+del frente de notas pasa a ser **macro-F1 0,7946 sobre 28 familias** en vez de 0,7417 sobre 30.
+Las dos están medidas; es cuestión de cuál se declara como principal. **Lo que no se puede es
+mezclarlas sin decir la base.**
+
+
+---
+
+### 🚨🚨 HALLAZGO (2026-09-26): HAY UN TERCER PAR DE LINAJE SIN DOCUMENTAR — **CLOP ↔ RYUK**
+
+Salió del barrido de boilerplate (`boilerplate_compartido.py`) y lo confirmó, de forma
+**independiente**, la matriz de confusión (`confusion_y_linaje.py`). Dos métodos que no
+comparten nada señalan el mismo par.
+
+#### La evidencia, medida
+
+| | valor |
+|---|---|
+| n-gramas de 8 palabras compartidos CLOP–RYUK | **185** |
+| de ellos, **exclusivos del par** (en ninguna otra familia) | **169 (91 %)** |
+| coseno char 3-5 `CLOP/clop1.txt` vs `RYUK/ryuk.txt` | **0,8018** |
+| **contención de `RYUK/ryuk.txt` dentro de `CLOP/clop1.txt`** | **0,811** |
+| confusiones RYUK → CLOP (50 semillas) | **117** con texto · **116** con cascada |
+| confusiones CLOP → RYUK | 42 |
+
+Las dos notas **empiezan con el mismo texto palabra por palabra**: «Your network has been
+penetrated. All files on each host in the network have been encrypted with a strong
+algorithm…». Tres notas de RYUK (`ryuk.txt`, `note_pcrisk.txt`, `note_variant_email.txt`, que
+son casi idénticas entre sí, coseno 0,986–0,9999, grupo 123) están **contenidas al 81 %** dentro
+de `CLOP/clop1.txt`, que es más larga.
+
+#### Por qué nadie lo había visto
+
+**El coseno se queda en 0,8018, por debajo del umbral 0,90.** El agrupador de casi-duplicados
+las deja en plantillas distintas (grupo 37 y grupo 123) y el protocolo las trata como material
+independiente. Es exactamente la limitación que midió la revisión del 2026-09-17 —el coseno no
+ve la contención— pero acá el efecto **cruza familias**, que es peor: no es una plantilla
+repetida, es una familia cuyo texto vive dentro de otra.
+
+#### Lo que explica
+
+**RYUK es la segunda peor familia del corpus** (acierto 0,2867 con cascada; patrón interno
+0,0572, el 3.º más bajo de las 28). Ahora se entiende: sus notas **no se parecen entre sí** —los
+cosenos internos van de 0,15 a 0,24 salvo el trío del grupo 123— **y sí se parecen a CLOP**. El
+clasificador hace lo razonable con lo que tiene.
+
+**Y la cascada no lo arregla: 117 → 116.** A diferencia de DHARMA↔PHOBOS (403 → 139, −65 %) y
+BLACKBASTA↔CONTI (72 → prácticamente 0), acá los IOCs no separan: la capa de reglas solo resuelve
+el 20 % de las notas de RYUK.
+
+#### ✅ RESUELTO EL MISMO Día: es PARENTESCO, no error de atribución
+
+Se verificó yendo al archivo original. **Las dos notas salen del MISMO repositorio fuente**
+(`fuente = ThreatLabz` en el manifiesto = el repo `ransomware_notes` de Zscaler ThreatLabz, que
+está en `3_datos/fuentes_notas/ransomware_notes/`): `clop/clop1.txt` y `ryuk/ryuk.txt`, con esos
+mismos nombres. O sea que **la separación en dos familias la hace la fuente, no el armado del
+corpus de la tesis.**
+
+Y cada nota lleva **sus propios marcadores**, que es lo que zanja la cuestión:
+
+- `ryuk.txt` (771 car.) termina con sus contactos propios — `WayneEvenson@protonmail.com`,
+  billetera BTC `14hVKm7Ft2rxDBFTNkkRC3kGstMGp2A4hk` — y con **la firma explícita de la
+  familia: «Ryuk. No system is safe»**.
+- `clop1.txt` (1429 car.) sigue por otro lado después del tronco común y lleva los suyos.
+- **Prefijo idéntico: 423 caracteres, el 55 % de la nota de Ryuk.** La primera diferencia es
+  tipográfica (un guión largo contra uno corto en «SHUTDOWN»).
+
+**Conclusión: las etiquetas están bien.** Es un molde de nota compartido entre dos familias
+distintas, cada una con sus propios contactos y su propia firma. **CLOP–RYUK es un tercer par de
+linaje y se declara como tal en la tesis**, junto a BLACKBASTA–CONTI y DHARMA–PHOBOS. No hay
+nada que corregir en el corpus.
+
+**⚠ CORRECCIÓN de lo que se dijo antes en esta misma sesión:** se afirmó que «tres de las cuatro
+notas de RYUK implicadas vienen de PCrisk». **Es falso.** Según el manifiesto: `ryuk.txt` es de
+**ThreatLabz**; `note_pcrisk.txt` y `note_variant_email.txt` son de **«NapierOne/varios»** (la
+procedencia débil que B.2 del plan manda auditar, pese a lo que sugiere el nombre del archivo); y
+la única de PCrisk con URL verificada es `pcrisk_ryuk_1.txt`, que **no** es del grupo implicado.
+
+#### Por qué la cascada no separa este par, si cada nota tiene IOCs propios
+
+Porque la regla solo aplica cuando el IOC de la nota de prueba **ya se vio en entrenamiento**.
+Las tres notas casi idénticas de RYUK están en el **mismo grupo 123**, así que cuando ese grupo
+cae en prueba sus correos y su billetera salen con él y la regla se queda sin clave. Por eso
+RYUK tiene `frac_resuelta_por_regla` = 0,20, la más baja entre las familias confundidas. **No es
+que los IOCs no sirvan: es que en esta familia no se repiten entre plantillas.**
+
+#### Los otros pares que salieron del mismo barrido
+
+| par | compartidos | exclusivos | ¿lo confirma la confusión? |
+|---|---|---|---|
+| BLACKBASTA–CONTI *(conocido)* | 239 | 239 (100 %) | sí, 72 con texto |
+| DHARMA–PHOBOS *(conocido)* | 193 | 148 (77 %) | sí, **403** con texto |
+| **CLOP–RYUK** | 185 | **169 (91 %)** | **sí, 117** |
+| **LORENZ–SODINOKIBI** | 145 | **108 (74 %)** | sí, SODINOKIBI→LORENZ 35 |
+| **BLACKCAT–SODINOKIBI** | 39 | **39 (100 %)** | — |
+| **MEDUZALOCKER–SODINOKIBI** | 48 | 21 (44 %) | sí, 37 |
+| **NOTPETYA–WANNACRY** | 22 | 18 (82 %) | sí, WANNACRY→NOTPETYA 44 |
+| BADRABBIT–NOTPETYA | 11 | 7 (64 %) | sí, **100** |
+
+**La coincidencia entre las dos columnas de la derecha es el resultado metodológico:** el
+boilerplate compartido **predice dónde se va a equivocar el clasificador**, sin mirar ni una
+predicción. Pares como DHARMA–LOCKBIT o CLOP–DHARMA, que comparten 27 y 16 n-gramas pero **0
+exclusivos**, no generan confusión: lo que comparten es el boilerplate del ecosistema.
+
+---
+
+### ★★ MATRIZ DE CONFUSIÓN BAJO P2bal Y CIERRE DE M.4 (2026-09-26)
+
+`confusion_y_linaje.py --n-semillas 50`, **preregistro L1–L5 commiteado antes de correr**
+(`9849f55`). Log `_log_confusion_linaje_149.txt`, salidas en `resultados_confusion_linaje_149/`
+(matrices 30×30 completas para texto y cascada). Puerta L1: reproduce 0,8123 / 0,7191 exacto.
+
+| sistema | errores (50 semillas) | de linaje | fracción | por semilla |
+|---|---|---|---|---|
+| texto solo | 2093 | 486 | 0,2322 | 41,9 |
+| **cascada** | **1398** | **186** | **0,1330** | 28,0 |
+
+**VEREDICTO: L1, L2, L3 y L4 CUMPLEN los cuatro.** La fracción de errores de linaje baja de
+0,2322 a 0,1330 y en absoluto cae a menos de la mitad (486 → 186). **La predicción que M.4 hacía
+y nunca se puso a prueba —que los IOCs separan familias que comparten texto— queda confirmada**,
+y la hace la cascada sola, sin la etapa de linaje que M.4 proponía.
+
+#### Cierre de M.4, con el matiz que impone el hallazgo de CLOP–RYUK
+
+El criterio automático del script dice «todavía tiene material» (13,3 % > 10 %). Leído con el
+hallazgo de arriba, la conclusión es más precisa y **M.4 se cierra igual**:
+
+- **Donde hay IOCs privados, M.4 ya está hecho:** DHARMA→PHOBOS pasa de 403 a 139 errores
+  (−65 %) y BLACKBASTA→CONTI de 72 a prácticamente 0. Una segunda etapa de linaje no agregaría
+  nada sobre eso.
+- **Donde no hay IOCs, ninguna etapa de linaje ayuda:** RYUK→CLOP pasa de 117 a 116. La capa de
+  reglas solo alcanza al 20 % de las notas de RYUK. **El problema no es de desambiguación, es
+  que no hay señal que desambiguar.**
+
+**Conclusión: M.4 no se corre.** Lo que proponía ya está medido por vía de la cascada, y el
+residuo que quedaría a su cargo es justamente el caso donde su mecanismo —IOCs privados— no
+existe.
+
+---
+
+### ★★ ¿CONVIENE QUE LA REGLA CEDA CUANDO EL TEXTO ESTÁ MUY SEGURO? (2026-09-26)
+
+`cascada_cede_por_margen.py --n-semillas 50`, **preregistro C1–C5 commiteado antes de correr**
+(`bf1ffdb`). Log `_log_cascada_cede_149.txt`, salidas en `resultados_cascada_cede_149/`. Sale del
+hallazgo del mismo día: en el tramo fácil la capa de reglas resta.
+
+La variante es una sola línea: la regla cede si el margen del texto supera un umbral. Umbral
+infinito = la cascada actual; umbral 0 = el texto solo. **Las dos puertas reprodujeron exacto**
+(0,7417 / 0,8123 y 0,6551 / 0,7191).
+
+| umbral de cesión | cede en | macro-F1 (30) | Δ vs cascada | IC Bonferroni | semillas + |
+|---|---|---|---|---|---|
+| 0,00 (texto solo) | 80,3 | 0,6551 | −0,0866 | [−0,0954; −0,0777] | 0/50 |
+| 0,25 | 63,6 | 0,7095 | −0,0321 | [−0,0377; −0,0266] | 0/50 |
+| 0,50 | 50,0 | 0,7297 | −0,0120 | [−0,0155; −0,0085] | 2/50 |
+| 0,75 | 39,7 | 0,7354 | −0,0062 | [−0,0087; −0,0038] | 2/50 |
+| **1,00** | 29,4 | **0,7432** | **+0,0015** | **[+0,0002; +0,0028]** | 9/50 |
+| 1,50 | 4,3 | 0,7417 | 0,0000 | [0; 0] | 0/50 |
+| inf (actual) | 0,0 | 0,7417 | — | — | — |
+
+**VEREDICTO: C1, C2, C3, C4 y C5 CUMPLEN TODOS.** Por el criterio de adopción fijado antes de
+correr, el umbral 1,00 **se adopta**: su IC de Bonferroni al 99,17 % excluye el cero por arriba.
+
+**Distribución del Δ por semilla en el umbral 1,00** (recalculada aparte para entenderlo): **41
+semillas dan exactamente 0, 9 son positivas (media +0,0084) y NINGUNA es negativa.** O sea: la
+variante **nunca empeora**; en 4 de cada 5 particiones no cambia nada y en el resto mejora poco.
+
+#### ⚠️ RECOMENDACIÓN: cumple el criterio, pero NO conviene adoptarlo. Es decisión de Romina.
+
+Tres razones, y ninguna contradice el preregistro —el criterio se cumplió y así queda escrito:
+
+1. **La magnitud es despreciable:** +0,0015 sobre 0,7417 es un 0,2 % relativo. No mueve ninguna
+   conclusión de la tesis.
+2. **El punto dulce es estrecho y eso huele a sobreajuste del umbral:** con 0,75 pierde
+   (−0,0062), con 1,50 ya no cede casi nunca (Δ = 0). Solo funciona en una ventana angosta.
+3. **El umbral se eligió sobre el mismo conjunto con el que se mide**, sin partición de
+   validación aparte —está declarado en el propio preregistro—. Con 149 notas no alcanza para
+   partir en tres.
+
+Complicar la descripción del método por +0,0015 hace el sistema más difícil de defender y no
+más fuerte.
+
+#### EL RESULTADO QUE SÍ VA A LA TESIS: el barrido VALIDA la jerarquía de la cascada
+
+Lo valioso no es el +0,0015 sino la columna entera: **hacer que la regla ceda antes empeora de
+forma sistemática y monótona** (−0,0866 · −0,0321 · −0,0120 · −0,0062, con 0/50, 0/50, 2/50 y
+2/50 semillas positivas). **La prioridad «la regla manda sobre el texto» no es una elección de
+comodidad: es la configuración medida como mejor**, y ahora hay una tabla que lo muestra. Eso
+responde por anticipado a la pregunta de un jurado sobre por qué las capas van en ese orden.
+
+---
+
+### ★★ TOP-K: EL SISTEMA COMO RANKING (2026-09-26) — idea de Romina, medida
+
+`topk_notas.py --n-semillas 50`, **preregistro T1–T4 commiteado antes de correr** (`bf1ffdb`).
+Log `_log_topk_149.txt`, salidas en `resultados_topk_p2bal_149/`. Sale de la pregunta de Romina
+en el chat con el tutor del 2026-09-09: «o dejamos siempre un tipo ranking de porcentajes».
+
+**Cómo se arma el ranking de la cascada, que hay que declarar:** si la capa de reglas aplica y
+apunta a una sola familia, esa familia va **primera** y detrás va el orden del texto sin
+repetirla; si no aplica, el ranking es el del texto. Es la traducción directa de la cascada a
+una lista.
+
+| sistema | top-1 | top-2 | top-3 | top-5 | top-10 |
+|---|---|---|---|---|---|
+| texto solo | 0,7191 | 0,8192 | 0,8446 | 0,8787 | 0,9258 |
+| **cascada** | **0,8123** | 0,8493 | **0,8663** | 0,8899 | 0,9286 |
+
+**Frase citable:** la familia correcta es la primera propuesta en el **81,2 %** de las notas y
+está **entre las tres primeras en el 86,6 %** (P2bal, 149 notas, 30 familias, 50 semillas).
+
+**VEREDICTO: T1, T3 y T4 cumplen; T2 FALLA.** T2 predecía top-3 ≥ 0,90 y midió **0,8663**. La
+predicción era optimista: suponía que los errores del SVC dejan la clase correcta cerca del
+tope, y no es así — cuando la cascada no acierta de una, la familia correcta queda en la
+**posición mediana 6 de 30** (el texto solo, en la 4).
+
+**LO QUE MUESTRA EL RANKING, y es coherente con lo demás:** la cascada gana solo +0,0540 al
+pasar de top-1 a top-3, y el texto solo gana +0,1255 (T3, cumple). Es la otra cara del hallazgo
+de la capa de reglas: **cuando la regla se equivoca, se equivoca fuerte** y empuja la familia
+correcta hacia abajo en la lista; el texto, en cambio, falla por poco. Las dos cosas —que la
+regla acierte 0,9928 y que cuando yerra yerra feo— son el mismo hecho.
+
+**DONDE EL RANKING SÍ SIRVE MUCHO: en las familias difíciles.**
+
+| familia | cascada top-1 | cascada top-3 | gana |
+|---|---|---|---|
+| JIGSAW | 0,4200 | **0,7850** | +0,3650 |
+| HELLOKITTY | 0,2267 | 0,4400 | +0,2133 |
+| RYUK | 0,2867 | 0,4867 | +0,2000 |
+| WANNACRY | 0,7700 | 0,9600 | +0,1900 |
+
+JIGSAW casi duplica. **Para las familias que el sistema no resuelve de una, ofrecer tres
+candidatas cambia la utilidad práctica de la herramienta** — y es justo el argumento de
+despliegue que sostiene presentar un ranking además del top-1.
+
+⚠️ **Top-10 apenas llega a 0,9286**: hay un ~7 % de notas donde la familia correcta no aparece
+arriba en ninguna posición razonable. De ese 7 %, 2,7 puntos son las 4 notas de BADRABBIT y
+CRYPTOLOCKER, cuya clase no existe en el modelo (T4, control de sanidad: aparecen en 0,0000 de
+los casos, como debía ser).
+
+**AL CITAR: top-k no es exactitud.** Se escribe siempre con la k pegada y al lado del top-1.
+
+---
+
+### ★ AÑO DE APARICIÓN vs RENDIMIENTO POR FAMILIA — EL AÑO NO EXPLICA NADA (2026-09-26)
+
+Pedido textual del tutor, anotado en `HANDOFF_2026-08-25` §3(d). `anio_vs_rendimiento.py`, log
+`_log_anio_vs_rendimiento.txt`, salidas en `resultados_anio_vs_rendimiento/`.
+**⚠ ANÁLISIS POST-HOC, no preregistrado.**
+
+**Fuente del año:** hoja «Informacion sobre familias» de `Pruebas.xlsx` (las 30 con año, armada
+por Romina y Carlos). **No sale de MISP**, que solo cubre 5 de 28 — ya estaba verificado.
+Emparejamiento 30/30 con mapeo explícito a mano: `BLACKCAT/alphv`, `BLACKMATTER7`,
+`MEDUSALOCKERb7`, `CRYPTOLOCKERc9`.
+
+**Resultado, sobre las 28 evaluables:**
+
+| relación | Pearson r | p |
+|---|---|---|
+| año vs F1 de la cascada | **+0,091** | 0,645 |
+| año vs F1 del texto solo | +0,164 | 0,406 |
+| plantillas vs F1 de la cascada | −0,113 | 0,566 |
+| año vs cantidad de plantillas | −0,305 | 0,115 |
+| **año vs F1 descontando las plantillas** (parcial) | **+0,060** | 0,763 |
+
+**Ninguna es significativa. El año de aparición de la familia no predice el rendimiento**, ni
+antes ni después de descontar el número de plantillas —que era la variable de confusión obvia y
+tampoco resultó significativa por sí sola.
+
+| tramo | familias | plantillas media | F1 texto | F1 cascada | patrón medio |
+|---|---|---|---|---|---|
+| viejas 2013-2016 | 5 | 4,80 | 0,6359 | 0,8362 | 0,2872 |
+| medias 2017-2019 | 12 | 3,25 | 0,6915 | 0,7463 | 0,4347 |
+| recientes 2020-2022 | 11 | 3,27 | 0,7432 | 0,8284 | 0,4475 |
+
+**EL CONTRASTE ES EL RESULTADO, y es lo que hay que llevarle al tutor.** Se probaron dos
+explicaciones del rendimiento por familia, las dos a pedido suyo:
+
+| explicación candidata | r con el F1/acierto | p |
+|---|---|---|
+| **año de aparición** | +0,091 | 0,645 — **no explica nada** |
+| **patrón interno de la familia** | **+0,834** (texto solo) | < 0,00001 — **explica mucho** |
+
+Lo que decide si una familia se clasifica bien **no es cuándo apareció, es si sus notas se
+parecen entre sí**. Los casos lo muestran: CHIMERA es de 2015 y BLACKBASTA de 2022, y las dos
+tienen texto malo (0,2947 y 0,2020) rescatado por la cascada (0,8920 y 0,7456); TESLACRYPT
+(2015) y BLACKCAT (2021) andan bien las dos. **Familias de todas las épocas aparecen arriba y
+abajo de la tabla.**
+
+⚠️ n = 28 es chico: un caso extremo mueve la correlación. Se cita como exploración post-hoc.
+
+---
+
+### INVENTARIO DE FAMILIAS DISPONIBLES PARA EXTENDER EL FRENTE DE NOTAS (2026-09-26, local)
+
+Contesta la pregunta «¿podemos ampliar las familias?» con el criterio del proyecto, no con
+cuántas carpetas traen las fuentes. `inventario_familias_fuentes.py`, log
+`_log_inventario_fuentes.txt`, salidas en `inventario_familias_fuentes/`.
+
+**Lo que hay en disco hoy** (`3_datos/fuentes_notas/`, 690 notas leídas):
+
+| fuente | notas | familias | familias con 2+ plantillas | familias nuevas con 2+ |
+|---|---|---|---|---|
+| `ransomware_notes` | 332 | 222 | 48 | 40 |
+| `RansomNoteFiles` | 157 | 67 | 18 | 14 |
+| `f6dfir_ransom_notes` | 182 | 31 | 21 | 21 |
+| `notas_pcrisk` | 19 | 13 | 6 | 0 |
+
+**Unificando todo con el corpus canónico** (agrupamiento por coseno char 0,90 sobre todo junto):
+
+- 319 familias distintas en total; **289 son nuevas** (no están entre las 30).
+- **77 familias nuevas llegan a 2 o más plantillas** — el piso para que una familia no saque
+  F1 = 0 estructural bajo corte por plantilla.
+- 32 familias nuevas llegan a 3 o más; 17 llegan a 4 o más.
+- **Total de familias con 2+ plantillas, canónicas más nuevas: 105.**
+- De las 690 notas de fuentes, **131 colapsan** con una plantilla que el corpus ya tiene y
+  **559 aportan texto distinto**.
+
+**⚠ 25 grupos de casi-duplicados cruzan dos o más familias**, y hay que resolverlos a mano antes
+de incorporar nada. El más grande junta **btcware | dharma | phobos en un solo grupo de 29
+notas**. **Ojo: DHARMA↔PHOBOS no es hallazgo nuevo** — ya está registrado y analizado en este
+mismo archivo (grupo 55/56, 11 notas de DHARMA + `pcrisk_phobos_1.txt`, y el grafo B.3 concluyó
+que el vínculo es por contenido casi duplicado, no por marcadores). El corpus canónico tiene
+**2 grupos mixtos y solo 2**: DHARMA+PHOBOS (12 notas) y BLACKBASTA+CONTI (2 notas), verificado
+hoy corriendo el agrupamiento sobre las 149. Lo que agregan las fuentes nuevas a ese grupo es
+**btcware**, familia externa. Otros grupos cruzados: `blackbasta|conti|monti`,
+`cartel|hades|lapiovra|revil|sodinokibi|sugar` (6 familias en un grupo), `conti|zeon`,
+`stop|stopdjvu`, `blacklock|dragonforce|eldorado`. Lista completa en
+`conflictos_de_etiqueta.csv`. Es la trampa del homónimo, que en este proyecto ya pegó tres veces.
+
+**Este inventario es un TECHO OPTIMISTA.** «Plantilla» es coseno 0,90 y ese criterio no detecta
+contención: con contención ≥ 0,8 el corpus canónico pasa de 99 a 81 plantillas y de 28 a 21
+familias evaluables. El número real de familias con dos plantillas de verdad independientes es
+**menor que 77**, y no está medido.
+
+---
+
+# 📌 PREREGISTRO — Exp. 2e: rasgos estructurales para mejorar el frente de archivos (2026-09-22)
+
+**Objetivo declarado: MEJORAR el 0,912, no medirlo otra vez.** Pedido explícito de Romina.
+
+## De dónde sale la idea (no es una corazonada, son dos mediciones propias)
+
+Del job 3630, ya registrado más arriba:
+1. **El 79,6 % de la importancia está en la cola** (cabecera 20,4 %), y los doce
+   desplazamientos más importantes son todos de cola.
+2. **SUNCRYPT tiene entropía de cola 4,78 y NOTPETYA 6,58**, contra 7,44 del resto. Las dos
+   **sí dejan algo estructurado al final** y aun así son la 1.ª y la 6.ª peor familia.
+
+El capítulo ya explica por qué no alcanza: *«ese bloque varía en cada archivo: una clave, un
+identificador de víctima o un contador. Es estructura, pero no es firma de familia»*.
+
+**Ahí está la palanca.** La representación posicional aprende **valores de byte en posiciones
+fijas**. Un pie cuyo contenido cambia en cada archivo es invisible para ella —aunque su
+**presencia**, su **tamaño** y su **grado de aleatoriedad** sean constantes dentro de la
+familia. «Hay 200 bytes poco aleatorios al final y el tamaño es múltiplo de 16» **es** un
+rasgo de familia aunque esos 200 bytes sean distintos en cada archivo.
+
+## Qué se agrega
+
+44 rasgos que describen la **forma** del archivo, no su contenido: entropía a ocho
+profundidades en cada extremo (16 a 4096), ocho bloques de 512 repartidos por el archivo,
+**largo del bloque final no aleatorio**, tamaño y sus restos módulo 16/512/4096, χ² contra la
+uniforme, bytes distintos, frecuencia máxima, ceros y fracción imprimible.
+
+**Ninguno mira el nombre ni la extensión.** Es la diferencia con el Exp. 2d: si acá aparece
+mejora, es del **contenido**, y **no arrastra la limitación de campaña**. Ese es el punto.
+
+Tres columnas sobre la misma partición: (1) bytes canónico · (2) bytes + estructura ·
+(3) solo estructura (control de complementariedad). Delta pareado e IC 95 %, 5 semillas, más
+reporte por familia de (1) y (2) y tabla de delta por familia. Corre sobre el **corpus
+corregido**, así que de paso mide cuánto mueve devolver los 310 `.pdf` cifrados.
+
+## ⚠ PREDICCIONES REGISTRADAS ANTES DE CORRER
+
+Se escriben para poder equivocarse en público, como en el Exp. 2d —donde la predicción falló
+por cuarenta puntos y eso decidió la lectura del resultado.
+
+| Qué | Predicción |
+|---|---|
+| (1) bytes canónico, exactitud, corpus corregido | **0,912 a 0,925** (sube o queda igual; NOTPETYA recupera 167 archivos) |
+| (2) bytes + estructura, Δ macro-F1 contra (1) | **+0,010 a +0,030**, IC excluye el cero |
+| (3) solo estructura, macro-F1 | **0,40 a 0,60** — no alcanza sola, 44 rasgos no separan 30 familias |
+| Dónde cae la mejora | **delta medio mayor en las seis difíciles que en las otras 24** |
+| Las dos que más suben | **SUNCRYPT y NOTPETYA** (son las que tienen cola de baja entropía) |
+
+**Cómo se lee cada desenlace:**
+- Si (2) mejora y cae en las difíciles → **mejora genuina del método por contenido**, se
+  reporta como resultado principal y sube el número del capítulo.
+- Si (2) mejora pero se reparte parejo → es mejora real pero **no cierra el residuo**; se
+  reporta con esa lectura y sin la historia de las seis.
+- Si (2) no mejora → **queda medido que el residuo no es de representación sino de ausencia
+  de señal**, que es un resultado negativo fuerte y citable: refuerza la conclusión ya escrita
+  de que la indistinguibilidad de esas seis familias es real.
+- Si (3) sale alto (>0,80) → los rasgos estructurales son un método por sí mismos y hay que
+  replantear, no solo agregar.
+
+**Riesgo conocido:** si el pie de SUNCRYPT **también varía de largo** entre archivos, el rasgo
+`largo_cola_no_aleatoria` tampoco lo captura y la predicción falla. No se puede saber sin
+correr.
+
+Código: `2_codigo/exp2e_estructura_bytes.py` + `slurm/job_exp2e.sh`, commiteados y pusheados.
+Probado con un corpus sintético de tres familias; el extractor detecta un pie de 192 bytes
+con exactitud.
+
+---
+
+---
+
+# 📐 D.1 *majority voting*: el techo aritmético, calculado (2026-09-26)
+
+Pregunta de Romina: «¿combinado con el frente de notas mejoraremos mucho?». Se calcula el
+techo con las cifras vigentes de los dos frentes, para que el elemento de acción 3 del tutor
+se conteste con una cuenta y no con una impresión.
+
+**Puntos de partida, con su base y su métrica:**
+- Archivos (Exp. 2c): **exactitud 0,912 ± 0,002**, macro-F1 0,911 · 30 familias · 15.000
+  archivos de NapierOne · cobertura 1,00.
+- Notas (M.6, sin abstención): **acierto 0,6601**, macro-F1 0,5191 · 30 familias · 149 notas
+  · cobertura 1,00.
+
+## El techo si existieran datos pareados
+
+El clasificador de archivos falla en el **8,8 %** de los casos. Si las notas fueran
+independientes y acertaran en el 66,01 % de esos, un **oráculo perfecto** —que supiera
+exactamente cuándo el clasificador de archivos se equivoca— rescataría
+0,088 × 0,6601 = **+5,8 puntos**, o sea 0,912 → **0,970**. Ese es el techo absoluto, y no es
+alcanzable: supone saber de antemano dónde está el error.
+
+**El riesgo del otro lado es 5× mayor.** Archivos acierta y notas falla en
+0,912 × 0,3399 = **31,0 %** de los casos. Una regla que delegue mal ahí destruye más de lo
+que gana.
+
+**Punto de equilibrio:** delegar conviene solo sobre un subconjunto donde el clasificador de
+archivos falle en más del **34 %** de los casos (de 0,3399/0,6601). Su tasa base de error es
+8,8 %, así que la regla de delegación tiene que concentrar los errores casi **cuatro veces**
+por encima de la base.
+
+## ¿Es alcanzable? Sí, y por eso el número final es chico pero no cero
+
+Hay una regla obvia que supera el umbral: **delegar cuando el clasificador de archivos predice
+una de las seis familias difíciles.** Su F1 medio ahí es ~0,57 (SUNCRYPT 0,745 · WASTEDLOCKER
+0,628 · CRYPTOLOCKER 0,605 · DARKSIDE 0,603 · JIGSAW 0,439 · NOTPETYA 0,394), o sea ~43 % de
+error: por encima del 34 % de equilibrio.
+
+Ganancia esperada con esa regla, si las seis son el 20 % de los casos:
+
+    0,20 × (0,43 × 0,6601 − 0,57 × 0,3399) = 0,20 × 0,090 ≈ **+1,8 puntos**
+
+**0,912 → ~0,930.** Es real, pero es «un par de puntos», no «mucho».
+
+## Por qué igual no se puede reportar
+
+**No hay muestras pareadas** (ya registrado en `PLAN_MEJORAS.md` D.1): las notas vienen de
+repositorios públicos y los archivos de NapierOne, así que **no existe un incidente del que se
+tengan los dos artefactos**. Emparejar al azar una nota de CERBER con un archivo de CERBER no
+mide nada: fabrica una correlación que los datos no tienen, y el «resultado» sería aritmética
+de las dos marginales, calculable sin correr nada —justamente lo que se acaba de hacer acá.
+
+## Comparación de palancas, que es lo que decide la prioridad
+
+| Palanca | Ganancia | ¿Medible? | Limitación que arrastra |
+|---|---|---|---|
+| Exp. 2d — forma del nombre | **+8,8 pts** (medido) | sí | campaña: no generaliza a campañas no vistas |
+| Exp. 2e — rasgos estructurales | +1 a +3 pts (predicho) | sí | ninguna: es contenido |
+| Corpus corregido (310 `.pdf`) | ? (a medir en 2e) | sí | ninguna |
+| **D.1 combinar los frentes** | **~+1,8 pts** (calculado) | **NO** | requiere datos que no existen |
+
+**Combinar es la palanca más chica y la única que no se puede medir.** Conclusión para el
+elemento de acción 3: de las tres salidas que lista D.1 —implementarlo, proponerlo sin
+evaluar, o argumentar por qué no— la que sostienen los números es **proponerlo como esquema de
+despliegue con el techo calculado y la razón medida**, que es bastante más fuerte que un «no
+se pudo».
+
+## Dónde sí aportaría combinar, y no es la exactitud
+
+1. **Cobertura de artefactos.** En un incidente real puede haber solo nota, solo archivos, o
+   los dos. Un protocolo de dos frentes cubre los tres casos; un clasificador solo, no.
+2. **Abstención.** Con M.3 a umbral 1,00 las notas dan **acierto 0,9687 donde contestan** con
+   cobertura 0,5495. Como *confirmador* —no como votante— la nota es precisa. El caso real del
+   22-08 lo mostró: el sistema **se abstuvo bien** ante una familia desconocida, y ese fue el
+   comportamiento valioso, no la clasificación.
+
+## La única vía que desbloquearía D.1 de verdad
+
+**f6-dfir**, si sus archivos cifrados vienen del mismo incidente que sus notas. Ya está como
+decisión abierta (requiere descargar material cifrado ⇒ es de Romina y Cappo). Si están
+pareados, D.1 pasa de «no evaluable» a evaluable, y es lo único que lo hace.
+
+---
+
+---
+
+# ✅✅ EXP. 2e CERRADO — la estructura mejora el frente de archivos, y la mejora cae ENTERA en las seis difíciles (2026-09-26)
+
+Job 4058, nodo c2, 1 h 47 min. Registrado de lo pegado por Romina. Salidas en
+`/scratch/ralfonzo/tesis/resultados_exp2e_job4058`. **Sin nombre ni extensión: es contenido.**
+
+## Las tres columnas (5 semillas, 15.000 archivos, 30 familias, corpus corregido)
+
+| Columna | Exactitud | macro-F1 |
+|---|---|---|
+| (1) bytes canónico 512+512 | 0,9123 ± 0,0003 | 0,9114 ± 0,0004 |
+| **(2) bytes + 44 rasgos estructurales** | **0,9357 ± 0,0005** | **0,9359 ± 0,0004** |
+| (3) solo los 44 rasgos | 0,8699 ± 0,0030 | 0,8680 ± 0,0032 |
+
+| Delta pareado por semilla | Δ | IC 95 % | Semillas |
+|---|---|---|---|
+| (2) − (1) exactitud | **+0,0234** | [+0,0228; +0,0241] | 5/5 |
+| **(2) − (1) macro-F1** | **+0,0246** | **[+0,0237; +0,0254]** | **5/5** |
+| (3) − (1) macro-F1 | −0,0434 | [−0,0473; −0,0394] | 0/5 |
+
+**Cifra nueva del frente de archivos: macro-F1 0,9359 ± 0,0004**, contra 0,9114 de la
+representación canónica sobre la misma partición. **Y sin mirar el nombre ni la extensión**,
+así que —a diferencia del Exp. 2d— no arrastra la limitación de campaña.
+
+## ⭐ Dónde cae la mejora: el resultado principal
+
+| | Δ medio de F1 |
+|---|---|
+| **Las seis difíciles del Exp. 2c** | **+0,1186** |
+| Las otras 24 familias | **+0,0006** |
+
+**Doscientas veces más.** La mejora no se reparte: va entera al residuo que el capítulo ya
+había identificado. Por familia (⚠ **semilla 0**, que es la única con reporte por familia; los
+agregados de arriba son sobre las 5):
+
+| Familia | Solo bytes | Con estructura | Δ |
+|---|---|---|---|
+| WASTEDLOCKER | 0,6397 | **0,8317** | **+0,1920** |
+| JIGSAW | 0,4285 | 0,5711 | +0,1426 |
+| DARKSIDE | 0,5982 | 0,7327 | +0,1345 |
+| NOTPETYA | 0,3614 | 0,4839 | +0,1224 |
+| SUNCRYPT | 0,7719 | 0,8394 | +0,0675 |
+| CRYPTOLOCKER | 0,6026 | 0,6552 | +0,0526 |
+| BADRABBIT | 0,9827 | **1,0000** | +0,0173 |
+
+Las otras 23 se mueven entre +0,0050 y −0,0061. Ninguna se rompe: la peor caída es HELLOKITTY
+con −0,0061.
+
+**Media de las seis: 0,5671 → 0,6857.** WASTEDLOCKER cruza por encima de 0,75 y JIGSAW por
+encima de 0,50. Con la salvedad de que es una semilla, el residuo del capítulo se **achica**,
+no desaparece.
+
+## Las cinco predicciones del preregistro: tres bien, dos mal
+
+| Predicción | Resultado | |
+|---|---|---|
+| (1) exactitud 0,912 a 0,925 | 0,9123 | ✅ |
+| (2) Δ macro-F1 +0,010 a +0,030 | +0,0246 | ✅ mitad superior |
+| (3) solo estructura 0,40 a 0,60 | **0,8680** | ❌ por 27 puntos |
+| Δ mayor en las seis que en las otras 24 | +0,1186 vs +0,0006 | ✅ y por 200× |
+| **Las dos que más suben: SUNCRYPT y NOTPETYA** | **WASTEDLOCKER y JIGSAW** | ❌ |
+
+## ⚠ La predicción fallada que importa: el mecanismo NO es el que razoné
+
+Diseñé `largo_cola_no_aleatoria` pensando en SUNCRYPT (entropía de cola 4,78) y NOTPETYA
+(6,58): las dos que **sí** dejan un pie poco aleatorio. Predije que serían las que más
+subieran.
+
+**Subieron menos que WASTEDLOCKER y DARKSIDE**, y esas dos son justamente las que el capítulo
+describe como *«exactamente en el techo»* de entropía —7,591 y 7,585 WASTEDLOCKER, 7,593 en
+cabecera DARKSIDE—, es decir **indistinguibles de datos aleatorios en ambos extremos**.
+
+Entonces la señal que las rescata **no puede ser la entropía del pie**. Los candidatos que
+quedan entre los 44 rasgos son los de **tamaño**: `tam`, `tam_mod16`, `tam_mod512`,
+`tam_mod4096`. Todas las familias cifraron **el mismo conjunto base de documentos**, así que
+las diferencias de tamaño entre familias son diferencias en **cuánto agrega cada una** —relleno
+a bloque, pie de longitud fija—. Eso es una propiedad del **código**, invisible para una
+representación que mira valores de byte en posiciones fijas.
+
+**Es hipótesis, no medición.** Se resuelve con las importancias del bosque de la columna (2),
+que el script no guardó. Es barato: una semilla, ~20 min. **No se corre sin que Romina lo
+pida**, pero es la pregunta que un jurado va a hacer —«¿qué rasgo hace el trabajo?»— y
+conviene tener la respuesta medida.
+
+## Lo que (3) = 0,8680 significa
+
+Estaba escrito en el preregistro: *«si (3) sale alto (>0,80) → los rasgos estructurales son un
+método por sí mismos y hay que replantear, no solo agregar»*. **44 números dan 0,8680 contra
+0,9114 de los 1.024 bytes posicionales: cuatro puntos menos con 23 veces menos
+características.** No es un agregado, es una **representación alternativa**, compacta y
+—argumentablemente— más robusta al cambio de campaña, porque el tamaño y la forma del pie los
+fija el código y no la configuración. Eso último **no se puede medir sobre NapierOne**; se
+propone y se declara.
+
+## Efecto del corpus corregido: nulo en el agregado
+
+0,9123 con las 310 muestras devueltas contra 0,9120 publicado: **+0,0003**. Devolver los
+`.pdf` cifrados de BADRABBIT y NOTPETYA no movió el número global. Coherente: son 1,5 familias
+de 30. **Lo que sí se ve es en BADRABBIT, que pasa a 1,0000 con estructura.** La corrección del
+filtro era necesaria por honestidad en la descripción del corpus, no porque cambiara cifras.
+
+---
 
 ## 7. Reglas / convenciones (IMPORTANTES — respetar en todo chat)
 - **★ FUENTES FIDEDIGNAS:** todo dato, archivo, métrica o afirmación que vaya a la tesis

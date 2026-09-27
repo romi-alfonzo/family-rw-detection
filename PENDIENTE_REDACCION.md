@@ -10,7 +10,20 @@ Los resultados están en `4_resultados/` y se regeneran con el código de `2_cod
 
 ## A. Resultados obtenidos que NO están todavía en el documento
 
-### A1. Hiperparámetros de las características estadísticas → §4.3.1
+> **✅ Estado al 2026-08-28: A1 a A6 están ESCRITOS** (frente de archivos cifrados), más tres
+> subsecciones que no estaban en esta lista: §4.4.4 el criterio de detección del 2b, §4.4.5 la
+> validación externa contra ID Ransomware y §4.5.4 la validación anidada con su desvío, y
+> §4.5.9 la verificación de integridad (los 12 JPEG de CERBER). Detalle y cifras corregidas en
+> el bloque «ESCRITO EN LA TESIS (2026-08-28)» de `ESTADO_TESIS.md`.
+> **Quedan de esta sección: A7** (normalización de marcadores, frente de notas) **y A8** (la
+> lectura conjunta de los negativos, que va en la discusión del capítulo).
+>
+> ⚠️ **Correcciones a esta lista, verificadas contra los CSV:** en **A3** la importancia de
+> cabecera/cola es **0,2043 / 0,7957** (no 0,204/0,796 redondeado a mano: coincide) y los
+> últimos 16 bytes suman **27,8 %**; en **A6** las familias que renombran son **CERBER con 981
+> archivos y BLACKMATTER con 13**, no «491 archivos del conjunto evaluado».
+
+### ✅ A1 — ESCRITO 2026-08-28 como §4.3.3. Hiperparámetros de las características estadísticas
 
 Cierra la única limitación de optimización declarada en la tesis.
 
@@ -28,7 +41,7 @@ características; las cuatro configuraciones caen entre 0,599 y 0,603. Señalar 
 características con 2,5 horas de cómputo rinden igual que 19 en 3 minutos. Reemplazar el
 párrafo de §4.3.1 que declara la falta de optimización como limitación.
 
-### A2. Generalización a tipos de documento nunca vistos → nueva subsección en §4.5
+### ✅ A2 — ESCRITO 2026-08-28 como §4.5.5. Generalización a tipos de documento nunca vistos
 
 Es la validación que confirma el resultado principal del Experimento 2c.
 
@@ -53,7 +66,7 @@ completamente distinta a la de un documento de Office. Metodología: entrenar co
 tipos salvo uno, evaluar sobre ese tipo; las familias que no conservan el nombre original
 participan del entrenamiento pero no de la prueba.
 
-### A3. Dónde reside la información dentro del archivo → nueva subsección en §4.5
+### ✅ A3 — ESCRITO 2026-08-28 dentro de §4.5.6 (con la figura). Dónde reside la información dentro del archivo
 
 - Importancia acumulada: **cabecera 0,204 · cola 0,796**.
 - Desplazamientos más informativos: −5, −133, −1, −2, −3, −6, −4, −10, −100, −168, −257, −129.
@@ -65,7 +78,7 @@ donde once de las quince familias con firma binaria la tienen como sufijo y solo
 prefijo. Explicación mecánica: añadir un bloque de control al final es más simple que
 insertarlo al principio, que obligaría a desplazar todo el contenido.
 
-### A4. Ablación de ventana → nueva subsección en §4.5
+### ✅ A4 — ESCRITO 2026-08-28 como §4.5.6, con la ablación EXTENDIDA. Ablación de ventana
 
 | Ventana | Bytes leídos | Exactitud |
 |---|---|---|
@@ -82,7 +95,7 @@ Figura ya generada: `images/fig_ablacion_ventana.png` (insertar en el capítulo)
 para una implementación práctica. La cola sola supera al doble de la cabecera sola, pero
 ambas regiones son necesarias para el máximo: la combinación suma 15 puntos sobre la cola.
 
-### A5. Diagnóstico de las seis familias difíciles → nueva subsección en §4.5
+### ✅ A5 — ESCRITO 2026-08-28 como §4.5.7, con el matiz. Diagnóstico de las seis familias difíciles
 
 Confusión dentro del grupo: **97,2 % a 99,4 %** en las seis. Forman un grupo de confusión mutua.
 
@@ -104,7 +117,7 @@ identifican bien. La explicación más plausible es que ese bloque **varía en c
 (una clave o un identificador por víctima): es estructura, pero no firma de familia.
 ⚠️ No escribir la conclusión simplificada de "no dejan estructura": es falsa para dos de las seis.
 
-### A6. Familias que renombran el archivo por completo → §4.4 o §4.5
+### ✅ A6 — ESCRITO 2026-08-28 como §4.5.8. Familias que renombran el archivo por completo
 
 **BLACKMATTER y CERBER** sustituyen el nombre original por cadenas aleatorias
 (`ontbgnqc`, `miwv13q3`, `ryidzs2b`…), de modo que pierden toda referencia al documento de
@@ -306,3 +319,309 @@ pero quedó atrás. Falta explicar, en el mismo estilo de orden de lectura:
   corrida, y las semillas que estaban clavadas.
 
 Romina pidió que se lo explique cuando llegue a esa etapa, no ahora.
+
+---
+
+## I. Trabajo metodológico interno de la construcción del corpus (a redactar)
+
+_Pedido de Romina (2026-08-20). Todo esto se hizo y sostiene las cifras del cap. 4, pero no
+está escrito. Va en el capítulo de metodología (construcción del corpus de notas) + una nota
+de limitaciones. Solo se AGREGA._
+
+### I1. Criterio de «texto distinto» por similitud de coseno
+
+- El corpus **no se cuenta por archivos sino por textos distintos (plantillas)**. Dos notas se
+  consideran la misma plantilla si su **similitud de coseno ≥ 0,90** sobre **TF-IDF de
+  caracteres `char_wb`, n-gramas 3-5**, agrupando por **componentes conexas**
+  (`agrupar_neardups()` en `2_codigo/clasificador_notas_v2.py`, `UMBRAL_NEARDUP = 0.90`).
+- Justificación medida (B.1): **lo que mueve el macro-F1 es el texto distinto, no la nota
+  repetida**. Por eso una nota que repite un contenido ya presente no aporta.
+- Consecuencia a mostrar con ejemplos: **archivos ≠ textos distintos**. WASTEDLOCKER = 4
+  archivos → **1** plantilla; DHARMA 19 → 6; CERBER 18 → 8. El molde rígido de WastedLocker
+  (~250 caracteres, solo cambia víctima/correos) explica su F1 por familia 0,000.
+
+### I2. Verificación de cada nota candidata antes de incorporarla
+
+- Toda nota recolectada se pasa por `2_codigo/verificar_nota_nueva.py` **antes** de sumarla:
+  calcula el coseno contra todo el corpus y dictamina **«COPIA»** (≥ 0,90 con algo existente,
+  no aporta) o **«TEXTO NUEVO»** (< 0,90, cuenta como plantilla nueva). Umbral 0,90, mismo
+  criterio con el que se midió todo el frente.
+- Corroboración independiente citable: **Windows Defender trae una firma propia para el TEXTO
+  de la nota de Chimera** (`Ransom:HTML/Chicrypt.A`); una transcripción en texto plano la
+  dispara. Es evidencia, de un proveedor de antivirus, de que **el texto de la nota por sí solo
+  identifica a la familia** — la premisa del frente de notas.
+
+### I3. Homónimos y trampa campaña-vs-familia (casos reales encontrados)
+
+Declarar que la desambiguación de familias fue un trabajo explícito, con casos concretos:
+
+- **Medusa ≠ MedusaLocker** (familias sin relación, FBI/CISA AA25-071A): 2 notas de Medusa
+  estaban mal etiquetadas en MEDUZALOCKER → movidas a `3_datos/descartados_integridad/`.
+- **Crypt0l0cker = TorrentLocker ≠ CryptoLocker (2013):** `lm_Crypt0l0cker_HOW_TO_RESTORE_FILES.html`
+  estaba mal etiquetada en CRYPTOLOCKER → movida.
+- **WastedLocker:** los textos «distintos» atribuibles son de **sucesores renombrados de Evil
+  Corp**, no de WastedLocker → no se etiquetan como esa familia.
+- No mezclar familias emparentadas o casi idénticas: **Ryuk vs Conti** (sucesor), **NotPetya vs
+  BadRabbit** (texto casi idéntico, otra familia), **Nemty vs NemucodAES** (repo Lemmou).
+- **`id-ransomware.blogspot.com` (Amigo-A / Andrew Ivanov) ≠ ID Ransomware** (servicio de
+  MalwareHunterTeam con el que se compara en `Pruebas.xlsx`). SANS las lista como dos fuentes
+  distintas. No confundirlas al citar.
+- El homónimo también apareció en el frente de bytes (el «parpadeo» de familias con firma según
+  la muestra).
+
+### I4. Fuentes y criterio de admisión
+
+- **Repos en disco (fuente más segura, sin red):** ThreatLabz `ransomware_notes`
+  (`github.com/ThreatLabz`) y Lemmou `RansomNoteFiles` (`github.com/lemmou`, congelado en
+  2019); **NapierOne** (archivos cifrados + parte de las notas); y pcrisk (Tomas Meskauskas).
+- **Lista blanca de fuentes citables verificadas:** pcrisk, bleepingcomputer, malwarebytes,
+  sophos, sonicwall, helpnetsecurity, cisecurity, cisa, ic3 (PDF primario del FBI),
+  id-ransomware.blogspot (Amigo-A), `api.github`/`raw.githubusercontent` (solo texto/listado).
+- **Uso real de `id-ransomware.blogspot.com` (Amigo-A / Andrew Ivanov):** se tomó **exactamente
+  una nota** de esa fuente — MAZE, etapa **ChaCha** (`idr_maze_chacha_2019.txt`, transcripción
+  de `DECRYPT-FILES.html` «0010 SYSTEM FAILURE 0010», 2019-05-13,
+  `https://id-ransomware.blogspot.com/2019/05/chacha-ransomware.html`; base64 truncado con `***`
+  en la fuente). Es la única nota del corpus proveniente de ese blog. Acreditar la fuente al
+  citarla y **no confundir el blog con el servicio ID Ransomware** (ver I3).
+- **Criterio de admisión de una fuente — 6 chequeos, en orden:** (1) ¿la recomienda un tercero
+  confiable? (SANS lista id-ransomware.blogspot); (2) ¿autoría verificable?; (3) ¿el dominio
+  puede caducar y ser recomprado?; (4) ¿redirige fuera de su dominio?; (5) ¿vendor original o
+  agregador comercial?; (6) ¿homónimo?
+- **Incidente que ilustra el chequeo 3 (contarlo):** `malwiki.org` respondía **301 y redirigía a
+  un dominio sin relación** (dominio caducado y recomprado) → no se siguió el redirect ni se usó.
+- **Reglas de integridad de la recolección:** solo se lee texto (no se bajan muestras, binarios
+  ni `.zip`); no se siguen redirects fuera de dominio; no se usan agregadores comerciales de
+  «recovery/decryptor».
+- **Trazabilidad:** `3_datos/manifiesto_corpus_v2.csv` con columnas `familia, archivo,
+  extension_original, tipo (bruto/transcripcion/corpus-existente), fuente` (autor, fecha, URL).
+  En notas transcriptas la `extension_original` es un dato **documentado, no observado**, y así
+  se declara.
+
+### I5. Limitación honesta a declarar
+
+**~24 % del corpus (37 filas `corpus-existente`) tiene fuente solo «NapierOne/varios» sin URL**,
+y `chimera_note2.txt` sigue sin fuente rastreable. Pendiente de decisión del tutor; hay que
+declararlo, no esconderlo.
+
+---
+
+## J. Extensión del frente de notas (a redactar como sección que se AGREGA al cap. 4)
+
+_Trabajo del 2026-08-20. Es una **extensión con base declarada** (corpus extendido a **155 notas**);
+**NO reemplaza** las cifras canónicas de 30 familias. Método detallado en la sección I; operativa en
+`6_notas_trabajo/extension_notas_id-ransomware_2026-08-20.md`._
+
+**Fuente y método:** `id-ransomware.blogspot.com` (Amigo-A, whitelisted por SANS), leída **sin
+ejecutar JavaScript**; capturas OCR-eadas por **subagente-visión**; cada texto verificado con el
+criterio de coseno ≥ 0,90; se redacta **solo lo que lleva al ejecutable/payload** (el `.rar` de
+WannaCry), mientras correos/BTC/`.onion` de contacto quedan verbatim como el resto del corpus.
+
+**Resultado sobre las 5 familias que estaban trabadas (corpus 151 → 155, +4 textos):**
+
+| Familia | Antes | Ahora | Qué se agregó / concluyó |
+|---|---:|---:|---|
+| WANNACRY | 2 | **4** | +2 variantes del original marzo 2017 (Q&A y mensaje de pantalla). Cerrada. |
+| RYUK | 2 | **4** | +2: nota corta «balance of shadow universe» y variante portal Tor 2021 (OCR de 18 capturas). Cerrada. |
+| NOTPETYA | 2 | 2 | Agotado **confirmado** (texto + 2 capturas = copia). |
+| CRYPTOLOCKER | 3 | 3 | Nota principal = original 2013 **con procedencia confirmada** (Amigo-A). La ventana de pago NO se cuenta como nota (decisión de alcance, análoga a Maze wallpaper-vs-sitio-Tor). |
+| WASTEDLOCKER | 1 | 1 | **1 molde confirmado** (3 muestras 2020 incl. Garmin colapsan). Sucesores (SecCrypt, Phoenix, PAYLOADBIN, Macaw, Easy2lock, Hades) = otras familias. |
+
+**Hallazgo transversal a escribir (importante):** para varias familias el techo es la **naturaleza
+de la familia, no la recolección** — WastedLocker produce **un** molde; el CryptoLocker original 2013
+**no dejaba archivo de nota** (solo ventana); NotPetya tuvo **una** nota. Esto **explica sus F1
+por familia bajos o 0** y es un **resultado citable**, no una carencia de esfuerzo. Contrasta con
+WannaCry y Ryuk, que sí tenían variantes distintas recuperables.
+
+**✅ RE-MEDICIÓN HECHA (2026-08-20).** Corrida sobre **155 notas / 30 familias / 106 plantillas**,
+a carpeta nueva `4_resultados/resultados_extension_155/` (canónicas intactas). Código: parámetro
+`--salida` en `clasificador_notas_v2.py`, `curva_aprendizaje_notas.py` y `resumen_para_capitulo4.py`
+(commit `a914e33`), **sin cambios de método**. Corpus verificado 1:1 contra el manifiesto (155 filas,
+0 discrepancias). Control interno de la curva: k=todo reprodujo el evaluador canónico sobre 155.
+Detalle y contraste de las predicciones preregistradas en `ESTADO_TESIS.md`, sección «RESULTADO DE
+LA RE-MEDICIÓN SOBRE 155 NOTAS».
+
+**Cifras globales a escribir (con base y métrica pegadas):**
+
+| Métrica | 155 notas | Canónica |
+|---|---|---|
+| P2 macro-F1 (grupos, combinado+LinearSVC) | 0,527 ± 0,049 | 0,435 (146) · 0,421 (144) |
+| P1 macro-F1 (estratificado, caracteres+LinearSVC) | 0,796 ± 0,019 | 0,760 (146) |
+| P2ret macro-F1 (30 familias, k=todo, R=100) | 0,761 ± 0,060 | 0,616 (144) |
+
+Reparto por familia **bajo P2 estricto** (2 pliegues): **0/30 ≥ 0,90 · 19/30 ≥ 0,50 · 11/30 < 0,50**.
+**Bajo P2ret**: **14/30 ≥ 0,90**. ⚠️ El mismo corpus da 0/30 o 14/30 según el protocolo: **declarar
+siempre cuál**.
+
+**Contraste de las 3 predicciones preregistradas** (F1 por familia, P2ret 30fam k=todo, 144→155):
+
+| Familia | 144 | 155 | Predicción | Veredicto |
+|---|---:|---:|---|---|
+| WANNACRY | 0,010 | 0,733 | (a) sube fuerte | cumple (fuerte) |
+| RYUK | 0,032 | 0,271 | (a) sube fuerte | parcial (a 0,27, ±0,42) |
+| NOTPETYA | 0,695 | 0,937 | (b) no se mueve | **falla** (+0,24) |
+| CRYPTOLOCKER | 0,410 | 0,097 | (b) no se mueve | **falla** (−0,31) |
+| WASTEDLOCKER | 0,000 | 0,987 | (b) no se mueve | **falla** (+0,99) |
+
+(c) El P2 global subió **+0,092** (0,435→0,527), ~3× lo predicho como «modesto».
+
+**Qué escribir:** WannaCry y Ryuk ya entran en las cifras de la extensión (variantes distintas
+recuperadas, aunque Ryuk queda ruidosa). El resto de las trabadas confirma el hallazgo transversal
+de arriba: su techo es la naturaleza de la familia, no la recolección.
+
+### J.bis — Hallazgo metodológico: el F1 por familia NO es estable entre versiones del corpus
+
+_Surgió de la re-medición 144→155 (2026-08-20). Va en la discusión + limitaciones. **Refina la
+sección K**: sobre 155, WastedLocker ya no es de una sola plantilla._
+
+El F1 por familia bajo P2/P2ret **cambia aunque a la familia no se le agregue nada**, por tres vías
+que hay que declarar al comparar cifras entre versiones del corpus:
+
+1. **Reagrupamiento global de casi-duplicados.** El IDF del TF-IDF se ajusta sobre todo el corpus; al
+   crecer 144→155, familias al borde del umbral 0,90 se **descolapsan**. **WASTEDLOCKER**: sus 4 notas
+   eran **1 plantilla** en 144 (F1=0 por construcción, ver K) y son **3 plantillas** en 155, así que
+   pasa a evaluable y su F1 salta a **0,987** — **artefacto de partición, no aprendizaje** (las 3
+   quedan a coseno ~0,89 entre sí, casi-duplicadas separadas por la deriva del umbral).
+2. **Retiros de notas** cambian la composición. **CRYPTOLOCKER** perdió la nota `lm_Crypt0l0cker`
+   (TorrentLocker, mal etiquetada; ver I3): 4→3 notas, 3→2 plantillas, F1 0,410→0,097.
+3. **La frontera multiclase depende del corpus entero.** **NOTPETYA** no recibió ni perdió nada
+   (sigue 2 notas / 2 plantillas) y su F1 subió 0,695→0,937: al afinarse la frontera con las demás
+   familias, se volvió más separable. Es la refutación más limpia del supuesto «sin material nuevo ⇒
+   el F1 no cambia».
+
+**Consecuencia para la redacción:** toda comparación de F1 por familia entre corpus de distinto
+tamaño debe declarar que el reagrupamiento se recalcula global. Es también la razón por la que las
+cifras canónicas (146/144) y las de la extensión (155) **se reportan por separado, cada una con su
+base declarada**, y no se «corrigen» unas con otras.
+
+---
+
+## K. Cómo interpretar los F1 por familia = 0 (familias de una sola plantilla) — para la discusión del cap. 4
+
+_Material para redactar la discusión y para responder al tutor si pregunta por los F1 = 0
+(WASTEDLOCKER, etc.). Aplica a las cifras canónicas, no solo a la extensión._
+
+**El punto:** un F1 por familia de **0,000 bajo el protocolo P2ret NO significa «el modelo no sabe
+clasificar esa familia»**. Es un **artefacto de la métrica** cuando la familia tiene **una sola
+plantilla** de nota.
+
+- **P2ret retiene una plantilla por familia para el test**, o sea que mide *«¿reconoce una variante
+  NO vista de esta familia?»*. Para una familia con **una sola** plantilla, al retener su única nota
+  no queda nada para entrenarla → nunca se predice esa etiqueta → **F1 = 0 por construcción**. La
+  métrica se queda sin variante contra la cual medir generalización, porque **no existe**.
+- **En uso real, esa familia se clasifica perfecto:** toda víctima recibe la misma nota; el modelo
+  la reconoce por **coincidencia exacta / casi-exacta** (es lo que hace ID Ransomware). Es el caso
+  **más fácil**, no imposible.
+- **Tensión honesta (declararla):** entrenar *y* testear con la misma única nota daría F1 = 1,0 pero
+  es **memorización** (fuga); retener la única nota (P2ret) da F1 = 0. Ninguna «mide» bien porque el
+  concepto de *generalizar a variantes no vistas* está **vacío** para una familia sin variantes.
+
+**Cómo se prueba que una familia «tiene una sola plantilla» (y no que «solo recolectamos una»):**
+buscando más muestras y midiendo el coseno. Si varias muestras **colapsan** (> 0,90) → es la
+familia. **Probado para WASTEDLOCKER** (3 muestras 2020 —BBA, Garmin, censurada— colapsan, molde
+`.wasted_info` de ~250 car.). En la extensión de ThreatLabz, **14 familias** muestran lo mismo
+(2-3 archivos que colapsan a 1): `akira`, `hive`, `medusa`, `monti`, `safepay`, `warlock`,
+`ransomhouse`, `dataleak`, `embargo`, `fog`, `gunra`, `kawalocker`, `mallox`, `nitrogen`.
+Distinto es tener **1 solo archivo sin haber buscado más** = incógnita (podría tener más).
+
+**Redacción:** interpretar los F1 = 0 de familias de una plantilla como **«sin variantes distintas
+para evaluar generalización; identificable por coincidencia exacta»**, es decir un **hallazgo sobre
+la familia**, no una falla del clasificador. Reafirma por qué se cuenta *textos distintos* (para
+medir generalización) y no *archivos* (para identificar, con uno alcanza).
+
+---
+
+## K. Estructura del frente de notas: Exp. 3, 3b, 3c, 3d (propuesta 2026-08-20, pedido de Romina)
+
+El frente de archivos tiene escalera con nombre (2 → 2b → 2c → 2d); el de notas acumuló los
+hallazgos bajo un solo «Experimento 3». Estructura espejo propuesta — **el Exp. 3 ya escrito no
+se toca; 3b, 3c y 3d se AGREGAN como subsecciones nuevas**, cada una con su base declarada:
+
+### Exp. 3 — El clasificador y los dos escenarios (YA ESCRITO, no tocar)
+Base: 146/144 notas. TF-IDF + LinearSVC, protocolos P1/P2, macro-F1 0,760 ± 0,029 / 0,435 ±
+0,057. El hallazgo de las plantillas (146 notas → 95 contenidos).
+
+### Exp. 3b — ¿Cuánto dato hace falta? (la curva de aprendizaje — sale de B.1)
+Base: 144 notas (re-medida sobre 155). Fuentes: `4_resultados/resumen_capitulo4/b1_*.csv` y
+`resultados_extension_155/resultados_curva_notas/`.
+- La moneda son los TEXTOS DISTINTOS, no las notas (curvas superpuestas en el eje de
+  plantillas, diferencia media 0,0052 de macro-F1).
+- El techo está en 4 plantillas por familia (paso 3→4: Δ macro-F1 +0,0297, IC 95 %
+  [+0,0039; +0,0554]; paso 4→5: +0,0006, indistinguible de cero).
+- La chatura de la curva de 30 familias era agotamiento del corpus, no saturación del
+  aprendizaje (`n_fam_bajo_tope`).
+- Contesta el pedido textual del tutor: cuántas notas hacen falta.
+
+### Exp. 3c — Qué predice el rendimiento y qué NO lo infla (cohesión + grafo — sale de B.3)
+Base 144: `resultados_grafo_marcadores/`. **Re-medición sobre 155 HECHA (2026-08-21):**
+`resultados_grafo_marcadores_155/` (155 notas / 106 plantillas / 30 familias / 108 nodos),
+mismo `grafo_marcadores.py` con `--salida` (commit `091cf7b`), sin cambios de método. Las dos
+bases se reportan por separado (misma lógica que J.bis). Correlación recalculada contra el F1
+por familia de `resultados_extension_155/` (P2ret, k=todo, 100 rep.).
+
+- **Lo que predice el F1 de una familia es la COHESIÓN entre sus plantillas, y SE SOSTIENE
+  sobre 155:** Spearman ρ **+0,69** (p ≈ 3·10⁻⁵, n=30), casi igual que sobre 144 (+0,704).
+  Control de método: el mismo cálculo sobre 144 reproduce **+0,7041**. El **margen** pasó a ser
+  el predictor más fuerte (ρ +0,75).
+- ⚠️ **La cantidad de plantillas: sobre 144 era nula (ρ −0,108, n.s.); sobre 155 da ρ −0,49
+  (p = 0,006), pero es un CONFUNDIDO de la recolección dirigida** (se sumaron plantillas justo a
+  las familias difíciles), NO causal — no contradice B.1. Declararlo así.
+- La **fracción de pares unidos por marcador** dejó de ser significativa (144: +0,425, sig.;
+  155: +0,30, n.s.).
+- **Cambios de cohesión 144→155, con causa (tabla en `ESTADO_TESIS.md`, «B.3 RE-MEDIDO»):**
+  MEDUZALOCKER 0,43→0,65 (se limpió la contaminación Medusa; margen pasó a positivo),
+  CHIMERA 0,15→0,34 (2 plantillas nuevas; deja de ser la más baja), JIGSAW 0,51→0,23 (sumó
+  traducciones de/fr), RYUK 0,44→0,22 (ahora la más baja: fragmentos ultra-cortos solo-IOC),
+  WASTEDLOCKER 1 plantilla→3 (deriva del IDF, ver J.bis; cohesión 0,90, la más alta),
+  CRYPTOLOCKER 0,36→0,43 (se retiró la nota TorrentLocker mal etiquetada).
+- **Ningún IOC operativo (email, onion, billetera) se comparte entre familias** (se sostiene en
+  155): las aristas entre familias son solo URLs de torproject (bajaron de 7 a 5). Los
+  marcadores son privados de cada familia.
+- Los **parentescos por CONTENIDO** persisten y NO aparecieron nuevos: grupo 6 BLACKBASTA↔CONTI,
+  grupo 56 DHARMA↔PHOBOS (salen de la deduplicación por contenido, NO del grafo de IOCs).
+- **Familias con plantillas en IDIOMAS distintos (verificado nota por nota; es el insumo de la
+  preregistración de 3e):** CHIMERA (de+en), JIGSAW (de+en+fr), GANDCRAB (en+fr). RYUK NO entra
+  (falso positivo del detector automático). SUNCRYPT/TESLACRYPT tampoco (inglés con
+  selector/enlace de traducción); WANNACRY es multi-idioma en la realidad pero el corpus solo
+  tiene sus notas en inglés.
+- **Control P3 (medido solo sobre 144, no re-corrido en 155):** el macro-F1 0,435 NO es búsqueda
+  de datos repetidos — la caída completa la explica el agrupamiento grueso (azar
+  0,2251 ± 0,0149 vs P3 real 0,2293). Es la respuesta anticipada a la objeción tipo Lemmou.
+
+### Exp. 3d — La recolección dirigida como validación fuera de muestra (la corrida de 155)
+Base: 155 notas / 106 plantillas / 30 familias. Fuentes: `resultados_extension_155/` y el
+bloque «PREDICCIONES PREREGISTRADAS» de `ESTADO_TESIS.md`.
+- Predicciones escritas ANTES de correr, guiadas por 3b: se recolectó hasta 4 plantillas en
+  las familias señaladas.
+- Resultado: P2 macro-F1 0,435 → 0,530 (+0,095, el salto más grande del frente — mayor que
+  todo lo logrado por ajustes de método juntos) · P1 0,760 → 0,812.
+- Recuperaciones por familia: CHIMERA F1 0 → 0,91; MAZE, MEDUZALOCKER, WANNACRY salen de ~0.
+- Los dos fallos informativos de la predicción: NOTPETYA y WASTEDLOCKER subieron SIN material
+  nuevo (las familias interactúan: mejorar a las vecinas reduce la confusión) y JIGSAW BAJÓ
+  de 0,67 a 0,51 al sumarle traducciones (evidencia causal del choque idioma-vs-cohesión —
+  cierra la pregunta de la señal 4 sin experimento aparte).
+- El límite honesto: las familias que quedan bajas (RYUK, HELLOKITTY, BLACKBASTA) lo están
+  por cohesión o confusión estructural, no por falta de notas.
+
+### Exp. 3e — Representación semántica multilingüe — ✅ MEDIDO (2026-08-21): NO SE ADOPTA
+Base: 155 notas / 106 plantillas / 30 familias, P2, LinearSVC, 10 semillas pareadas.
+Modelo: paraphrase-multilingual-MiniLM-L12-v2, troceado en ventanas de 126 tokens con
+mean-pooling (133 de 155 notas superaban la ventana del modelo). Fuente:
+`4_resultados/resultados_embeddings_155/`.
+- Embedding en LUGAR de TF-IDF: macro-F1 0,4532 ± 0,0436, Δ pareado −0,0733
+  [−0,1073; −0,0393] — empeora. Solo CHIMERA sube limpio (Δ +0,269: traducciones literales);
+  GANDCRAB baja (pierde su señal de superficie).
+- Embedding CONCATENADO con TF-IDF (L2 por bloque): macro-F1 0,5358 ± 0,0406, Δ +0,0092
+  [−0,0098; +0,0283] — plano. Y RYUK, el CONTROL NEGATIVO, sube más que las tres familias
+  objetivo (Δ +0,128 [+0,055; +0,200]) ⇒ el caso preregistrado «mejora genérica, mecanismo
+  NO probado».
+- **Veredicto por criterio preregistrado: no adoptar.** Cuarto resultado negativo de método
+  del frente de notas (hiperparámetros, abstracción de marcadores, control P3, embeddings):
+  el techo lo pone el dato también contra representaciones semánticas. Se escribe como cierre
+  de la escalera de método, igual que los negativos del frente de archivos.
+
+**La narrativa espejo que esto arma:** en archivos, la escalera fue «lo estadístico no
+discrimina → las firmas explican dónde vive la señal → el ML la extrae completa». En notas
+queda «el clasificador funciona con techo → la curva dice cuánto dato hace falta → la cohesión
+explica qué familia rinde y el control descarta la trampa → la intervención guiada por todo lo
+anterior funciona como se predijo». Las dos terminan igual: el límite es del dato, está
+acotado, y se demostró.

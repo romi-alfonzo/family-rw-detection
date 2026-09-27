@@ -72,7 +72,7 @@ DESCARGA» en `ESTADO_TESIS.md`). `0_tamanos.csv` confirma el control: el subcon
 relleno es constante en los 7 puntos (n=14.783 = archivos ≥8.192 B). Falta solo bajar los
 logs `slurm-*.out` del cluster.
 
-### A.2 Desvío en el frente de archivos — **listo para lanzar** (2026-08-17)
+### A.2 Desvío en el frente de archivos — ✅ **CERRADO** (job 3648, 2026-08-17: exactitud 0,912 ± 0,002 · macro-F1 0,911 ± 0,001, 10 semillas)
 Hoy las notas se reportan como media ± desvío sobre 10 semillas y los archivos van sin error.
 El tutor pidió incluirlo («relacionado a overfitting y underfitting»). Repetir la corrida
 canónica con varias semillas.
@@ -341,6 +341,87 @@ Circularidad: mismo criterio y exclusiones que B.3, con corrida con/sin reportan
 
 ---
 
+## Aportes del catálogo MISP (fuente enviada por el tutor, 2026-08-20)
+
+Copia en `3_datos/misp_ransomware_galaxy/`. Alimenta tres frentes distintos — no mezclar:
+
+1. **Mejorar notas (D.2):** `ransomnotes-filenames` desbloquea el nombre de la nota como
+   feature (ver D.2 arriba). Además `ransomnotes` (115 entradas con texto) puede aportar
+   plantillas a las familias que siguen bajas — SIEMPRE vía el verificador de casi-duplicados
+   y con procedencia MISP en el manifiesto.
+2. **Ampliar familias (extensión):** `synonyms` (207 entradas) para deduplicar por alias ANTES
+   de sumar una familia nueva (que REvil y Sodinokibi no entren como dos), y
+   `ransomnotes`/`ransomnotes-refs` como material de las candidatas (las refs son imágenes →
+   OCR autorizado). Prerequisito de todo esto: mapeo manual familia→entrada (el automático
+   agarró imitadores).
+3. **Capítulo (citas):** la tabla de extensiones por familia (DHARMA 21, MEDUZALOCKER 36,
+   JIGSAW 19 documentadas) como evidencia externa de que la extensión identifica la campaña
+   y no la familia; fechas como corroboración de `Pruebas.xlsx`.
+
+## MENÚ DE MEJORAS RESTANTES PARA LAS 30 (fijado 2026-08-21, tras el cierre del 3e)
+
+Descartado y NO volver a intentar: hiperparámetros (840 configs), abstracción de marcadores,
+embeddings (3e), más notas por encima de 4 plantillas (B.1 satura). Lo que queda, por
+prioridad, cada uno con predicción preregistrada y de A UNO:
+
+### M.1 — Cascada IOC→texto (el espejo del Exp. 2b en notas) — ✅ **CERRADO** (2026-08-22)
+Mecanismo medido que la sostiene: **ningún IOC operativo se comparte entre familias** (B.3),
+así que un email/onion/BTC ya visto identifica la familia casi sin error. Regla: si la nota
+de prueba contiene un IOC visto en entrenamiento → asignar esa familia; si no → clasificador
+de texto. Se reporta con las TRES columnas del 2b: cobertura · acierto donde aplica ·
+combinado. **La cobertura es preregistrable ANTES de correr** desde el grafo B.3-155:
+fracción de plantillas que comparten algún IOC con otra plantilla de su familia. Costo: bajo,
+local, sin prerequisitos. Valor narrativo: completa la simetría de los dos frentes
+(firmas exactas donde aplican + ML cubre el resto).
+
+
+> **RESULTADO (detalle completo en `ESTADO_TESIS.md`, bloques de preregistro y resultado M.1).**
+> Base 155 notas / 106 plantillas / 30 familias, P2, 10 semillas. Las tres columnas del 2b:
+> **cobertura 0,2613 ± 0,0264 · acierto donde aplica 0,9814 ± 0,0241 · macro-F1 combinado
+> 0,5453 ± 0,0485** (base 0,5265 ± 0,0490), **Δ pareado +0,0188 con IC 95 % [+0,0128; +0,0248],
+> 10/10 semillas** ⇒ **se adopta** por el criterio preregistrado. **Con** filtro de circularidad
+> el Δ cae a +0,0058 con IC 95 % [−0,0013; +0,0130], que incluye el cero ⇒ **no se adopta**;
+> reportar siempre las dos.
+>
+> - **Es la primera mejora de método del frente de notas cuyo IC 95 % excluye el cero** (los
+>   hiperparámetros, la abstracción de marcadores y los embeddings dieron los tres nulo o peor).
+> - **Controles negativos intactos:** la regla no asignó ni una nota de RYUK ni de HELLOKITTY.
+>   El +0,0097 de HELLOKITTY es precisión ajena (16 falsos positivos del texto corregidos), no
+>   recall propio; el script reporta las dos columnas por familia para no confundirlas.
+> - **La cobertura quedó en 0,26 contra 0,58 preregistrada, y la causa está identificada:**
+>   4 URLs de torproject de los 265 valores del corpus producen 362 conflictos (23,4 % de las
+>   decisiones). Los otros 261 valores (98,5 %) son privados de una familia ⇒ confirmación
+>   independiente del mecanismo de B.3. GANDCRAB quedó con 90 conflictos y 0 asignaciones.
+> - **Los 8 errores de la regla son exactamente las aristas Tor que B.3-155 ya documentaba**
+>   (CONTI↔BLACKBASTA, AVOSLOCKER↔CLOP): el grafo predijo dónde iba a fallar.
+> - **Pendiente decidible por Romina/el tutor:** un diagnóstico post-hoc (NO preregistrado, NO
+>   adoptable tal como está) muestra que descartar esos 4 valores llevaría la cobertura a 0,3974
+>   y el macro-F1 a 0,5658. Para usarlo hay que **preregistrarlo y volver a correrlo**.
+
+### M.2 — D.2: nombre + extensión de la NOTA como vista
+Prerequisito: mapeo MISP + auditoría de procedencia de nombres (genuino vs curador). La señal
+principal de ID Ransomware; muchas familias conservan el nombre de la nota entre campañas
+(DHARMA: Info.hta / FILES ENCRYPTED.txt). Predicción: sube a las familias cuyo nombre genuino
+es estable entre plantillas; cero en las de nombre curador.
+
+### M.3 — Abstención con umbral de confianza (no sube el macro-F1: cambia el reporte)
+Si el margen del SVC es bajo → «no sé» en vez de adivinar. Entrega la curva
+precisión-vs-cobertura de despliegue: «cuando contesta, acierta X %; contesta el Y % de las
+veces». Respuesta directa a «0,53 es poco» en la defensa. Costo: casi nulo.
+
+### M.4 — Desambiguación dentro de linaje (ataca BLACKBASTA↔CONTI y DHARMA↔PHOBOS)
+Dos etapas: clasificar al grupo de linaje y desambiguar ADENTRO del grupo por IOCs — que son
+privados de cada familia aun cuando el texto sea compartido (BLACKBASTA y CONTI comparten
+plantilla pero no onions). Ataca exactamente a 2 de las familias bajas. Costo: medio.
+
+### M.5 — Definición de «nota mínima» (decisión de Romina/Cappo, no experimento)
+RYUK está última en cohesión por fragmentos de ~6 tokens que son solo contactos. ¿Son «notas»
+o artefactos mínimos a reportar aparte? Con un criterio declarado de contenido mínimo, RYUK
+probablemente se recupera — pero es una decisión de alcance del corpus, no un truco, y se
+toma con el tutor.
+
+(Few-shot queda como carta opcional de método, prior bajo tras el 3e; solo si Cappo la pide.)
+
 ## SPRINT D — Escritura
 
 - **PRIMERO: reescribir `generar_figuras_cap4.py` para que LEA los CSV bajados** en vez de
@@ -385,7 +466,24 @@ pareados. Paper de referencia ya entregado por el tutor:
 `5_bibliografia/reunion 02-05-2024/Majority Voting Approach to Ransomware Detection.pdf`.
 Tres salidas posibles: implementarlo, proponerlo sin evaluar, o argumentar por qué no.
 
-### D.2 Nombre de archivo como característica *(era el Sprint 4.1)*
+### D.2 Nombre de archivo de la NOTA como característica — **DESBLOQUEADO por MISP (2026-08-20)**
+
+El bloqueo era la procedencia: en ThreatLabz la mayoría de los nombres los puso el curador
+(`conti1.txt`), o sea circulares. El catálogo MISP que envió el tutor trae
+**`ransomnotes-filenames` (298 entradas): nombres REALES documentados** por familia
+(DHARMA: `README.txt`, `Info.hta`, `FILES ENCRYPTED.txt`; MEDUZALOCKER: 11 nombres; CLOP: 4).
+Con eso el experimento se puede hacer con fuente citable, en dos pasos obligados:
+
+1. **Auditoría previa (prerequisito):** marcar en el manifiesto la procedencia de cada nombre
+   del corpus — `genuino` (coincide con MISP o viene del repo bruto de Lemmou, 42 notas) o
+   `curador`. Sin esta auditoría el experimento es circular y no se corre.
+2. **Experimento:** nombre + extensión de la nota como vista adicional, evaluado bajo P2 con
+   la misma disciplina que los marcadores (la etiqueta `curador` NUNCA entra como feature).
+   Predicción a preregistrar sobre la auditoría hecha.
+
+Es el espejo del Exp. 2d en el frente de notas: la señal principal de ID Ransomware, medida
+con procedencia controlada.
+
 Se descartó porque el 51 % de los nombres los puso el curador; los 42 del repositorio de
 Lemmou sí son auténticos. Requiere marcar la procedencia de cada nombre en el manifiesto.
 
