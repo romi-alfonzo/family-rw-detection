@@ -39,6 +39,19 @@ metricas se calculan con labels=familias fijo, el mismo vector de 30 en los dos 
 verifica que las predicciones guardadas reproduzcan exactamente la cifra publicada antes de
 remuestrear nada.
 
+AGREGADO POST HOC (2026-09-28, DESPUES de ver el resultado -- se declara como tal).
+La prediccion F5 FALLO: la media de las replicas quedo 0,041 (texto) y 0,046 (cascada) por DEBAJO
+del punto estimado. La causa esta identificada y no es un error de calculo: con `labels=familias`
+fijo en 30, una remuestra que no incluye NINGUNA plantilla de alguna familia le asigna F1=0 a esa
+familia, y ese cero entra igual al promedio macro. Como toda remuestra con reposicion pierde
+familias, el macro-F1 remuestreado esta sesgado hacia abajo POR CONSTRUCCION. Es el mismo efecto
+que la revision del 2026-09-17 ya habia visto en LOGO (media 0,6436 contra punto 0,6747 con
+labels=30; media 0,6736 con labels presentes).
+Por eso se reportan AHORA LAS DOS convenciones: labels=30 fijo (CONSERVADORA, intervalo mas ancho
+y limite inferior mas bajo) y labels presentes en la remuestra (sin el sesgo, pero con denominador
+variable). La conclusion no depende de cual se elija. La que se cita en el informe es la
+conservadora.
+
 Uso:  python bootstrap_plantilla_p2bal.py [--n-semillas 50] [--replicas 2000]
 """
 from __future__ import annotations
@@ -142,13 +155,20 @@ def main():
     rng_b = np.random.default_rng(2026)
     n_pl = len(plantillas)
     reps = {"texto": [], "cascada": []}
+    reps_pres = {"texto": [], "cascada": []}   # convencion "labels presentes", sin el sesgo
+    fam_perdidas = []
     for b in range(args.replicas):
         s = int(rng_b.integers(args.n_semillas))
         elegidas = plantillas[rng_b.integers(0, n_pl, n_pl)]
         idx = np.concatenate([idx_de_plantilla[g] for g in elegidas])
+        presentes = np.unique(y[idx])
+        fam_perdidas.append(len(familias) - len(presentes))
         for capa in ("texto", "cascada"):
             reps[capa].append(f1_score(y[idx], pred[capa][s][idx],
                                        average="macro", labels=familias, zero_division=0))
+            reps_pres[capa].append(f1_score(y[idx], pred[capa][s][idx],
+                                            average="macro", labels=presentes,
+                                            zero_division=0))
 
     filas = []
     print("\n=== RESULTADO ===")
@@ -167,6 +187,12 @@ def main():
             media_bootstrap=round(float(v.mean()), 4),
             frac_replicas_bajo_050=round(float((v < 0.50).mean()), 4),
             supera_050="SI" if lo_b > 0.50 else "NO"))
+        vp = np.array(reps_pres[capa])
+        lo_p, hi_p = np.percentile(vp, [2.5, 97.5])
+        filas[-1].update(
+            ic_labels_presentes=f"[{lo_p:.4f}; {hi_p:.4f}]",
+            media_labels_presentes=round(float(vp.mean()), 4),
+            sesgo_labels_presentes=round(float(vp.mean() - punto[capa]), 4))
         print(f"{capa:<9}{punto[capa]:>9.4f}{f'[{lo_s:.4f}; {hi_s:.4f}]':>26}"
               f"{f'[{lo_b:.4f}; {hi_b:.4f}]':>26}{v.std(ddof=1):>9.4f}"
               f"{('SI' if lo_b > 0.50 else 'NO'):>8}")
@@ -193,6 +219,14 @@ def main():
     ]
     for nombre, cumple, det in chk:
         print(f"  [{'CUMPLE' if cumple else 'FALLA '}] {nombre:<52} {det}")
+    print()
+    print(f"  SESGO DE labels=30: una remuestra pierde en promedio "
+          f"{np.mean(fam_perdidas):.2f} familias de 30, y cada una aporta un F1=0 al macro. "
+          f"Por eso la media de las replicas queda por debajo del punto (F5 fallada).")
+    for r in filas:
+        print(f"    {r['capa']:<9} labels=30 {r['ic_por_plantillas']} "
+              f"(sesgo {r['media_bootstrap']-r['punto']:+.4f}) | labels presentes "
+              f"{r['ic_labels_presentes']} (sesgo {r['sesgo_labels_presentes']:+.4f})")
     print(f"\n  AL CITAR: el IC por plantillas es el que corresponde para hablar del CORPUS; el "
           f"IC entre semillas habla de la PARTICION. No son intercambiables.")
     print(f"\nSalidas en {OUT}")
