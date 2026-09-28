@@ -150,6 +150,93 @@ corpus (no hay forma de disenarlas a ciegas). Por lo tanto este experimento NO v
 criterio de abstraccion: mide si, DADAS estas abstracciones, la forma aporta. Se declara asi.
 Lo que NO se miro antes de commitear este archivo es cualquier resultado de la cascada.
 =============================================================================================
+=============================================================================================
+AMPLIACION DEL 2026-09-28 -- POSTERIOR A LA CORRIDA ORIGINAL. NO REESCRIBE NADA DE ARRIBA.
+
+Todo lo que esta ENCIMA de esta linea quedo commiteado ANTES de correr (commit 5b23894) y se
+deja tal cual, incluidas las predicciones que fallaron. Este bloque SE AGREGA.
+
+MOTIVO: la corrida original ya habia terminado cuando llego el aviso de que la cifra que este
+script cita como justificacion -- los 0,9998 de «bytes + forma del nombre» del frente de
+archivos -- esta COMPROMETIDA POR UNA FUGA. Fuente: 2_codigo/exp2g_nombre_robusto.py
+(commit 4477dbb, 2026-09-28).
+
+QUE PASO EN EL FRENTE DE ARCHIVOS. El Exp. 2f midio el sistema completo en 0,9998, pero su
+validacion por tipos de documento colapso en un pliegue: con los jpg fuera del entrenamiento,
+sumar la forma del nombre bajo el macro-F1 de 0,8052 a 0,2167. La causa se verifico mirando
+los archivos:
+    0001-doc.doc.avos2      0001-pdf.pdf.avos2      0001-jpg-fromweb.jpg.avos2
+La BASE del nombre la puso NapierOne al armar su corpus, y en los jpg lleva un «-fromweb» que
+en los documentos no esta. La funcion de forma miraba el nombre ENTERO, asi que aprendio
+tambien como nombro NAPIERONE sus archivos, no solo como renombra el ransomware. El arreglo
+del Exp. 2g fue calcular los rasgos SOLO sobre la extension final, que es lo unico que agrega
+el ransomware.
+
+CONSECUENCIA PARA LA JUSTIFICACION DE ESTE SCRIPT. El «0,9998» citado arriba NO se puede usar
+como evidencia de que la forma del nombre funciona: incluye un componente que aprendia el
+esquema de nombrado del curador. La evidencia de transferencia esta siendo RE-MEDIDA por el
+Exp. 2g y, mientras no cierre, este experimento NO se apoya en esa cifra. Lo que queda en pie
+del 2d es mas debil y mas honesto: la forma del nombre SOLA daba 0,5771, o sea que nunca
+resolvio la tarea por si misma. La pregunta de este script sigue siendo valida -- ¿aporta la
+forma del nombre en notas? -- pero ya no viene respaldada por un 0,9998.
+
+EL MISMO RIESGO EN ESTE SCRIPT, Y DONDE ESTA EXACTAMENTE.
+Que un nombre sea AUDITADO garantiza que es el nombre genuino que puso el ransomware; NO
+garantiza que todas las partes de la cadena sean informativas de la familia. Aca la parte
+contaminada esta identificada y VERIFICADA (no razonada): el ID de la victima lo enmascaro a
+mano la auditoria, y lo hizo con DOS NOTACIONES DISTINTAS:
+    «[]»             en 15 de los 16 nombres que llevan ID
+    «[victim's_id]»  en 1  (readme.[victim's_id].txt, DARKSIDE)
+Esas dos notaciones tienen 2 y 13 caracteres. Por lo tanto el LARGO de la cadena y la CANTIDAD
+DE TOKENS no son propiedades del ransomware: dependen de como escribio la mascara una persona.
+Y el efecto es concreto: el unico nombre de DARKSIDE cae en el tramo «largo» por la notacion, y
+caeria en «medio» si la mascara fuera «[]» como en los otros 15. En FIRMA ese nombre produce la
+clave privada «.txt|none|1|no|SI|largo» -> DARKSIDE, cuyo campo «largo» es un artefacto de la
+auditoria. Es la misma forma de fuga que el «-fromweb» de NapierOne, a menor escala.
+
+LOS DOS GRUPOS, QUE SE REPORTAN POR SEPARADO (pedido del 2026-09-28):
+
+  GRUPO A -- SOLIDAS. Dependen SOLO de lo que pone el ransomware, y son inmunes a la notacion
+  de la mascara porque borran el ID antes de medir o no miran largos:
+      EXT   la extension final (control)
+      DOM   palabras del dominio + extension (borra ID, separadores y adornos)
+      ROB   extension + hay ID + palabras del dominio  [NUEVA]
+      FROB  extension + separador dominante + hay digitos + hay ID  [NUEVA]
+            (es FIRMA SIN los dos campos contaminados: largo y cantidad de tokens)
+
+  GRUPO B -- SOSPECHOSAS. Miran el nombre ENTERO: largo literal, cantidad de tokens, tipografia.
+      ESQ · ESQC · FIRMA
+
+  Regla de lectura fijada ahora: si el aporte viene del GRUPO B, es SOSPECHOSO y se declara
+  como tal; si viene del GRUPO A, es solido. Se mide ademas cada grupo combinado.
+
+LIMITACION ADICIONAL QUE SE DECLARA (pedido del 2026-09-28): el corpus de notas viene de
+repositorios publicos que RENOMBRAN AL CATALOGAR. Por eso solo 64 de 149 notas conservan el
+nombre genuino y las otras 85 llegan como None. La via del nombre tiene entonces un techo que
+NO es del metodo sino de como se distribuyen las notas: aunque la abstraccion fuera perfecta,
+no puede pasar del 42,95 % del corpus, y ese numero solo sube consiguiendo notas de fuentes que
+preserven el nombre original.
+
+HIPOTESIS DE LA AMPLIACION -- CON SU GRADO DE CEGUERA DECLARADO:
+  A1. [CIEGA] ROB y FROB (grupo A, nunca medidas) dan Delta macro-F1 global <= 0, o con IC que
+      incluye el cero. Razon: DOM, que es del mismo grupo y ya estaba medida, dio -0,0067 con
+      0/50 semillas positivas.
+  A2. [NO CIEGA -- es una OBSERVACION de la corrida original, no una prediccion] la unica
+      abstraccion con Delta macro-F1 global positivo y IC que excluye el cero es ESQ, que
+      pertenece al GRUPO B. O sea: el unico aporte nominal del experimento viene del grupo
+      sospechoso. Se verifica en codigo y se reporta como tal.
+  A3. [CIEGA] GRUPO_A combinado da Delta macro-F1 global <= 0.
+  A4. [CIEGA, verificable sin correr] hay al menos 2 notaciones distintas de la mascara del ID,
+      lo que demuestra que largo y cantidad de tokens dependen del auditor.
+  A5. [CIEGA] FROB (FIRMA sin largo ni tokens) no da MENOS que FIRMA. Si FIRMA aportara algo
+      real de estructura, sacarle los dos campos contaminados no deberia destruirlo. Si FROB
+      cae respecto de FIRMA, lo que FIRMA aportaba estaba en los campos contaminados.
+
+NOTA DE HONESTIDAD DE LA AMPLIACION: este bloque se escribe DESPUES de haber visto los
+resultados de la corrida original. Las hipotesis marcadas [NO CIEGA] no son predicciones y se
+reportan como observaciones. Las marcadas [CIEGA] se refieren a variantes que no se habian
+medido todavia cuando se escribio este bloque.
+=============================================================================================
 
 Uso:  python capa_forma_nombre.py [--n-semillas 50] [--salida CARPETA]
 """
@@ -256,17 +343,47 @@ def abs_extension(nombre):
     return _partir(nombre)[1] or "SIN_EXT"
 
 
+# ---- AMPLIACION 2026-09-28: abstracciones del GRUPO A (solo lo que pone el ransomware) ----
+def abs_robusta(nombre):
+    """ROB: extension + hay ID de victima + palabras del dominio. NO mira largos ni tokens,
+    asi que no depende de con que notacion la auditoria enmascaro el ID."""
+    base, ext = _partir(nombre)
+    tiene_id = "SI" if RE_ID.search(base) else "no"
+    letras = re.sub(r"[^a-z0-9]", "", RE_ID.sub("", base))
+    pal = sorted({w for w in VOCAB_DOMINIO if w in letras})
+    return "|".join([ext, tiene_id, "+".join(pal) if pal else "SIN"])
+
+
+def abs_firma_robusta(nombre):
+    """FROB: la FIRMA sin los dos campos contaminados por la auditoria (largo y n de tokens).
+    Queda extension + separador dominante + hay digitos + hay ID. Ablacion que localiza de
+    donde salia lo que FIRMA aportaba."""
+    base, ext = _partir(nombre)
+    tiene_id = "SI" if RE_ID.search(base) else "no"
+    b = RE_ID.sub("", base)
+    dig = "SI" if RE_DIG.search(b) else "no"
+    cuenta = {s: b.count(s) for s in ("_", "-", " ")}
+    sep = max(cuenta, key=lambda s: cuenta[s]) if max(cuenta.values()) > 0 else "none"
+    return "|".join([ext, sep, dig, tiene_id])
+
+
 ABSTRACCIONES = {
     "ESQ": abs_esqueleto,
     "ESQC": abs_esqueleto_colapsado,
     "FIRMA": abs_firma,
     "DOM": abs_dominio,
     "EXT": abs_extension,
+    "ROB": abs_robusta,
+    "FROB": abs_firma_robusta,
 }
 CANDIDATAS = ["ESQ", "ESQC", "FIRMA", "DOM"]        # EXT queda fuera: es control
+# Los dos grupos de la ampliacion. A = solo lo que pone el ransomware. B = mira el nombre entero.
+GRUPO_A = ["EXT", "DOM", "ROB", "FROB"]
+GRUPO_B = ["ESQ", "ESQC", "FIRMA"]
 # Las variantes fijadas antes de correr. "base" = la cascada de siempre, sin capa de forma.
-VARIANTES = ["base"] + list(ABSTRACCIONES) + ["TODAS"]
-COMBOS = {"TODAS": CANDIDATAS}
+# TODAS es la combinacion original (las 4 candidatas del preregistro, sin tocar).
+VARIANTES = (["base"] + list(ABSTRACCIONES) + ["TODAS", "GRUPO_A", "GRUPO_B"])
+COMBOS = {"TODAS": CANDIDATAS, "GRUPO_A": GRUPO_A, "GRUPO_B": GRUPO_B}
 
 
 # ============================================================
@@ -350,6 +467,37 @@ def main():
     print( "  >>> usar esos nombres seria CIRCULAR y por eso llegan como None.")
     ok_h2 = (n == N_NOTAS_ESPERADO and n_con == N_CON_NOMBRE_ESPERADO)
     print(f"  H2 {'CUMPLE' if ok_h2 else 'FALLA'}: esperado {N_CON_NOMBRE_ESPERADO}/{N_NOTAS_ESPERADO}")
+    print( "  >>> El corpus de notas viene de repositorios publicos que RENOMBRAN AL CATALOGAR.")
+    print( "  >>> El techo no es del metodo: es de como se distribuyen las notas.")
+
+    # ---------------- A4: sonda de fuga, al estilo del Exp. 2g ----------------
+    # El «-fromweb» de NapierOne enseno que hay que mirar QUE PARTE del nombre puso el
+    # ransomware y que parte puso el curador. Aca la parte del curador es la mascara del ID.
+    print("\n" + "-" * 90)
+    print("  A4 -- SONDA DE FUGA: ¿que parte del nombre la puso una persona y no el ransomware?")
+    print("-" * 90)
+    nom_unicos = sorted({nm for nm in nombres_nota if nm})
+    masc = defaultdict(list)
+    for nm in nom_unicos:
+        for m in RE_ID.findall(nm):
+            masc[m].append(nm)
+    print(f"  Notaciones distintas de la mascara del ID de la victima: {len(masc)}")
+    for m, lst in sorted(masc.items(), key=lambda kv: -len(kv[1])):
+        print(f"    {m!r:<18} en {len(lst)} nombres (largo {len(m)} caracteres)")
+    cambia = []
+    for nm in nom_unicos:
+        if RE_ID.search(nm):
+            b = _partir(nm)[0]
+            if abs_firma(nm) != abs_firma(nm.replace(RE_ID.search(nm).group(0), "[]")):
+                cambia.append((nm, abs_firma(nm),
+                               abs_firma(nm.replace(RE_ID.search(nm).group(0), "[]"))))
+    ok_a4 = len(masc) >= 2
+    print(f"  A4 {'CUMPLE' if ok_a4 else 'FALLA'}: con {len(masc)} notaciones, el LARGO y la "
+          "CANTIDAD DE TOKENS")
+    print( "      dependen del auditor, no del ransomware. Nombres cuya FIRMA cambia si se")
+    print(f"      uniformara la mascara a «[]»: {len(cambia)}")
+    for nm, f_real, f_unif in cambia:
+        print(f"        {nm}\n          firma real      {f_real}\n          firma uniformada {f_unif}")
 
     # ---------------- inventario de valores por abstraccion (descripcion del corpus) -------
     inv = []
@@ -443,8 +591,11 @@ def main():
         ac_rot = float((pred["base"][m_rot] == np.tile(y, (S, 1))[m_rot]).mean()) if m_rot.any() else np.nan
         # lo que la capa CAMBIA de respuesta (disparaban las dos, distinto resultado)
         m_cam = ap_v & ap_b & (pred[v] != pred["base"])
+        grupo = ("-" if v == "base" else "A solida" if v in GRUPO_A
+                 else "B sospechosa" if v in GRUPO_B else "combo")
         filas.append(dict(
             variante=v,
+            grupo=grupo,
             cobertura=round(cob, 4),
             acierto_donde_aplica=round(acd, 4) if acd == acd else np.nan,
             macro_f1=round(float(f1[v].mean()), 4),
@@ -465,7 +616,7 @@ def main():
     print("  LAS TRES COLUMNAS (149 notas, P2bal, 50 semillas). Techo de cobertura del nombre: "
           f"{techo:.4f}")
     print("=" * 90)
-    print(df[["variante", "cobertura", "acierto_donde_aplica", "macro_f1", "exactitud"]]
+    print(df[["variante", "grupo", "cobertura", "acierto_donde_aplica", "macro_f1", "exactitud"]]
           .to_string(index=False))
     print("\n  Desglose de lo que la capa agrega y de lo que rompe:")
     print(df[["variante", "cobertura_agregada", "acierto_en_lo_agregado", "cobertura_rota",
@@ -634,6 +785,71 @@ def main():
         print( "    campana -- la forma del nombre ES la campana, que es la limitacion ya")
         print( "    declarada del Exp. 2d -- mientras que en el corpus de notas cada familia trae")
         print( "    notas de varias campanas, que renombran distinto.")
+
+    # ---------------- VEREDICTO DE LA AMPLIACION (2026-09-28) ----------------
+    print("\n" + "=" * 90)
+    print("  VEREDICTO DE LA AMPLIACION -- los dos grupos por separado (pedido del 2026-09-28)")
+    print("=" * 90)
+    print("  GRUPO A = solo lo que pone el ransomware (inmune a la mascara del auditor)")
+    print("  GRUPO B = mira el nombre ENTERO: largo literal, cantidad de tokens, tipografia\n")
+    print(f"  {'variante':<10} {'grupo':<14} {'D macro-F1 global':>20} {'IC 95 %':>24} {'sem':>7}")
+    for v in GRUPO_A + GRUPO_B + ["GRUPO_A", "GRUPO_B", "TODAS"]:
+        d, lo, hi, sp = getd(v, "macro_f1_global")
+        g = ("A solida" if v in GRUPO_A else "B sospechosa" if v in GRUPO_B else "combo")
+        print(f"  {v:<10} {g:<14} {d:>+20.4f} {'[%+.4f; %+.4f]' % (lo, hi):>24} {sp:>4}/{S}")
+
+    d_rob, lo_rob, _, _ = getd("ROB", "macro_f1_global")
+    d_frob, lo_frob, _, _ = getd("FROB", "macro_f1_global")
+    d_ga, lo_ga, hi_ga, _ = getd("GRUPO_A", "macro_f1_global")
+    d_gb, lo_gb, hi_gb, _ = getd("GRUPO_B", "macro_f1_global")
+    d_firma = getd("FIRMA", "macro_f1_global")[0]
+    a1 = (d_rob <= 0 or lo_rob <= 0) and (d_frob <= 0 or lo_frob <= 0)
+    # A2: de las candidatas del preregistro, cuales dan Delta > 0 con IC que excluye el cero
+    positivas = [v for v in CANDIDATAS if getd(v, "macro_f1_global")[1] > 0]
+    a2 = bool(positivas) and all(v in GRUPO_B for v in positivas)
+    a3 = d_ga <= 0
+    a5 = d_frob >= d_firma
+    amp = [
+        ("A1 [ciega] ROB y FROB no aportan (D <= 0 o IC incluye 0)", a1,
+         f"ROB {d_rob:+.4f} · FROB {d_frob:+.4f}"),
+        ("A2 [observacion] el unico aporte nominal es del GRUPO B", a2,
+         f"positivas: {positivas if positivas else 'ninguna'}"),
+        ("A3 [ciega] GRUPO_A combinado da D <= 0", a3, f"{d_ga:+.4f} [{lo_ga:+.4f}; {hi_ga:+.4f}]"),
+        ("A4 [ciega] hay >= 2 notaciones de la mascara del ID", ok_a4,
+         f"{len(masc)} notaciones · {len(cambia)} firmas cambian"),
+        ("A5 [ciega] FROB no da menos que FIRMA", a5,
+         f"FROB {d_frob:+.4f} vs FIRMA {d_firma:+.4f}"),
+    ]
+    for nombre, cumple, det in amp:
+        print(f"\n  [{'CUMPLE' if cumple else 'FALLA '}] {nombre:<56} {det}")
+
+    print("\n" + "-" * 90)
+    print("  POR QUE LA LECTURA AUTOMATICA DE H10 ES DEMASIADO GENEROSA")
+    print("-" * 90)
+    print("  H10 se escribio mirando SOLO si algun Delta macro-F1 global tenia IC que excluye el")
+    print("  cero. Esa condicion se puede cumplir sin que la capa sirva, y aca pasa exactamente")
+    print("  eso. Los numeros de la unica variante que la cumple:")
+    r_esq = df[df.variante == "ESQ"].iloc[0]
+    d_e_ac, lo_e_ac, hi_e_ac, sp_e_ac = getd("ESQ", "exactitud_global")
+    d_e_fr, lo_e_fr, hi_e_fr, _ = getd("ESQ", "macro_f1_restringido")
+    print(f"    - acierto donde AGREGA cobertura ....... {r_esq['acierto_en_lo_agregado']}"
+          "   (la capa se equivoca la mayoria de las veces que dispara de mas)")
+    print(f"    - cobertura que ROMPE .................. {r_esq['cobertura_rota']}"
+          f"   y ahi la base acertaba {r_esq['acierto_base_en_lo_roto']}")
+    print(f"    - Delta EXACTITUD global ............... {d_e_ac:+.4f} "
+          f"[{lo_e_ac:+.4f}; {hi_e_ac:+.4f}]  {sp_e_ac}/{S}  (el IC incluye el cero)")
+    print(f"    - Delta macro-F1 RESTRINGIDO a las 64 .. {d_e_fr:+.4f} "
+          f"[{lo_e_fr:+.4f}; {hi_e_fr:+.4f}]  (NEGATIVO donde la capa puede actuar)")
+    movidas = dff[(dff.n_con_nombre > 0) & (dff.delta.abs() > 1e-9)]
+    print(f"    - familias que se mueven: {len(movidas)} de {len(fam_con_nombre)} con nombre")
+    for _, r in movidas.iterrows():
+        print(f"        {r['familia']:<14} {r['base']:.4f} -> {r['mejor']:.4f}  ({r['delta']:+.4f})"
+              f"  [{r['n_notas']} notas, {r['n_con_nombre']} con nombre]")
+    print("\n  Traduccion: el +0,0042 de macro-F1 global de ESQ no es una mejora del sistema.")
+    print("  Es el macro-F1 reaccionando al movimiento de una familia chica, mientras la")
+    print("  exactitud no se mueve y el macro-F1 restringido BAJA. Y ademas ESQ es del GRUPO B,")
+    print("  el sospechoso. Por eso la lectura que vale es la del segundo/tercer caso de H10 y")
+    print("  NO la que imprimio la regla automatica.")
 
     print("\n  RECORDAR AL CITAR: toda cifra global de este script esta multiplicada por 64/149.")
     print(f"  El aporte RESTRINGIDO a las notas con nombre es {fac:.3f} veces el global en exactitud.")
