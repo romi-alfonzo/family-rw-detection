@@ -40,6 +40,37 @@ PROTOCOLOS
          pliegues una familia de 2 plantillas aporta 1 sola al train, asi que el tope k
          casi no muerde y la curva no tiene alcance. La retencion maximiza el lado de
          entrenamiento (hasta n-1 plantillas) y es exactamente la pregunta de despliegue.
+  P2bal  AGREGADO 2026-09-28. El reparto corregido de protocolo_p2bal.py: 2 pliegues por
+         plantilla, repartidas DENTRO de cada familia. Se agrega como CONFIRMACION CRUZADA,
+         no para re-derivar el punto de corte (ver preregistro abajo). Se corre con
+         --solo-p2bal, que NO toca la lista de trabajos canonica.
+
+=============================================================================================
+PREREGISTRO de la extension P2bal -- escrito y COMMITEADO ANTES de correr.
+
+POR QUE SE CORRE. El reparto de P2 resulto estar mal construido: dejaba 3,85 familias por
+pliegue sin ninguna plantilla de entrenamiento (F1=0 forzado). Surgio la duda de si la
+conclusion "el ultimo tope que aporta es 3 plantillas por familia" dependia de ese defecto.
+
+LO QUE YA SE VERIFICO ANTES DE ESCRIBIR ESTO (b1_curva_por_repeticion.csv, 30fam, plantillas):
+la conclusion del punto de corte NO sale de P2 sino de P2ret, y P2ret NO tiene el defecto:
+sus familias sin entrenamiento son 2,00 CONSTANTES en todo k, y son exactamente BADRABBIT y
+CRYPTOLOCKER, las de plantilla unica -- el cero estructural inevitable. P2 marca 3,85 en todo
+k; P1, 0,00. Esta corrida confirma, no re-deriva.
+
+E1. PUERTA DE ENTRADA: P2bal en k=todo, 50 repeticiones, reproduce el 0,6551 de
+    protocolo_p2bal.py con diferencia < 1e-9 (misma siembra 20.000+rep, mismo modelo por
+    repeticion, mismo conjunto de entrenamiento). Si no reproduce, ABORTA.
+E2. El nivel de la curva P2bal queda por ENCIMA del de P2 en todos los k.
+E3. ALCANCE LIMITADO, declarado de antemano: con 2 pliegues el entrenamiento tiene ~1,8
+    plantillas por familia, asi que el tope k deja de morder pronto y la curva se aplana POR
+    CONSTRUCCION, no por saturacion del aprendizaje. Prediccion concreta: el salto 3->4 bajo
+    P2bal no es significativo. Es la misma limitacion que ya tenia P2 y la razon por la que
+    existe P2ret. Si alguien cita esta curva como el techo de aprendizaje, la cita mal.
+E4. El punto de corte de P2ret no se mueve: 1->2 y 2->3 significativos, 3->4 no.
+E5. Familias sin entrenamiento bajo P2bal: 1,00 por pliegue, constante en todo k (las dos de
+    plantilla unica, ausentes en uno de los dos pliegues).
+=============================================================================================
 
 ANIDAMIENTO (importante para la estadistica)
 El orden de plantillas/notas de cada familia se sortea UNA vez por (repeticion, pliegue)
@@ -98,6 +129,7 @@ sys.path.insert(0, str(_AQUI))
 from clasificador_notas_v2 import (CORPUS_DIR, N_FOLDS, N_SEMILLAS, UMBRAL_NEARDUP,
                                    agrupar_neardups, cargar_corpus, evaluar,
                                    obtener_modelos, vectorizador)
+from protocolo_p2bal import split_p2bal
 
 OUT_DIR = (_AQUI.parent / "4_resultados" / "resultados_curva_notas"
            if (_AQUI.parent / "4_resultados").is_dir()
@@ -113,6 +145,7 @@ CONFIG = {
     "P1":    ("caracteres", "LinearSVC"),
     "P2":    ("combinado",  "LinearSVC"),
     "P2ret": ("combinado",  "LinearSVC"),
+    "P2bal": ("combinado",  "LinearSVC"),
 }
 
 R_DEFECTO = 100        # repeticiones de la retencion
@@ -217,6 +250,12 @@ def _splits(protocolo, T, Y, G, rep, n_folds, rng):
         te = np.array([i for i in range(len(Y)) if G[i] in elegidos], int)
         tr = np.array([i for i in range(len(Y)) if G[i] not in elegidos], int)
         return [(tr, te)]
+    if protocolo == "P2bal":
+        # Mismo reparto y MISMA siembra que protocolo_p2bal.py (20.000 + rep), para que el
+        # punto k=todo reproduzca su cifra al bit y la puerta de entrada pueda ser exacta.
+        # Se usa un generador propio: el rng compartido sigue intacto para _ordenes, de modo
+        # que el sorteo de subconjuntos anidados no cambia respecto de los otros protocolos.
+        return split_p2bal(Y, G, np.unique(Y), np.random.default_rng(20_000 + rep), n_folds)
     raise ValueError(protocolo)
 
 
@@ -327,6 +366,23 @@ def validar(textos, y, grupos, familias):
     return ok
 
 
+REF_P2BAL = 0.6551          # protocolo_p2bal.py, 50 semillas, texto solo, 30 familias
+
+
+def validar_p2bal(textos, y, grupos, familias, n_reps=50):
+    """P2bal en k=todo debe reproducir protocolo_p2bal.py. Misma siembra (20.000+rep), mismo
+    modelo por repeticion y mismo conjunto de entrenamiento, asi que la unica diferencia
+    admisible es el redondeo a 4 decimales de la referencia: el umbral practico es 1e-4."""
+    df, _ = curva(textos, y, grupos, protocolo="P2bal", unidad="plantillas", ks=[None],
+                  familias_incluidas=familias, etiqueta="validacion_p2bal",
+                  n_reps=n_reps, n_folds=N_FOLDS)
+    mio = float(df.f1_macro.mean())
+    d = abs(mio - REF_P2BAL)
+    print(f"  P2bal: protocolo_p2bal.py {REF_P2BAL:.6f} | curva {mio:.6f} | "
+          f"diferencia {d:.2e}  {'OK' if d < 1e-4 else 'NO COINCIDE'}")
+    return d < 1e-4
+
+
 def main():
     global OUT_DIR
     ap = argparse.ArgumentParser()
@@ -335,6 +391,9 @@ def main():
     ap.add_argument("--rapido", action="store_true",
                     help=f"R={R_RAPIDO} en vez de {R_DEFECTO} (prueba de cableado)")
     ap.add_argument("--reps", type=int, default=None)
+    ap.add_argument("--solo-p2bal", action="store_true",
+                    help="corre SOLO las curvas del reparto corregido P2bal, con su propia "
+                         "puerta de entrada. No toca la lista canonica: usar --salida nueva.")
     ap.add_argument("--salida", type=Path, default=None,
                     help="carpeta de salida (por defecto, 4_resultados/resultados_curva_notas). "
                          "Usar una carpeta NUEVA para no pisar la corrida canonica.")
@@ -363,7 +422,10 @@ def main():
     print("\n" + "-" * 78)
     print("  CONTROL DE CORRECCION -- k=todo contra el evaluador canonico")
     print("-" * 78)
-    if not validar(textos, y, grupos, familias):
+    if args.solo_p2bal:
+        if not validar_p2bal(textos, y, grupos, familias):
+            sys.exit("ABORTADO (E1): P2bal no reproduce protocolo_p2bal.py.")
+    elif not validar(textos, y, grupos, familias):
         sys.exit("ABORTADO: el punto k=todo no reproduce el evaluador canonico.")
     if args.validar:
         return
@@ -380,6 +442,13 @@ def main():
         ("30fam", "P1", "plantillas", [1, 2, 3, 4, None], familias, N_SEMILLAS, N_FOLDS),
         ("30fam", "P1", "notas", [1, 2, 3, 4, 6, 8, None], familias, N_SEMILLAS, N_FOLDS),
     ]
+    if args.solo_p2bal:
+        # 50 repeticiones, para que k=todo sea comparable con protocolo_p2bal.py.
+        trabajos = [
+            ("30fam", "P2bal", "plantillas", [1, 2, 3, 4, None], familias, 50, N_FOLDS),
+            ("30fam", "P2bal", "notas", [1, 2, 3, 4, 6, 8, None], familias, 50, N_FOLDS),
+        ]
+
     todas, todas_fam = [], []
     for etiqueta, prot, unidad, ks, fams, r, nf in trabajos:
         df, dff = curva(textos, y, grupos, protocolo=prot, unidad=unidad, ks=ks,
