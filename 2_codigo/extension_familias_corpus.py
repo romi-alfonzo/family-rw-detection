@@ -42,6 +42,32 @@ L3. La normalizacion de nombres de familia es LAXA (minusculas, sin separadores)
 L4. "Plantilla" sigue siendo coseno de caracteres 0,90, criterio que no detecta contencion.
 
 =============================================================================================
+ARREGLO DE DISENO (2026-09-28, DESPUES de que la puerta X1 abortara -- se declara como tal).
+
+La primera version agrupaba los casi-duplicados sobre el corpus COMPLETO, y la puerta X1 aborto:
+el nucleo daba macro-F1 0,7948 en vez de 0,7417. Se diagnostico y son DOS causas:
+
+  (1) Al admitir solo familias con >= 2 plantillas, BADRABBIT y CRYPTOLOCKER quedaban fuera, de
+      modo que la puerta comparaba 28 familias contra la cifra de 30. El 0,7948 medido es, en
+      efecto, el macro-F1 sobre las 28 evaluables (0,7946).
+
+  (2) HALLAZGO, y es el que obliga a cambiar el diseno: **el criterio de plantilla NO ES ESTABLE
+      ante la ampliacion del corpus.** `TfidfVectorizer` ajusta el IDF sobre el corpus que
+      recibe, asi que agregar 690 notas cambia los pesos y con ellos los cosenos. Verificado
+      sobre GANDCRAB: tres pares cruzan el umbral 0,90 al ampliar --  0,9116 -> 0,8960,
+      0,9098 -> 0,8950 y 0,9036 -> 0,8885 -- y la familia pasa de 4 a 5 plantillas. WASTEDLOCKER
+      hace el camino inverso, de 3 a 2. **Las 99 plantillas del nucleo dejan de ser las mismas.**
+
+EL DISENO CORREGIDO preserva el nucleo exactamente:
+  - el corpus canonico se agrupa SOLO, y conserva sus 99 plantillas y sus 30 familias, incluidas
+    las dos de plantilla unica: el nucleo no se toca;
+  - cada nota de fuente se compara contra las canonicas con el vectorizador del conjunto
+    completo, y si supera el umbral con alguna, HEREDA su grupo. Asi una nota externa que es
+    casi-copia de una canonica no puede quedar en un pliegue distinto, que seria una fuga;
+  - las notas de fuente que no colisionan con el nucleo se agrupan entre si;
+  - el filtro de >= 2 plantillas se aplica SOLO a las familias nuevas.
+
+=============================================================================================
 PREREGISTRO -- escrito y COMMITEADO ANTES de correr (2026-09-28).
 
 X1. PUERTA DE ENTRADA. Restringido al corpus canonico solo, el sistema reproduce macro-F1
@@ -83,7 +109,9 @@ except Exception:
 _AQUI = Path(__file__).resolve().parent
 sys.path.insert(0, str(_AQUI))
 
-from clasificador_notas_v2 import (CORPUS_DIR, MIN_CHARS_NOTA, UMBRAL_NEARDUP,
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+from clasificador_notas_v2 import (CORPUS_DIR, MIN_CHARS_NOTA, TFIDF_CHAR, UMBRAL_NEARDUP,
                                    agrupar_neardups, cargar_corpus, obtener_modelos,
                                    vectorizador)
 from extractor_notas import extraer_texto
@@ -179,13 +207,41 @@ def main():
     y_ext = np.array(y_ext)
     es_canonica = np.array(es_canonica)
     print(f"\nTodo junto: {len(t_ext)} notas, {len(set(y_ext))} familias")
-    print("Agrupando casi-duplicados sobre el conjunto completo ...")
-    g_ext, _ = agrupar_neardups(t_ext, UMBRAL_NEARDUP)
-    g_ext = np.array(g_ext)
 
-    # ---------- familias con >= 2 plantillas ----------
+    # ---------- agrupamiento que PRESERVA el nucleo (ver ARREGLO DE DISENO) ----------
+    print("Agrupando: el nucleo solo, para conservar sus 99 plantillas ...")
+    g_can_solo, _ = agrupar_neardups(t_can, UMBRAL_NEARDUP)
+    g_can_solo = np.array(g_can_solo)
+    n_can = len(t_can)
+    print(f"  nucleo: {len(set(g_can_solo))} plantillas (tienen que ser 99)")
+
+    print("Comparando cada nota de fuente contra el nucleo, con el vectorizador completo ...")
+    X = TfidfVectorizer(**TFIDF_CHAR).fit_transform(t_ext)
+    Sim = (X[n_can:] @ X[:n_can].T).toarray()          # fuentes x canonicas
+    g_ext = np.empty(len(t_ext), dtype=int)
+    g_ext[:n_can] = g_can_solo
+    hereda = 0
+    libres = []
+    for j in range(len(t_ext) - n_can):
+        k = int(np.argmax(Sim[j]))
+        if Sim[j, k] > UMBRAL_NEARDUP:
+            g_ext[n_can + j] = g_can_solo[k]            # hereda el grupo de la canonica
+            hereda += 1
+        else:
+            libres.append(j)
+    print(f"  notas de fuente que son casi-copia de una canonica: {hereda} (heredan su grupo)")
+
+    # las que no colisionan con el nucleo se agrupan entre si, con ids que no colisionan
+    if libres:
+        g_lib, _ = agrupar_neardups([t_ext[n_can + j] for j in libres], UMBRAL_NEARDUP)
+        base = int(g_can_solo.max()) + 1
+        for pos, j in enumerate(libres):
+            g_ext[n_can + j] = base + int(g_lib[pos])
+    print(f"  plantillas totales en el corpus extendido: {len(set(g_ext))}")
+
+    # ---------- filtro: el nucleo entero, y de las nuevas solo las de >= 2 plantillas ----------
     ppf = {f: len(set(g_ext[y_ext == f])) for f in set(y_ext)}
-    admitidas = {f for f, k in ppf.items() if k >= 2}
+    admitidas = {f for f, k in ppf.items() if k >= 2 or f in canonicas}
     m = np.array([f in admitidas for f in y_ext])
     textos = [t for t, k in zip(t_ext, m) if k]
     y = y_ext[m]
