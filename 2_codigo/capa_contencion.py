@@ -86,6 +86,13 @@ K7. CONTROL DE NO-CIRCULARIDAD (duro). En las notas donde la capa NO aplica, la 
     restringido 0,0000 y Delta macro-F1 restringido 0,0000. Si no da exacto, hay un bug y NO se
     reporta ningun resultado de la corrida.
 
+AGREGADO DESPUES DEL PREREGISTRO (se declara para que el historial de git no enganie). La
+corrida de humo de 3 semillas dio Delta EXACTAMENTE 0,0000 en los cinco umbrales, con cero notas
+cambiadas. Para EXPLICAR por que, se agrego una columna descriptiva -- «coincide_con_el_texto»:
+en que fraccion de sus decisiones la capa contesta lo mismo que el LinearSVC. No es una hipotesis
+nueva ni cambia ninguna de K1..K7, que quedan como fueron commiteadas en c7c7228; es el
+estadistico que faltaba para no reportar un cero sin causa.
+
 LO QUE ESTE EXPERIMENTO NO DICE. No dice si la contencion «deberia» separarse en la particion:
 esa es la limitacion ya declarada del criterio de plantilla (coseno char 0,90), y sigue igual.
 Dice si, DADO el protocolo declarado, explotar la contencion de forma directa agrega acierto
@@ -270,7 +277,7 @@ def main():
                                   zero_division=0) for s in range(NS)])
         ac_u = np.array([accuracy_score(y, p_new[ui, s]) for s in range(NS)])
         cob, ac_ap, ac_tx_ap, cob_br, ya_regla, ac_br = [], [], [], [], [], []
-        camb, gana, pierde, confl = [], [], [], []
+        camb, gana, pierde, confl, coinc = [], [], [], [], []
         for s in range(NS):
             a = aplica[ui, s]
             b = bruta[ui, s]
@@ -279,6 +286,8 @@ def main():
             confl.append(float(conflicto[ui, s].mean()))
             ac_ap.append(float((p_new[ui, s, a] == y[a]).mean()) if a.any() else np.nan)
             ac_tx_ap.append(float((p_txt[s, a] == y[a]).mean()) if a.any() else np.nan)
+            # descriptivo agregado tras la corrida de humo: ¿la capa dice lo mismo que el texto?
+            coinc.append(float((p_new[ui, s, a] == p_txt[s, a]).mean()) if a.any() else np.nan)
             ac_br.append(float(ok_bruta[ui, s, b].mean()) if b.any() else np.nan)
             ya_regla.append(float(por_regla[s, b].mean()) if b.any() else np.nan)
             dif = p_new[ui, s] != p_base[s]
@@ -299,6 +308,8 @@ def main():
             acierto_donde_aplica=round(m_ap, 4) if not np.isnan(m_ap) else np.nan,
             ic95_acierto_donde_aplica=f"[{lo_ap:.4f}; {hi_ap:.4f}]" if not np.isnan(m_ap) else "--",
             acierto_del_texto_en_esas_notas=round(m_tx, 4) if not np.isnan(m_tx) else np.nan,
+            coincide_con_el_texto=round(float(np.nanmean(coinc)), 4)
+            if not np.all(np.isnan(coinc)) else np.nan,
             macro_f1=round(float(f1_u.mean()), 4),
             exactitud=round(float(ac_u.mean()), 4),
             delta_macro_f1=round(mf, 4),
@@ -430,7 +441,9 @@ def main():
         print(f"    el cero. La capa resuelve el {mejor_fila['cobertura']*100:.1f} % del corpus "
               f"con acierto {mejor_fila['acierto_donde_aplica']:.4f} donde aplica, pero el texto")
         print(f"    solo ya acertaba {mejor_fila['acierto_del_texto_en_esas_notas']:.4f} en esas "
-              f"mismas notas: la senal ya estaba explotada, la capa la repite.")
+              f"mismas notas y la capa le contesta lo mismo en el "
+              f"{mejor_fila['coincide_con_el_texto']*100:.2f} % de sus")
+        print("    decisiones: la senal ya estaba explotada por el TF-IDF, la capa solo la repite.")
     print(f"\n  RECORDAR AL CITAR: cobertura y acierto-donde-aplica son METRICAS DISTINTAS. "
           f"Base: {n} notas, 30 familias, P2bal, {NS} semillas.")
     print(f"\nSalidas en {OUT}")
