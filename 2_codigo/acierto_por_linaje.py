@@ -82,9 +82,18 @@ DEBILES = [("LORENZ", "SODINOKIBI"), ("BLACKCAT", "SODINOKIBI"),
            ("MEDUZALOCKER", "SODINOKIBI"), ("NOTPETYA", "WANNACRY")]
 
 
-def fusionar(etiquetas, pares):
-    """Mapea cada familia al representante de su componente conexa segun `pares`."""
-    padre = {f: f for f in set(etiquetas)}
+def mapa_fusion(universo, pares):
+    """Mapa familia -> representante de su componente conexa, sobre el universo COMPLETO.
+
+    El universo se pasa explicito y es siempre el mismo (las 30 familias), de modo que el
+    MISMO mapa se aplica a las etiquetas verdaderas y a las predicciones. Construirlo a
+    partir de las etiquetas que trae cada array es un error: si una familia del par nunca
+    aparece entre las predicciones de una semilla, el par se fusiona en y pero no en la
+    prediccion, y aciertos se convierten en errores. Ese bug estaba en la primera version
+    de este script (2026-09-28) y hacia que la fusion aleatoria BAJARA la exactitud, lo
+    que es imposible: fusionar clases solo puede subirla o dejarla igual.
+    """
+    padre = {f: f for f in universo}
 
     def raiz(x):
         while padre[x] != x:
@@ -96,7 +105,11 @@ def fusionar(etiquetas, pares):
             ra, rb = raiz(a), raiz(b)
             if ra != rb:
                 padre[rb] = ra
-    return np.array([raiz(f) for f in etiquetas])
+    return {f: raiz(f) for f in universo}
+
+
+def aplicar(etiquetas, mapa):
+    return np.array([mapa.get(e, e) for e in etiquetas])
 
 
 def ic(v):
@@ -163,15 +176,30 @@ def main():
     print("  OK\n" if ok else "  FUERA DE TOLERANCIA (--sin-puerta)\n")
 
     def medir(pares, P):
-        """Exactitud y macro-F1 por semilla con las familias de `pares` fusionadas."""
-        yf = fusionar(y, pares)
+        """Exactitud y macro-F1 por semilla con las familias de `pares` fusionadas.
+
+        El MISMO mapa se aplica a las etiquetas verdaderas y a las predicciones (ver
+        mapa_fusion): de otro modo la metrica se corrompe.
+        """
+        mapa = mapa_fusion(familias, pares)
+        yf = aplicar(y, mapa)
         clases = np.unique(yf)
         acc, f1 = [], []
         for s in range(args.n_semillas):
-            pf = fusionar(P[s], pares)
+            pf = aplicar(P[s], mapa)
             acc.append(accuracy_score(yf, pf))
             f1.append(f1_score(yf, pf, average="macro", labels=clases, zero_division=0))
         return np.array(acc), np.array(f1), len(clases)
+
+    # CONTROL DE SANIDAD: fusionar clases NUNCA puede bajar la exactitud. Si baja, el mapa
+    # se esta aplicando de forma asimetrica y no se reporta nada.
+    for _pares in (FUERTES, FUERTES + DEBILES):
+        for _P in (p_txt, p_m6):
+            _a, _, _ = medir(_pares, _P)
+            _b = np.array([accuracy_score(y, _P[s]) for s in range(args.n_semillas)])
+            if (_a < _b - 1e-12).any():
+                sys.exit("ABORTADO: la fusion bajo la exactitud en alguna semilla. "
+                         "Es imposible; el mapa se aplica mal.")
 
     # ---------------- variantes ----------------
     variantes = [("sin fusion", []), ("3 pares fuertes", FUERTES),
