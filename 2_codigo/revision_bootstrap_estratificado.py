@@ -21,6 +21,15 @@ desaparece, el macro-F1 se calcula siempre sobre las mismas 30, y el estimando n
 replicas. Las familias de una sola plantilla conservan esa plantilla y su F1 sigue siendo 0, que
 es lo correcto y es el cero estructural de siempre.
 
+LA UNIDAD DEL ESTRATO ES EL PAR (FAMILIA, PLANTILLA), NO LA PLANTILLA ENTERA. Corregido el
+2026-09-28 tras la observacion de la sesion hermana. El corpus tiene DOS grupos de casi-duplicados
+que cruzan familias -- grupo 6 con BLACKBASTA(1)+CONTI(1) y grupo 53 con DHARMA(11)+PHOBOS(1),
+14 notas en total, el 9,4 % del corpus. Tomando la plantilla entera, cuando DHARMA sorteaba el
+grupo 53 entraban las 12 notas incluida la de PHOBOS, y cuando PHOBOS sorteaba ese mismo grupo
+entraban otra vez las 12: notas ajenas se colaban en el estrato y el tamano de cada familia
+cambiaba entre replicas. Tomando el par, de un grupo mixto entran solo las notas de la familia
+que lo sorteo. El sesgo residual baja de -0,0120 a practicamente cero con ese cambio.
+
 SE COMPARAN LAS TRES CONVENCIONES sobre exactamente las mismas predicciones:
   (a) libre + labels=30      -- la conservadora que reporta la sesion hermana
   (b) libre + labels presentes -- su alternativa sin sesgo, con denominador variable
@@ -79,6 +88,9 @@ def main():
     plantillas = np.unique(grupos)
     idx_de = {g: np.where(grupos == g)[0] for g in plantillas}
     pl_de_fam = {f: np.unique(grupos[y == f]) for f in familias}
+    # indices POR PAR (familia, plantilla): de un grupo mixto, solo las notas de esa familia
+    idx_de_par = {(f, g): np.where((y == f) & (grupos == g))[0]
+                  for f in familias for g in pl_de_fam[f]}
     print(f"Notas: {n} | Familias: {len(familias)} | Plantillas: {len(plantillas)}")
     print(f"Semillas: {args.n_semillas} | Replicas: {args.replicas}\n")
 
@@ -131,10 +143,15 @@ def main():
         i_libre = np.concatenate([idx_de[g] for g in el_libre])
         pres_libre = np.unique(y[i_libre])
         perdidas_libre.append(len(familias) - len(pres_libre))
-        # (c) ESTRATIFICADO: se remuestrea DENTRO de cada familia, conservando su cantidad
-        el_estr = np.concatenate([pl[rng.integers(0, len(pl), len(pl))]
-                                  for pl in (pl_de_fam[f] for f in familias)])
-        i_estr = np.concatenate([idx_de[g] for g in el_estr])
+        # (c) ESTRATIFICADO: se remuestrea DENTRO de cada familia, conservando su cantidad.
+        # La unidad es el par (familia, plantilla): de un grupo mixto entran SOLO las notas
+        # de la familia que lo sorteo. Ver el docstring.
+        trozos = []
+        for f in familias:
+            pl = pl_de_fam[f]
+            for g in pl[rng.integers(0, len(pl), len(pl))]:
+                trozos.append(idx_de_par[(f, g)])
+        i_estr = np.concatenate(trozos)
         perdidas_estr.append(len(familias) - len(np.unique(y[i_estr])))
         for capa in ("texto", "cascada"):
             p = pred[capa][s]
