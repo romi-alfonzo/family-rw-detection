@@ -52,6 +52,23 @@ y limite inferior mas bajo) y labels presentes en la remuestra (sin el sesgo, pe
 variable). La conclusion no depende de cual se elija. La que se cita en el informe es la
 conservadora.
 
+SEGUNDO AGREGADO POST HOC (2026-09-28, planteado por la sesion hermana -- declarado como tal).
+El sesgo de F5 no hay que corregirlo: hay que EVITARLO, y para eso hay que remuestrear la unidad
+correcta. Remuestrear las 99 plantillas sin mirar la familia trata al CONJUNTO DE FAMILIAS como
+aleatorio, o sea admite replicas donde una familia no existe. Pero las 30 familias NO son una
+muestra: estan fijadas por el nucleo canonico de NapierOne, que es una decision de diseno del
+trabajo (CLAUDE.md). Lo muestral es QUE PLANTILLAS conseguimos DE CADA familia.
+La pregunta que corresponde es: "y si hubieramos conseguido otras plantillas de estas mismas 30
+familias?". Se responde con un bootstrap ESTRATIFICADO POR FAMILIA: dentro de cada familia se
+remuestrean sus plantillas con reposicion, conservando su cantidad. Ninguna familia desaparece, el
+estimando no cambia entre replicas y el sesgo no se genera. Ademas conserva labels=30 fijo, asi que
+no hay que pagar el denominador variable de la convencion "labels presentes".
+La unidad estratificada es el par (familia, plantilla) y no la plantilla sola: los grupos 6 y 53
+mezclan dos familias, y de un par sorteado entran solo las notas de ESA familia. Asi cada familia
+conserva su tamano y un grupo mixto no arrastra notas ajenas.
+Se reportan las tres. La PRINCIPAL pasa a ser la estratificada; la libre queda al lado como
+escenario mas conservador, que ademas trataria al conjunto de familias como muestral.
+
 Uso:  python bootstrap_plantilla_p2bal.py [--n-semillas 50] [--replicas 2000]
 """
 from __future__ import annotations
@@ -117,6 +134,9 @@ def main():
     nombres_nota = [nom.get((f, Path(a).name)) for f, a in zip(y, archivos)]
     plantillas = np.unique(grupos)
     idx_de_plantilla = {g: np.where(grupos == g)[0] for g in plantillas}
+    pares_de_fam = {f: [(f, g) for g in np.unique(grupos[y == f])] for f in familias}
+    idx_de_par = {(f, g): np.where((y == f) & (grupos == g))[0]
+                  for f in familias for _, g in pares_de_fam[f]}
     print(f"Notas: {len(y)} | Familias: {len(familias)} | Plantillas: {len(plantillas)}")
     print(f"Semillas: {args.n_semillas} | Replicas bootstrap: {args.replicas}\n")
 
@@ -156,6 +176,7 @@ def main():
     n_pl = len(plantillas)
     reps = {"texto": [], "cascada": []}
     reps_pres = {"texto": [], "cascada": []}   # convencion "labels presentes", sin el sesgo
+    reps_estr = {"texto": [], "cascada": []}   # (c) estratificado por familia
     fam_perdidas = []
     for b in range(args.replicas):
         s = int(rng_b.integers(args.n_semillas))
@@ -163,9 +184,18 @@ def main():
         idx = np.concatenate([idx_de_plantilla[g] for g in elegidas])
         presentes = np.unique(y[idx])
         fam_perdidas.append(len(familias) - len(presentes))
+        # (c) estratificado por familia: se remuestrean los pares (familia, plantilla)
+        # DENTRO de cada familia, conservando su cantidad. Ninguna familia desaparece.
+        ie = np.concatenate([idx_de_par[pares_de_fam[f][j]]
+                             for f in familias
+                             for j in rng_b.integers(0, len(pares_de_fam[f]),
+                                                     len(pares_de_fam[f]))])
         for capa in ("texto", "cascada"):
             reps[capa].append(f1_score(y[idx], pred[capa][s][idx],
                                        average="macro", labels=familias, zero_division=0))
+            reps_estr[capa].append(f1_score(y[ie], pred[capa][s][ie],
+                                            average="macro", labels=familias,
+                                            zero_division=0))
             reps_pres[capa].append(f1_score(y[idx], pred[capa][s][idx],
                                             average="macro", labels=presentes,
                                             zero_division=0))
@@ -193,6 +223,14 @@ def main():
             ic_labels_presentes=f"[{lo_p:.4f}; {hi_p:.4f}]",
             media_labels_presentes=round(float(vp.mean()), 4),
             sesgo_labels_presentes=round(float(vp.mean() - punto[capa]), 4))
+        ve = np.array(reps_estr[capa])
+        lo_e, hi_e = np.percentile(ve, [2.5, 97.5])
+        filas[-1].update(
+            ic_estratificado=f"[{lo_e:.4f}; {hi_e:.4f}]",
+            ancho_estratificado=round(float(hi_e - lo_e), 4),
+            media_estratificado=round(float(ve.mean()), 4),
+            sesgo_estratificado=round(float(ve.mean() - punto[capa]), 4),
+            estratificado_supera_050="SI" if lo_e > 0.50 else "NO")
         print(f"{capa:<9}{punto[capa]:>9.4f}{f'[{lo_s:.4f}; {hi_s:.4f}]':>26}"
               f"{f'[{lo_b:.4f}; {hi_b:.4f}]':>26}{v.std(ddof=1):>9.4f}"
               f"{('SI' if lo_b > 0.50 else 'NO'):>8}")
@@ -227,6 +265,12 @@ def main():
         print(f"    {r['capa']:<9} labels=30 {r['ic_por_plantillas']} "
               f"(sesgo {r['media_bootstrap']-r['punto']:+.4f}) | labels presentes "
               f"{r['ic_labels_presentes']} (sesgo {r['sesgo_labels_presentes']:+.4f})")
+    print()
+    print("  (c) ESTRATIFICADO POR FAMILIA -- el que corresponde al diseno: las 30 familias",
+          "estan fijadas, lo muestral son sus plantillas")
+    for r in filas:
+        print(f"    {r['capa']:<9} {r['ic_estratificado']}  ancho {r['ancho_estratificado']:.4f}"
+              f"  sesgo {r['sesgo_estratificado']:+.4f}  >0,50: {r['estratificado_supera_050']}")
     print(f"\n  AL CITAR: el IC por plantillas es el que corresponde para hablar del CORPUS; el "
           f"IC entre semillas habla de la PARTICION. No son intercambiables.")
     print(f"\nSalidas en {OUT}")
