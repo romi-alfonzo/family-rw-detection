@@ -7473,6 +7473,141 @@ mezclarlas sin decir la base.**
 
 ---
 
+## 📌 LAS DOS BASES DEL FRENTE DE NOTAS — NO SE MEZCLAN (decisión de Romina, 2026-09-28)
+
+A partir de acá conviven dos conjuntos, **con cifras propias que no son comparables entre sí**.
+Al citar cualquier número hay que decir de cuál sale.
+
+### BASE A — NÚCLEO CANÓNICO. Es la de la tesis.
+
+**149 notas · 99 plantillas · 30 familias · P2bal · 50 semillas.** Es el núcleo que empareja los
+dos frentes del trabajo, y **no se toca**.
+
+| | cascada | texto solo |
+|---|---|---|
+| macro-F1 (30 familias) | **0,7417** [0,7328; 0,7505] | 0,6551 |
+| macro-F1 (28 evaluables) | **0,7946** | 0,7019 |
+| exactitud | 0,8123 | 0,7191 |
+| exactitud balanceada | 0,7798 | 0,7033 |
+| MCC | 0,8042 | 0,7092 |
+| IC por remuestreo de plantillas | [0,6585; 0,8187] | [0,5654; 0,7446] |
+
+**En uso:** con abstención responde el **77,18 %** y acierta el **93,24 %**; la familia correcta
+está entre las tres primeras el **86,6 %**; ante una familia fuera del catálogo **se abstiene el
+79,1 %** (al costo de 18,8 % en las conocidas).
+
+**Por escenario:** 0,9891 ante una nota parecida a una ya vista (36 % del corpus) · **0,7434**
+ante una nota genuinamente nueva (61 %) · 0,0000 en las 4 notas de familias de plantilla única.
+
+⚠️ Estas cifras usan la **normalización de URL original**. La corrección medida el 28-09 daría
+0,7492, **y NO está aplicada**: se reporta aparte.
+
+### BASE B — CORPUS EXTENDIDO. Experimento aparte, para trabajo futuro.
+
+**596 notas · 106 familias**, sumando las fuentes públicas ya reunidas. **No es comparable con la
+Base A** y nunca se cita sin declarar su base.
+
+| conjunto | familias | notas | macro-F1 | exactitud |
+|---|---|---|---|---|
+| global | 106 | 596 | **0,6485** | 0,7529 |
+| restringido a las 30 originales | 30 | 257 | **0,7419** | 0,7669 |
+| solo las familias nuevas | 76 | 339 | 0,6502 | 0,7423 |
+
+**Lo que dice:** las 30 originales **mantienen su macro-F1** (0,7419 contra 0,7417) con 76
+familias más compitiendo y 108 notas nuevas en las propias familias viejas. **Lo que baja en el
+global es la tarea, no el método: el sistema escala.** 42 de las 76 nuevas superan F1 0,70.
+
+**Limitaciones que van pegadas siempre:** etiquetas de las fuentes **sin auditoría de
+procedencia**; **sin nombres de archivo auditados**, así que la segunda capa de la cascada no
+actúa sobre las nuevas; normalización de nombres de familia laxa; y 21 familias con conflicto de
+etiqueta que **el catálogo MISP identificó como parentesco real, no como error**.
+
+**Y una advertencia propia de esta base:** la corrección de normalización de URL que mejora la
+Base A (+0,0076) **empeora la Base B** (−0,0080). El criterio del filtro de genéricos no escala:
+con muchas familias haría falta un umbral relativo, que **no está medido**.
+
+---
+
+### ★★★ LA PRIMERA MEJORA REAL: NORMALIZAR LAS URL DEL DICCIONARIO (2026-09-28)
+
+`filtro_genericos_url.py`, **preregistro N1–N6 commiteado antes de correr**. Logs
+`_log_filtro_url.txt` y `_log_filtro_url_nucleo50.txt`.
+
+#### El defecto
+
+El filtro de genéricos descarta un marcador cuando aparece **en más de una familia del pliegue de
+entrenamiento**. Pero el mismo sitio entra al diccionario **partido en varias claves**. Sobre el
+corpus de 106 familias, `torproject.org` aparece como **siete claves distintas**:
+
+| clave | familias |
+|---|---|
+| `https://www.torproject.org/download/` | 46 |
+| `https://www.torproject.org/` | 45 |
+| `https://torproject.org` | 19 |
+| `https://torproject.org/` | 19 |
+| `https://www.torproject.org` | 14 |
+
+Una variante poco frecuente puede quedar en **una sola familia** de ese pliegue, **pasar el filtro
+y hacer que la regla conteste con seguridad equivocada**. Es el mismo mecanismo que en mundo
+abierto hacía que la regla reclamara las notas de CONTI para BLACKBASTA.
+
+#### El resultado, sobre el núcleo de 30 (50 semillas)
+
+| variante | macro-F1 | exactitud | acierto de la regla |
+|---|---|---|---|
+| A — actual | 0,7417 | 0,8123 | 0,9928 |
+| **B — normalización suave** | **0,7492** | **0,8183** | **0,9977** |
+| C — por dominio | 0,7480 | 0,8168 | 0,9928 |
+
+**Δ macro-F1 de B: +0,0076** [+0,0049; +0,0102].
+
+**Distribución del Δ por semilla, verificada aparte: 29 semillas con Δ exactamente 0, 21
+positivas con media +0,0180, y CERO negativas. Nunca empeora.**
+
+«Suave» es: minúsculas, sin esquema, sin `www.`, sin barra final. No hay parámetro que ajustar.
+
+#### Por qué esta sí se adopta y la cesión por margen no
+
+| | cesión por margen | normalización de URL |
+|---|---|---|
+| Δ | +0,0015 | **+0,0076** |
+| parámetro a elegir | sí, umbral, y sobre el mismo conjunto | **ninguno** |
+| ventana de funcionamiento | estrecha (0,75 pierde, 1,50 no hace nada) | no aplica |
+| ¿empeora alguna vez? | no, pero el efecto es despreciable | **no, y el efecto es 5× mayor** |
+| naturaleza | complica el método | **corrige un defecto** |
+
+Que `https://www.torproject.org/` y `https://torproject.org` sean **la misma clave** no es una
+decisión de diseño: es lo correcto. El sistema las trataba como valores distintos por un descuido
+de normalización.
+
+#### ⚠️ Y el hallazgo que va con él: en 106 familias, la MISMA corrección EMPEORA
+
+| corpus | Δ macro-F1 de B | acierto de la regla |
+|---|---|---|
+| núcleo 30 | **+0,0076** | 0,9928 → **0,9977** |
+| extendido 106 | **−0,0080** | 0,9427 → 0,9349 |
+
+**N2 y N3 FALLAN**: se había predicho lo contrario. La explicación: con 30 familias la clave
+unificada aparece en varias y **siempre se filtra**, así que normalizar solo quita ruido. Con 106
+hay pliegues donde **sobrevive**, y entonces una sola clave genérica captura de golpe todas las
+notas que antes se repartían entre siete — la cobertura sube (0,5119 → 0,5385) y el acierto baja.
+
+**Consecuencia para cualquier extensión futura:** el criterio «aparece en más de una familia del
+entrenamiento» **no escala**. Con muchas familias hace falta un umbral relativo, del tipo
+«descartar si aparece en más del X % de las familias del pliegue». **No está medido.**
+
+#### ✅ DECISIÓN TOMADA (Romina, 2026-09-28): NO se adopta en el canónico
+
+**El canónico de 30 familias queda como está: macro-F1 0,7417 con la normalización original.**
+`normalizacion_marcadores.py` **no se toca** y no se re-mide nada.
+
+La corrección se reporta **aparte**, como mejora verificada y no aplicada: «se identificó un
+defecto en la normalización de las URL del diccionario; corregirlo eleva el macro-F1 a 0,7492
+[Δ +0,0076, IC +0,0049 a +0,0102, sin una sola semilla negativa en 50]». Es material para
+trabajo futuro y para la discusión, no para las cifras del capítulo.
+
+---
+
 ### ★★ LA EXTENSIÓN CON EL CATÁLOGO MISP DEL TUTOR — LA VÍA QUEDA CERRADA (2026-09-28)
 
 `capa_extension_misp.py`, **preregistro M1–M6 commiteado antes de correr**. Log
@@ -9941,6 +10076,186 @@ con nombre es 2,328 veces el global en exactitud (identidad aritmética verifica
 ⚠️ **NO citar los 0,9998 de «bytes + forma del nombre» como evidencia de que la forma del nombre
 funciona:** esa cifra está comprometida por la fuga del Exp. 2f. La evidencia se está re-midiendo
 en el Exp. 2g.
+
+---
+
+# ✅✅ EXP. 2g CERRADO — el sistema completo es ROBUSTO: bytes + estructura + extensión = 0,9998 y no colapsa en jpg. Cifra canónica del frente de archivos (2026-09-28)
+
+Job 4091, 1 h 50 min (17:56 → 19:46), nodo c2. **Registrado de lo pegado.** Salidas en
+`/scratch/ralfonzo/tesis/resultados_exp2g_job4091` (`cv_por_semilla.csv`,
+`cv_por_familia_y_semilla.csv`, `cv_resumen.csv`, `cv_por_familia_resumen.csv`,
+`tipos_por_pliegue.csv`, `manifiesto.json`). Base: NapierOne-small, 30 familias, 500/familia =
+15.000 archivos, semillas 0-4, 5 pliegues, RF 300/20/2/0,3 (`class_weight="balanced"` en CV).
+
+## Control de reproducibilidad: reproduce al 2f y al 2e-c al cuarto decimal
+
+Sin estar programado como puerta, el control existe: **la columna (2) en CV** (0,9357 ± 0,0005 /
+0,9359 ± 0,0004), **el F1 por familia de (2)** (NOTPETYA 0,4811 · JIGSAW 0,5739 · CRYPTOLOCKER
+0,6576 · DARKSIDE 0,7515 · WASTEDLOCKER 0,8352 · SUNCRYPT 0,8296) y **las columnas (2) y (3) de
+tipos no vistos** (doc 0,9337 / 0,9943 … jpg 0,8052 / 0,2167 … promedio 0,8789 / 0,8842) son
+**idénticas** a las del 2f (job 4083), y la (2) de tipos también a la del 2e-c (job 4079). Mismo
+muestreo, mismas particiones, mismos pliegues de prueba: **las comparaciones son pareadas de
+verdad** y los n y familias por pliegue son los de la tabla del 2e-c.
+
+## (A) Validación cruzada — 5 semillas
+
+| Columna | Exactitud | macro-F1 |
+|---|---|---|
+| (2) bytes + estructura | 0,9357 ± 0,0005 | 0,9359 ± 0,0004 |
+| **(5) bytes + estructura + forma de la EXTENSIÓN** | **0,9998 ± 0,0001** | **0,9998 ± 0,0001** |
+
+Por semilla, macro-F1 (2) → (5): 0,9356 → 0,9999 · 0,9355 → 0,9998 · 0,9361 → 0,9999 ·
+0,9360 → 0,9997 · 0,9365 → 0,9999. **Δ (5)−(2) = +0,0639 [+0,0634; +0,0644], 5/5.**
+
+**Igual que la forma completa del 2f (0,9998 ± 0,0001), con las mismas semillas y particiones:
+mirar solo la extensión final NO pierde nada en CV.** La salvedad de G1 («puede quedar algo por
+debajo porque pierde la base») no se materializó.
+
+**F1 por familia con (5), media de 5 semillas: las 30 ≥ 0,99.** Las más bajas: NOTPETYA 0,9978 ±
+0,0008 · BADRABBIT 0,9988 ± 0,0008 · JIGSAW 0,9990 ± 0,0007 · BLACKBASTA 0,9996 · CUBA 0,9996. Las
+otras 25 en 1,0000. **Solo CUBA baja respecto de (2)** (1,0000 → 0,9996 ± 0,0005).
+
+| Familia | bytes (2f) | + estructura | **+ estructura + extensión** |
+|---|---|---|---|
+| NOTPETYA | 0,3850 | 0,4811 | **0,9978** |
+| JIGSAW | 0,4338 | 0,5739 | **0,9990** |
+| CRYPTOLOCKER | 0,6128 | 0,6576 | **1,0000** |
+| DARKSIDE | 0,5981 | 0,7515 | **1,0000** |
+| WASTEDLOCKER | 0,6266 | 0,8352 | **1,0000** |
+| SUNCRYPT | 0,7590 | 0,8296 | **1,0000** |
+
+**Observación, no mecanismo demostrado:** las dos más bajas con (5), NOTPETYA y BADRABBIT, son
+las dos que no renombran lo que cifran (verificado en `subsec:exp2c_sesgo_pdf`): su extensión
+final es la del documento y la marca «es de un tipo de documento» vale igual para las dos. Es
+coherente con que ahí tengan que separar los bytes. No se midió. (No incluir a JIGSAW en esa
+frase: el recuento del 2d la agrupa con ellas, pero sus nombres originales eran los de sus
+archivos **sin cifrar**, que después se apartaron — a precisar en el pulido de §4.6.)
+
+## (B) Dejar-un-tipo-fuera (semilla de muestreo 0, un ajuste por pliegue, RF semilla 42)
+
+| Tipo excluido | (2) b + estr | (3) + forma completa (2f) | **(5) + extensión** | Δ (3)−(2) | **Δ (5)−(2)** |
+|---|---|---|---|---|---|
+| doc | 0,9337 | 0,9943 | 0,9943 | +0,0606 | +0,0606 |
+| docx | 0,9023 | 1,0000 | 1,0000 | +0,0977 | +0,0977 |
+| **jpg** | 0,8052 | **0,2167** | **0,9997** | **−0,5885** | **+0,1945** |
+| pdf | 0,8131 | 0,9791 | 0,9800 | +0,1660 | +0,1669 |
+| pptx | 0,8893 | 1,0000 | 1,0000 | +0,1107 | +0,1107 |
+| xls | 0,9037 | 0,9995 | 0,9995 | +0,0958 | +0,0958 |
+| xlsx | 0,9047 | 1,0000 | 1,0000 | +0,0953 | +0,0953 |
+| **Promedio** | 0,8789 | 0,8842 | **0,9962** | | **+0,1174 [+0,0743; +0,1604], 7/7** |
+
+**El colapso del 2f desaparece:** en jpg, la forma completa daba 0,2167 y la de la extensión da
+**0,9997**. En los otros seis tipos (5) iguala a (3) (pdf: 0,9800 contra 0,9791). La columna (3)
+reproduce el 2f al lado del arreglo, en la misma tabla.
+
+**⭐ Lo que más dice:** la pérdida al pasar de VC aleatoria a tipo no visto es **−0,057 para bytes y
+para bytes + estructura (2e-c), y −0,0036 para el sistema completo** (0,9998 → 0,9962). La
+extensión que agrega el ransomware no depende del tipo del documento, así que no solo no
+colapsa: **vuelve al sistema casi insensible al tipo**. El pliegue más bajo es pdf, 0,9800.
+
+## Veredicto del preregistro: CUMPLEN LAS CUATRO
+
+| | Predicción | Resultado | |
+|---|---|---|---|
+| G1 | (5) ≥ 0,995 en CV | **0,9998** | ✅ |
+| G2 | jpg sin colapso: Δ (5)−(2) ≥ −0,02 | **+0,1945** (forma completa: −0,5885) | ✅ |
+| G3 | Δ (5)−(2) > 0 en los 7 pliegues | mínimo **+0,0606** (doc) | ✅ |
+| G4 | las cuatro difíciles ≥ 0,95 con (5) | NOTPETYA 0,9978 · JIGSAW 0,9990 · CRYPTOLOCKER 1,0000 · DARKSIDE 1,0000 | ✅ |
+
+**Lectura acordada de antemano (docstring, commit `4477dbb`): «G1, G2 y G3 cumplen → (5) es el
+sistema completo y robusto: la cifra canónica del frente».**
+
+## ⭐ CIFRA CANÓNICA DEL FRENTE DE ARCHIVOS (criterio de Romina: el sistema que apila todas las capas)
+
+> **Bytes + rasgos estructurales + forma de la extensión final (Exp. 2g): macro-F1 0,9998 ±
+> 0,0001 y exactitud 0,9998 ± 0,0001** (15.000 archivos, 30 familias, 5 semillas × 5 pliegues),
+> las 30 familias ≥ 0,99; bajo tipo de documento no visto, **0,9962 de macro-F1** promedio en siete
+> pliegues, 7/7 por encima de bytes + estructura.
+> **Limitación declarada, pegada:** una sola campaña por familia en NapierOne; la forma de la
+> extensión puede ser del programa o de la campaña, y este conjunto no permite separarlo. **La
+> parte que no arrastra esa limitación es la de contenido: 0,936** (Exp. 2e), que se reporta al lado.
+
+## Qué queda superado y qué NO
+
+- **Superado:** el 0,9998 de la forma COMPLETA del nombre (2d y 2f) como sistema: es real en CV
+  pero aprende la base heredada de NapierOne (`-fromweb`) y colapsa en jpg. El aviso del bloque de
+  la capa de forma del nombre en notas («no citar el 0,9998 de bytes + forma como evidencia… se
+  está re-midiendo en el 2g») **queda resuelto: la evidencia robusta es la del 2g**, y es sobre la
+  forma de la EXTENSIÓN, no del nombre entero.
+- **Corrección de la síntesis:** con 5 semillas, bajo solo contenido (bytes + estructura) quedan
+  **tres** familias por debajo de 0,75 (NOTPETYA, JIGSAW, CRYPTOLOCKER); DARKSIDE da 0,7515.
+- **No cambia:** el 0,912 (solo bytes) y el 0,936 (contenido) siguen siendo mediciones válidas de su
+  capa; el sistema completo las apila.
+
+## ⚠ Verificación pendiente, disparada al preparar la tesis
+
+La leyenda de `tab:exp2e_tipos` dice «BLACKMATTER y CERBER, que sustituyen el nombre completo,
+participan solo del entrenamiento». **Sale de una etiqueta engañosa del script** del 2e-c:
+`exp2e_validacion_tipos.py` imprime como «Familias que renombran por completo (solo
+entrenamiento)» a toda familia con **algún** archivo sin tipo reconocible. BLACKMATTER renombra
+13 de ~1.000 archivos (§4.5, `subsec:exp2c_renombrado`), así que sus demás archivos **sí** deberían
+estar en la prueba. Los pliegues tienen 28 familias (medido), pero **cuáles son las dos que faltan
+no está verificado.** Comando pedido a Romina sobre `tipos_por_familia.csv` del job 4079. Afecta
+también la frase de `subsec:exp2c_renombrado` «su familia queda fuera del pliegue».
+
+**Código corregido (commit `51c2d05`):** `exp2e_validacion_tipos.py` y `analisis_bytes.py` ahora
+imprimen «Familias con archivos sin tipo reconocible (esos archivos solo entrenan)» y, aparte,
+«Familias que no entran a ningún pliegue de prueba», calculadas. No cambia ningún resultado.
+
+## Llevado a la tesis y a los informes el mismo día
+
+**`resultados.tex`** (respaldo `resultados.tex.antes_2g`; CRLF preservado). Compila: **93 páginas,
+0 errores, 0 referencias sin resolver**, sin desbordes en §4.6-§4.10.
+- **Secciones nuevas** `sec:exp2f` («Experimento 2f: Sistema Completo») y `sec:exp2g` («Experimento
+  2g: Nombre Robusto»), antes de la síntesis. Tablas `tab:exp2f` (CV de las cuatro columnas),
+  `tab:exp2g_tipos` (tipos no vistos con las columnas + nombre y + extensión lado a lado) y
+  `tab:exp2g_familias` (las seis difíciles a lo largo de las capas, 5 semillas). El 2f incluye el
+  colapso en jpg con su causa y el valor metodológico (la validación por tipos detectó un artefacto
+  de curaduría). El 2g cierra con «Alcance y limitación»: la limitación de campaña alcanza a todo el
+  frente y la capa de la extensión es la más expuesta.
+- **2d:** párrafo agregado al final de su limitación («un cuarto componente»), con remisión al 2f/2g.
+- **2e:** tras «cuatro familias permanecen por debajo de 0,75» (una semilla) se agregó que con cinco
+  semillas son tres.
+- **Síntesis:** «los dos experimentos posteriores» → «los experimentos posteriores (2d a 2g)»; «La
+  conclusión del frente… queda» → «Al cabo de esas etapas…»; las dos direcciones «culminan en un
+  sistema que las apila»; frase del nombre robusto agregada; «tres con cinco semillas» agregado;
+  **párrafo de la cifra reescrito**: 0,9998 del sistema completo, 0,9962 bajo tipo no visto, con la
+  descomposición (contenido 0,936, bytes 0,912) y tres familias bajo 0,75 por contenido. **Precisión:**
+  «la segunda concierne al contenido, y no arrastra esa limitación» → «y no depende del esquema de
+  renombrado» (la limitación de campaña general alcanza también al contenido: §4.5.14 ya lo dice del
+  0,912).
+- **Tabla comparativa:** fila Exp. 2g en negrita; la del 2e pasa a «(solo contenido)» sin negrita;
+  leyenda con la limitación. **Punto 2 de «Los resultados demuestran»** reescrito con las cifras
+  vigentes. **Discusión:** una frase agregada (el sistema completo combina las dos señales) y el punto
+  2 del procedimiento post-ataque actualizado (decía 91,2 % a secas).
+- **Márgenes:** `tab:exp2e` y `tab:exp2e_tipos` (del 2e, de hoy) se salían 60 y 72 pt: envueltas en
+  `\resizebox`. Quedan desbordes preexistentes que no son del frente de archivos.
+
+**Informes a Cappo** (respaldos `.antes_2g`):
+- `informe_2026-09-27_…_para_cappo.md`: recuadro con la cifra del frente al principio; §1 con
+  actualización; §3 con la precisión de campaña; **§5 nuevo «El sistema completo — Exps. 2f y 2g»**;
+  hallazgos pasan a §6 y suman **6.3 CRYPTOLOCKER determinista**; §7 (*majority voting*) empieza
+  diciendo que con el sistema completo el margen es 0,0002; §8 suma la sexta predicción fallada
+  (F4 del 2f); §9 decisión 1 reescrita — **la anterior atribuía a Romina la decisión «el 0,936 es
+  canónico», que fue un error de Claude**; ahora dice su criterio real.
+- `informe_cierre_2026-09-28_…_frente_archivos.pdf` (+ `.tex`): reescrito con las cifras vigentes.
+  **2 páginas**, 0 errores, sin desbordes.
+
+**Verificación de las cifras de los informes, contra el log pegado del 4091 y los bloques del 2f y
+del 2e-c. Cinco imprecisiones propias corregidas antes de entregar:** (1) «de 0,912 a 0,9998 de
+macro-F1» mezclaba métricas (0,912 es exactitud); (2) «catorce rasgos que miran solo la extensión»:
+uno, la cantidad de puntos, mira el nombre; (3) CRYPTOLOCKER «clave fija sin IV» dicho como hecho →
+«la huella de»; (4) **«techo de +2,5 puntos» (venía del informe anterior): +2,5 es la ganancia
+estimada de delegar; el techo del oráculo es +5,2**; (5) «0,936» sin métrica en los dos informes.
+
+**Para Romina, antes de mandar nada a Cappo:** con el sistema completo en 0,9998, el *majority
+voting* con notas (elemento de acción 3) no puede sumar más de 0,0002: la cuenta del +2,5 vale
+solo si no se dispone del nombre del archivo. Está así en los dos informes.
+
+**Para el pulido final (no tocado):** el 2d dice que BADRABBIT, NOTPETYA **y JIGSAW** «son las
+familias que no renombran»; los nombres originales de JIGSAW eran los de sus archivos **sin cifrar**,
+apartados después. La figura de progresión (`generar_figuras_cap4.py`) sigue mostrando cuatro
+enfoques. El «residuo genuino» del §4.5.8.
 
 ---
 
