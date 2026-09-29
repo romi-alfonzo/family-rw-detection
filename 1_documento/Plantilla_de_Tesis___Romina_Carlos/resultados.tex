@@ -185,6 +185,31 @@ La información que permite distinguir familias de ransomware a partir de sus ar
 
 Esta lectura es además coherente con la capacidad de ID Ransomware de identificar el 66,67\% de las familias a partir de archivos cifrados (Sección~\ref{sec:res_herramientas}): la herramienta no emplea estadística sino firmas de bytes en posiciones conocidas. Las dos secciones siguientes ponen a prueba esta hipótesis de forma directa, primero localizando explícitamente esas firmas (Experimento 2b) y luego aprendiéndolas de los datos (Experimento 2c).
 
+\subsection{Optimización de hiperparámetros sobre las características estadísticas}
+\label{subsec:exp2_hiperparametros}
+
+La subsección anterior reserva la búsqueda de hiperparámetros y declara esa omisión como una limitación del alcance del experimento. La limitación quedó cerrada posteriormente: se ejecutó una búsqueda aleatorizada (\texttt{RandomizedSearchCV}, veinte configuraciones muestreadas por combinación, validación cruzada estratificada de cinco particiones) sobre los mismos 29.029 archivos y las mismas 29 familias, para los dos subconjuntos de características relevantes y los dos algoritmos que mejor rendían sin ajustar. La Tabla~\ref{tab:exp2_gridsearch} presenta el resultado.
+
+\begin{table}[ht]
+\centering
+\caption{Búsqueda de hiperparámetros sobre las características estadísticas. Base: 29.029 archivos, 29 familias, azar $= 0{,}034$. La referencia sin ajustar es 0,603 de exactitud (Tabla~\ref{tab:exp2_ampliado}). El tiempo es el de la búsqueda completa en el clúster.}
+\label{tab:exp2_gridsearch}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Configuración ajustada} & \textbf{Exactitud} & \textbf{Macro-F1} & \textbf{Cómputo} \\
+\hline
+19 características + Random Forest & 0,601 & 0,584 & 11 min \\
+\textbf{19 características + HistGradientBoosting} & \textbf{0,603} & \textbf{0,595} & \textbf{3 min} \\
+275 características + Random Forest & 0,600 & 0,589 & 2 h 27 min \\
+275 características + HistGradientBoosting & 0,599 & 0,592 & 35 min \\
+\hline
+\end{tabular}
+\end{table}
+
+La mejor configuración ajustada alcanza 0,6029 de exactitud frente a 0,6030 sin ajustar: la diferencia es de $-0{,}0001$, es decir, nula. Las cuatro configuraciones caen dentro de un rango de cuatro milésimas ---entre 0,599 y 0,603---, de modo que el resultado es indiferente tanto a los hiperparámetros como al número de características. El contraste de costo es ilustrativo: 275 características con Random Forest requieren dos horas y media de cómputo para rendir lo mismo que 19 características con \textit{HistGradientBoosting} en tres minutos.
+
+La lectura que interesa no es que la optimización sea innecesaria, sino qué informa el hecho de que no cambie nada. El techo de la representación estadística no es un problema de ajuste: es una propiedad de la representación. Lo que le falta a un vector de estadísticos globales no se consigue optimizando, sino cambiando qué se mide, que es exactamente lo que hacen los dos experimentos siguientes. Este es el primero de los resultados negativos convergentes que se retoman en la discusión al cierre del capítulo.
+
 \section{Experimento 2b: Identificación por Artefactos Estructurales}
 \label{sec:exp2b}
 
@@ -226,6 +251,78 @@ Combinado & 94,1\% & 0,932 $\pm$ 0,001 & 0,991 $\pm$ 0,002 \\
 La interpretación de estas cifras exige cautela. La extensión acierta el 100\% de los casos en que está presente, pero ese valor perfecto es un indicio de artefacto y no de mérito: en NapierOne cada familia está representada por una única campaña, de modo que su extensión es constante dentro del conjunto de datos. En la práctica, familias como DHARMA emplean extensiones que incorporan un identificador de la víctima, por lo que la extensión constituye un identificador de \textit{campaña} y no de \textit{familia}. Su rendimiento no es extrapolable.
 
 Las firmas binarias, en cambio, constituyen evidencia de contenido: son marcadores que el propio programa escribe en el archivo para reconocer posteriormente lo que ya ha cifrado, y por lo tanto resultan más estables entre campañas que la extensión. Alcanzan un 98,4\% de acierto, pero solo cubren el 57,2\% de los archivos: la regla exige que la firma se repita en al menos el 90\% de los archivos de la familia, de modo que las familias cuyo marcador varía entre archivos quedan fuera. Esta limitación de cobertura es la que motiva el experimento siguiente.
+
+\subsection{El criterio de detección: de la unanimidad a la mayoría}
+\label{subsec:exp2b_criterio}
+
+El procedimiento descrito exige que el prefijo o el sufijo sea común a \textit{todos} los archivos muestreados de la familia. Ese criterio de unanimidad byte a byte resultó ser frágil, y el diagnóstico de su fragilidad produjo además un hallazgo sobre una familia concreta.
+
+\textbf{El síntoma.} La familia BADRABBIT aparecía unas veces con un sufijo común de 18 bytes y otras sin marca alguna, según qué muestra de 50 archivos hubiera tocado en el sorteo. En consecuencia, la lista de familias sin marca ---que es un resultado que el capítulo reporta--- oscilaba entre dos y tres elementos según la semilla de muestreo, y las cifras de cobertura del modo «solo firmas binarias» oscilaban con ella.
+
+\textbf{El diagnóstico.} Se volcaron los últimos 18 bytes de la totalidad de los archivos de BADRABBIT. La secuencia \texttt{65 00 6E 00 63 00 72 00 79 00 70 00 74 00 65 00 64 00} ---la palabra \texttt{encrypted} codificada en UTF-16 \textit{little-endian}, que es el marcador documentado de BadRabbit--- aparece en \textbf{965 de los aproximadamente 1.000 archivos de la familia, un 96,5\,\%}. Los treinta y cinco restantes terminan en secuencias distintas entre sí y de aspecto aleatorio, de modo que están cifrados: simplemente no llevan el marcador a esa distancia del final. No se trata, por tanto, de archivos sin cifrar dentro del conjunto.
+
+\textbf{La aritmética.} Si el 96,5\,\% de los archivos lleva el marcador, la probabilidad de que los cincuenta sorteados lo lleven todos es $0{,}965^{50} \approx 0{,}17$. La unanimidad no fallaba por un azar excepcional: fallaba en el 83\,\% de los sorteos. Lo llamativo no era el fallo sino el acierto. La comprobación empírica coincide con la predicción: sobre diez semillas de muestreo, el criterio de unanimidad detecta la firma de BADRABBIT en \textbf{una sola}, frente a las 1,7 que la probabilidad anticipa.
+
+\textbf{El defecto de fondo.} La unanimidad byte a byte no es un criterio conservador sino uno frágil, porque no se degrada de forma gradual: un único archivo discrepante no acorta la subcadena común, la lleva a cero. Bajo ese criterio, una familia que marca el 96\,\% de sus archivos y otra que no marca ninguno resultan indistinguibles.
+
+\textbf{La corrección.} Se aplicó al prefijo y al sufijo el mismo criterio de mayoría que ya se empleaba para la extensión, declarado en 0,90, y cada marca pasa a reportarse junto con su cobertura, es decir, la fracción de archivos de la familia que efectivamente la lleva. La Tabla~\ref{tab:exp2b_criterio} compara ambos criterios sobre diez semillas de muestreo.
+
+\begin{table}[ht]
+\centering
+\caption{Efecto del criterio de detección sobre la estabilidad del Experimento 2b. Diez semillas de muestreo, 1.500 archivos (50 por familia), 30 familias, modo combinado; media $\pm$ desvío sobre las diez semillas.}
+\label{tab:exp2b_criterio}
+\small
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Criterio de detección} & \textbf{Familias con marca} & \textbf{Exactitud} & \textbf{Cobertura} \\
+\hline
+Unanimidad byte a byte & 27,0 \quad (entre 26 y 28) & 0,900 $\pm$ 0,016 & 0,909 $\pm$ 0,014 \\
+\textbf{Mayoría declarada en 0,90} & \textbf{28,0 \quad (28 en las diez)} & \textbf{0,932 $\pm$ 0,001} & \textbf{0,941 $\pm$ 0,002} \\
+\hline
+\end{tabular}
+\end{table}
+
+El cambio \textbf{reduce el desvío dieciséis veces} y además \textbf{sube la media 0,032}. Bajo unanimidad, el número de familias con marca variaba entre 26 y 28 según el sorteo; bajo el criterio de mayoría es 28 en las diez semillas. Es asimismo un resultado más fuerte en cuanto a contenido: afirmar que «BADRABBIT marca sus archivos con la cadena \texttt{encrypted} en UTF-16, en el 96,5\,\% de los casos» dice más que afirmar que BADRABBIT no deja marca. La cobertura medida dentro de las muestras de 50 archivos ---entre 0,92 y 1,00, con media próxima a 0,96--- reproduce por una vía independiente la proporción hallada en el volcado sobre la familia completa.
+
+El recuento de firmas binarias se comporta del mismo modo. Bajo unanimidad son quince familias en siete de las diez semillas y dieciséis en las tres restantes, y las dos que entran y salen son precisamente BADRABBIT y BLACKBASTA. Bajo el criterio de mayoría son \textbf{diecisiete familias en las diez semillas, sin una sola variación}: \textbf{cuatro prefijos} ---CUBA, LORENZ, TESLACRYPT y WANNACRY--- y \textbf{trece sufijos}. La asimetría entre trece y cuatro no es accesoria: converge con el análisis de importancia por posición de la Sección~\ref{subsec:exp2c_ventana}, donde casi el 80\,\% de la información discriminante se concentra en la cola del archivo. La marca se escribe al final.
+
+Conviene señalar un caso límite que el criterio deja visible: BADRABBIT \textbf{no altera la extensión} de los archivos que cifra, de modo que la firma binaria es su única marca. Es exactamente la familia para la que el defecto del criterio resultaba más costoso, y la que ilustra por qué la cobertura debe reportarse junto con la marca en lugar de tratarse como una propiedad de todo o nada.
+
+\subsection{Validación externa de las firmas descubiertas}
+\label{subsec:exp2b_validacion}
+
+La evaluación manual de ID Ransomware descrita en la Sección~\ref{sec:res_herramientas} dejó registradas, para varias familias, las secuencias de bytes que la propia herramienta declara como evidencia de identificación. Esas anotaciones permiten una validación externa directa del procedimiento de descubrimiento automático: son dos derivaciones independientes ---una por catálogo manual mantenido por terceros, la otra por búsqueda sobre los datos--- que pueden compararse byte a byte. \textbf{Seis familias coinciden de forma exacta} (Tabla~\ref{tab:exp2b_validacion}).
+
+\begin{table}[ht]
+\centering
+\small
+\caption{Coincidencia entre los bytes que ID Ransomware declara por su cuenta y las firmas que el procedimiento automático descubre a partir de los datos, sin catálogo previo. Las anotaciones de la herramienta se recogieron durante la evaluación descrita en la Sección~\ref{sec:res_herramientas}.}
+\label{tab:exp2b_validacion}
+\footnotesize
+\begin{tabular}{|l|p{6.0cm}|l|}
+\hline
+\textbf{Familia} & \textbf{Bytes declarados por ID Ransomware} & \textbf{Firma descubierta} \\
+\hline
+WANNACRY & \texttt{[0x00-0x08]} \newline \texttt{57414E4143525921} & prefijo de 12 B que la contiene \\
+\hline
+LORENZ & \texttt{[0x00-0x05]} \newline \texttt{2E737A3430} & prefijo de 5 B, idéntica \\
+\hline
+TESLACRYPT & \texttt{[0x00-0x30]} \newline \texttt{000000000000000041CAE9B7E004308D} \newline \texttt{00000000} & prefijo de 64 B que la contiene \\
+\hline
+MAZE & \texttt{[0x58771-0x58779]} \newline \texttt{0000000066116166} & sufijo de 8 B, idéntica \\
+\hline
+GANDCRAB & \texttt{[0x43614-0x4361C]} \newline \texttt{1829899381820300} & sufijo de 19 B que la contiene \\
+\hline
+MEDUZALOCKER & \texttt{[0x5A20A-0x5A218]} \newline \texttt{00002C0000000002000001000000} & sufijo de 21 B que la contiene \\
+\hline
+\end{tabular}
+\end{table}
+
+En dos de los seis casos ---LORENZ y MAZE--- las dos secuencias son idénticas. En los otros cuatro, la firma hallada automáticamente es \textit{más larga} y contiene a la declarada por la herramienta: el procedimiento recupera el marcador documentado y, además, los bytes constantes contiguos que el catálogo manual no registra. Dos familias más aportan coincidencias de otro tipo: para CONTI la herramienta declara la extensión \texttt{.MRBNY}, que es la que el procedimiento encuentra, mientras que para PHOBOS y SODINOKIBI declara una regla ---bytes de relleno y metadatos en un caso, una suma de verificación de la clave pública en el otro--- y no una secuencia literal, de modo que no admiten comparación byte a byte.
+
+Estas seis coincidencias son la validación externa más directa que admite el Experimento 2b. El procedimiento no partió de ningún catálogo: las marcas se derivaron de los archivos y, aun así, reproducen las que una herramienta de referencia, construida a mano y de forma independiente, declara para las mismas familias. Las dos que se leen como texto ---\texttt{WANACRY!} y \texttt{.sz40}--- lo hacen en ambas derivaciones.
+
+\textbf{Una discrepancia abierta, que se declara.} Para RYUK la herramienta reporta la secuencia \texttt{0x4845524D4553} ---la palabra \texttt{HERMES}, familia de la que Ryuk deriva--- dentro del rango \texttt{[0x584D0-0x58792]}. El procedimiento automático \textit{no} la encuentra: RYUK aparece únicamente con su extensión \texttt{.ryk}. La explicación más plausible, enunciada aquí como hipótesis y no como resultado, es que el rango declarado abarca 706 bytes mientras que el procedimiento exige que la marca esté a una distancia fija del final; un bloque de longitud variable escrito después del marcador bastaría para desplazarlo entre archivos. La comprobación requiere un volcado hexadecimal dirigido y queda pendiente. La discrepancia no afecta a las cifras reportadas: el clasificador del Experimento 2c identifica a RYUK con un macro-F1 por familia de 0,9996 $\pm$ 0,0005.
 
 \section{Experimento 2c: Aprendizaje Automático sobre la Estructura de Bytes}
 \label{sec:exp2c}
@@ -283,21 +380,581 @@ El resultado es marcadamente bimodal: \textbf{23 de las 30 familias alcanzan un 
 
 \begin{itemize}
 \item Las \textbf{quince familias con firma binaria} identificada en el Experimento 2b obtienen, sin una sola excepción, un F1 igual o superior a 0,99.
-\item De las \textbf{once familias que solo poseían extensión propia} ---es decir, sin marca detectable en el contenido mediante coincidencia exacta---, siete alcanzan igualmente valores superiores a 0,98. El clasificador extrae de los bytes información que la regla exacta no capturaba. Las cuatro restantes ---JIGSAW, DARKSIDE, CRYPTOLOCKER y WASTEDLOCKER--- son precisamente las que el Experimento 2c no resuelve: al no emplear el nombre del archivo, el clasificador se queda sin la única marca que esas familias dejan.
+\item De las \textbf{once familias que solo poseían extensión propia} ---es decir, sin marca detectable en el contenido mediante coincidencia exacta---, siete alcanzan igualmente valores superiores a 0,98. El clasificador extrae de los bytes información que la regla exacta no capturaba. Las cuatro restantes ---JIGSAW, DARKSIDE, CRYPTOLOCKER y WASTEDLOCKER--- son precisamente las que el Experimento 2c no resuelve: al no emplear el nombre del archivo, el clasificador se queda sin la única marca que esas familias escriben explícitamente. CRYPTOLOCKER deja además una regularidad en el contenido, debida a su forma de cifrar, que solo es aprovechable en algunos tipos de documento (Sección~\ref{subsec:exp2c_determinista}).
 \item De las \textbf{dos familias sin marca alguna}, ninguna supera el umbral: SUNCRYPT alcanza 0,745 $\pm$ 0,016 y NOTPETYA 0,394 $\pm$ 0,023. BADRABBIT, en cambio, pasa de un F1 de 0,15 en el experimento estadístico a \textbf{0,978 $\pm$ 0,002}, quedando prácticamente resuelta.
 \end{itemize}
 
 Las seis familias con menor rendimiento ---SUNCRYPT (0,745 $\pm$ 0,016), WASTEDLOCKER (0,628 $\pm$ 0,013), CRYPTOLOCKER (0,605 $\pm$ 0,016), DARKSIDE (0,603 $\pm$ 0,011), JIGSAW (0,439 $\pm$ 0,014) y NOTPETYA (0,394 $\pm$ 0,023)--- forman un grupo de confusión mutua. DARKSIDE presenta un patrón revelador: precisión de 0,45 frente a un recall de 0,90, lo que indica que actúa como clase de destino por defecto para los archivos que el modelo no logra atribuir. Estas seis familias son, presumiblemente, las que cifran sin añadir estructura al archivo, y constituyen el residuo genuino de la indistinguibilidad estadística planteada en el Experimento 2.
 
+\subsection{Validación anidada y estabilidad de la estimación}
+\label{subsec:exp2c_anidada}
+
+El experimento produce dos cifras de exactitud que no ofrecen la misma garantía y que conviene distinguir de forma explícita, porque responden a preguntas distintas.
+
+La primera proviene de la \textbf{etapa de búsqueda}, que es anidada: la selección de hiperparámetros se ejecuta dentro del subconjunto de entrenamiento de cada partición externa y la métrica se calcula sobre la partición externa, que no intervino en la selección. Esa etapa da \textbf{0,8913 de exactitud y 0,8920 de macro-F1} sobre 6.000 archivos (200 por familia). Es la cifra metodológicamente inatacable, y es también la que compara las tres representaciones en igualdad de condiciones: la posicional obtiene 0,8913, los n-gramas de bytes con regresión logística 0,8623 y con LinearSVC 0,8515. La ventaja de la representación posicional se sostiene, por tanto, también bajo evaluación anidada.
+
+La segunda proviene de la \textbf{etapa final}, que reevalúa la configuración ya elegida sobre una muestra mayor ---15.000 archivos, 500 por familia--- con los hiperparámetros fijos: \textbf{0,9089 de exactitud y 0,9074 de macro-F1}. Aquí los hiperparámetros se seleccionaron con archivos que en parte reaparecen en la muestra de evaluación, de modo que la cifra es optimista respecto de la anterior. La distancia entre ambas, \textbf{0,018 de exactitud}, acota esa diferencia: el valor conservador y el valor de referencia del experimento están a menos de dos centésimas.
+
+Sobre la etapa final se midió además la dispersión, repitiendo la corrida con diez semillas de muestreo y los hiperparámetros fijos, de modo que lo que se estima es la variabilidad de la muestra y no una nueva selección de modelo. El resultado es \textbf{0,912 $\pm$ 0,002 de exactitud y 0,911 $\pm$ 0,001 de macro-F1}, con un recorrido total entre 0,9093 y 0,9147 a lo largo de las diez semillas. La estimación del frente de archivos es, por tanto, estable hasta la tercera cifra decimal, lo que se explica por el tamaño de la muestra sobre la que se calcula.
+
+\subsection{Generalización a tipos de documento nunca vistos}
+\label{subsec:exp2c_tipos}
+
+En NapierOne todas las familias cifraron el mismo conjunto base de documentos, de modo que cabe una objeción legítima al resultado anterior: que el clasificador aprenda rasgos del documento original ---la estructura de un \texttt{.docx}, la cabecera de un \texttt{.pdf}--- y no del ransomware que lo cifró. La objeción se pone a prueba con una validación \textit{dejar-un-tipo-fuera}: se entrena con todos los tipos de documento salvo uno y se evalúa exclusivamente sobre el tipo excluido, que el modelo no vio nunca. La Tabla~\ref{tab:exp2c_tipos} presenta los siete pliegues.
+
+\begin{table}[ht]
+\centering
+\caption{Validación \textit{dejar-un-tipo-fuera}. Base: 14.500 archivos, 29 familias ---la medición es anterior a la incorporación de BLACKBASTA---, mismos hiperparámetros que el Experimento 2c. La columna de familias indica cuántas están representadas en el conjunto de prueba de cada pliegue.}
+\label{tab:exp2c_tipos}
+\small
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Tipo excluido} & \textbf{Archivos de prueba} & \textbf{Familias} & \textbf{Exactitud} & \textbf{Macro-F1} \\
+\hline
+doc & 1.991 & 27 & 0,889 & 0,881 \\
+docx & 1.978 & 27 & 0,887 & 0,877 \\
+xls & 1.948 & 27 & 0,889 & 0,883 \\
+xlsx & 1.962 & 27 & 0,884 & 0,872 \\
+pptx & 1.926 & 27 & 0,867 & 0,864 \\
+pdf & 1.798 & 25 & 0,863 & 0,836 \\
+jpg & 2.397 & 28 & 0,874 & 0,811 \\
+\hline
+\textbf{Promedio de los siete pliegues} & --- & --- & \textbf{0,879} & \textbf{0,861} \\
+\hline
+\end{tabular}
+\end{table}
+
+El rendimiento se sostiene sobre tipos nunca vistos: el promedio es de 0,879 de exactitud frente a la referencia de 0,910 con el tipo presente en el entrenamiento, una \textbf{caída de 0,031}. El caso de \texttt{jpg} es el más informativo, porque la estructura interna de una imagen comprimida no se parece a la de un documento de ofimática y, aun así, la exactitud es de 0,874. La objeción queda descartada: lo que el clasificador aprende no es el documento de origen.
+
+Hay una precisión que debe acompañar a estas cifras. \textbf{Ningún pliegue cubre las 29 familias}: cubren entre 25 y 28 según el tipo excluido. Las razones son de composición del conjunto. CERBER sustituye el nombre del archivo ---véase la Sección~\ref{subsec:exp2c_renombrado}---, de modo que su tipo de documento no puede leerse, y en esta medición solo aparece en el pliegue de \texttt{jpg}; BLACKMATTER está representada casi solo por imágenes ---988 de sus 1.000 muestras son \texttt{jpg}---, de modo que solo puede aparecer en ese pliegue; NOTPETYA no tiene imágenes; y el pliegue \texttt{pdf} carecía de BADRABBIT y NOTPETYA por el sesgo de carga descrito en la Sección~\ref{subsec:exp2c_sesgo_pdf}. El de \texttt{jpg} es el único con 28 familias. La conclusión se sostiene, pero el promedio debe enunciarse como «entre 25 y 28 de las 29 familias según el tipo excluido» y no como si cubriera todas.
+
+\subsection{Cuántos bytes hacen falta y dónde reside la señal}
+\label{subsec:exp2c_ventana}
+
+La elección de 512 bytes por extremo era, hasta aquí, una decisión de diseño sin justificar. Esta subsección la justifica por dos vías independientes que convergen: variando el tamaño de la ventana y midiendo dónde se concentra la importancia dentro de ella.
+
+\subsubsection*{La curva de ventana satura, y luego desciende}
+
+Se repitió la clasificación con ventanas de 64 a 4.096 bytes por extremo, es decir, entre 128 y 8.192 bytes leídos por archivo (Figura~\ref{fig:ablacion_extendida}, panel a; Tabla~\ref{tab:exp2c_ventana}).
+
+\begin{table}[ht]
+\centering
+\caption{Ablación de la ventana de lectura. Base: 15.000 archivos, 30 familias, Random Forest con los hiperparámetros del Experimento 2c. La columna «sin relleno» excluye los archivos más cortos que la ventana máxima.}
+\label{tab:exp2c_ventana}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Ventana} & \textbf{Bytes leídos} & \textbf{Macro-F1} & \textbf{Macro-F1} & \textbf{Exactitud} \\
+\textbf{(cabecera + cola)} & & \textbf{(15.000)} & \textbf{(sin relleno)} & \textbf{(15.000)} \\
+\hline
+64 + 64 & 128 & 0,790 & 0,794 & 0,796 \\
+128 + 128 & 256 & 0,792 & 0,795 & 0,798 \\
+256 + 256 & 512 & 0,851 & 0,856 & 0,851 \\
+\textbf{512 + 512} & \textbf{1.024} & \textbf{0,905} & \textbf{0,910} & \textbf{0,904} \\
+1.024 + 1.024 & 2.048 & 0,904 & 0,908 & 0,903 \\
+2.048 + 2.048 & 4.096 & 0,903 & 0,908 & 0,902 \\
+4.096 + 4.096 & 8.192 & 0,901 & 0,906 & 0,901 \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\textwidth]{images/fig_ablacion_extendida.png}
+\caption{Ablación extendida de la ventana de lectura. (a) La curva alcanza su máximo en 512 bytes por extremo y desciende levemente a partir de ahí; las dos series ---corpus completo y subconjunto sin relleno de ceros--- discurren en paralelo, de modo que la forma de la curva no es un artefacto del relleno. (b) Un bloque tomado del centro del archivo apenas supera el azar, y añadirlo a los extremos no aporta.}
+\label{fig:ablacion_extendida}
+\end{figure}
+
+El máximo está en 512 bytes por extremo y a partir de ahí la curva \textbf{desciende} levemente, hasta 0,901 de macro-F1 con 8.192 bytes leídos. Leer más no mejora: la información se agota antes, y las columnas adicionales solo añaden ruido. En sentido contrario, el dato relevante para una implementación práctica es que \textbf{con 128 bytes por archivo ya se alcanza el 87\,\% del macro-F1 máximo}, lo que hace viable una inspección de coste casi nulo.
+
+\subsubsection*{Un control que la ampliación de ventana hacía necesario}
+
+Al agrandar la ventana, los archivos más cortos que ella se rellenan con ceros, y ese relleno codifica indirectamente el tamaño del archivo, que es una pista ajena a su contenido. El control estaba obligado, porque la ventaja podría venir del relleno y no de los bytes. Son 84 archivos con la ventana de 1.024, 143 con la de 2.048 y 217 con la de 4.096 ---entre el 0,6\,\% y el 1,4\,\% del conjunto---. La curva se midió dos veces: sobre el corpus completo de 15.000 archivos y sobre el subconjunto de 14.783 que miden al menos 8.192 bytes y por tanto nunca se rellenan. Las dos series discurren \textbf{en paralelo}, con el subconjunto limpio unas cinco milésimas de macro-F1 por encima de forma uniforme. La forma de la curva, y con ella la conclusión sobre la saturación, \textbf{no es un artefacto del relleno}.
+
+\subsubsection*{Los bytes del medio no llevan información}
+
+La pregunta complementaria es si la elección de leer los extremos deja fuera algo aprovechable. Un bloque de 1.024 bytes tomado del centro del archivo alcanza un \textbf{macro-F1 de 0,058}, con el azar en 0,033: prácticamente nada. Añadido a los extremos, el macro-F1 pasa de 0,905 a 0,903, de modo que no aporta y estorba levemente. La asimetría entre los dos extremos, en cambio, es marcada: \textbf{la cola sola alcanza 0,746 de macro-F1 y la cabecera sola 0,348}, más del doble a favor del final del archivo.
+
+\subsubsection*{Dónde se concentra la importancia dentro de la ventana}
+
+La segunda vía mide directamente qué posiciones usa el modelo. Sumando la importancia de Gini de las 1.024 posiciones, \textbf{la cabecera acumula el 20,4\,\% y la cola el 79,6\,\%} (Figura~\ref{fig:importancia_posicion}). Los doce desplazamientos más informativos son todos de la cola: $-5$, $-133$, $-1$, $-2$, $-3$, $-6$, $-4$, $-10$, $-100$, $-168$, $-257$ y $-129$. La concentración es extrema en el borde: \textbf{los últimos dieciséis bytes reúnen por sí solos el 27,8\,\%} de toda la importancia.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\textwidth]{images/fig_importancia_por_posicion.png}
+\caption{Importancia de Gini por posición dentro de la ventana de lectura. La escala vertical es común a los dos paneles. La señal se concentra en los últimos bytes del archivo, con un pico secundario entre los desplazamientos $-130$ y $-170$; la cabecera aporta poco más allá de sus primeras decenas de bytes.}
+\label{fig:importancia_posicion}
+\end{figure}
+
+Existe además un \textbf{pico secundario} real en la cola, entre los desplazamientos $-128$ y $-255$, que acumula otro 21,5\,\%. Ese pico es lo que explica el salto de la curva de ventana entre 128 y 256 bytes por extremo: con 128 el pico queda fuera de la ventana, y al incorporarlo el macro-F1 sube de 0,792 a 0,851. Las dos vías ---ampliar la ventana y medir la importancia--- describen, por tanto, el mismo objeto.
+
+La convergencia con el Experimento 2b es completa: trece de las diecisiete firmas binarias descubiertas son sufijos y solo cuatro son prefijos. La explicación mecánica es directa: añadir un bloque de control al final de un archivo es una operación barata, mientras que insertarlo al principio obligaría a desplazar todo el contenido. \textbf{El ransomware firma al final.}
+
+\subsection{Por qué fallan las seis familias difíciles}
+\label{subsec:exp2c_dificiles}
+
+Las seis familias que quedan por debajo de 0,75 de F1 forman un grupo cerrado: entre el \textbf{97,2\,\% y el 99,4\,\%} de las predicciones emitidas para cada una de ellas cae dentro del propio grupo de seis. No se confunden con el resto del conjunto, se confunden entre ellas. La Tabla~\ref{tab:exp2c_dificiles} añade la entropía media de sus extremos.
+
+\begin{table}[ht]
+\centering
+\caption{Diagnóstico de las seis familias difíciles. La confusión interna es el porcentaje de predicciones de esa familia que cae dentro del grupo de seis. Entropía de Shannon en bits/byte, medida sobre 512 bytes de cada extremo. Base: 14.500 archivos, 29 familias.}
+\label{tab:exp2c_dificiles}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Familia} & \textbf{Confusión interna} & \textbf{Entropía cabecera} & \textbf{Entropía cola} \\
+\hline
+CRYPTOLOCKER & 99,4\,\% & 7,59 & 7,59 \\
+WASTEDLOCKER & 99,2\,\% & 7,59 & 7,59 \\
+JIGSAW & 98,6\,\% & 7,51 & 7,55 \\
+DARKSIDE & 97,2\,\% & 7,59 & 7,49 \\
+\textbf{SUNCRYPT} & 98,2\,\% & 7,59 & \textbf{4,78} \\
+\textbf{NOTPETYA} & 98,4\,\% & 7,34 & \textbf{6,58} \\
+\hline
+Resto de familias & --- & 7,03 & 7,44 \\
+\hline
+\end{tabular}
+\end{table}
+
+Estas cifras deben leerse contra el techo correcto, que no es 8,0. La entropía de Shannon se estima aquí sobre ventanas de 512 bytes, y una muestra de 512 bytes no alcanza a visitar los 256 valores posibles: por simple efecto del tamaño de muestra, datos \textit{uniformemente aleatorios} medidos sobre 512 bytes dan una entropía media de \textbf{7,590 $\pm$ 0,034} bits/byte, y no 8,0 (sobre 256 bytes el techo baja a 7,175, y solo con bloques de 65.536 bytes se alcanza 7,997). El valor de 8,0 bits/byte que aparece al analizar archivos completos (Figura~\ref{fig:entropia_familia}) corresponde a muestras de decenas de miles de bytes, donde el techo sí es prácticamente 8.
+
+Leídas contra 7,590, las cifras de la Tabla~\ref{tab:exp2c_dificiles} dicen algo más fuerte que «entropía alta»: CRYPTOLOCKER (7,594 y 7,589) y WASTEDLOCKER (7,591 y 7,585) están \textbf{exactamente en el techo}, es decir, son \textit{indistinguibles de datos uniformemente aleatorios} en ambos extremos. DARKSIDE lo está en la cabecera (7,593) pero no en la cola (7,491, unas tres desviaciones por debajo), y JIGSAW queda algo por debajo en ambos. En el otro extremo, el promedio del resto de las familias ---7,03 en cabecera--- está más de quince desviaciones bajo el techo, lo que confirma que la mayoría de las familias sí deja contenido no aleatorio cerca del comienzo del archivo.
+
+La lectura simple ---«no dejan estructura»--- es \textbf{falsa para dos de las seis}, y conviene no escribirla. Las cuatro primeras sí presentan entropía próxima al máximo en ambos extremos: el cifrado ocupa el archivo por completo y no hay marca añadida que aprender, aunque CRYPTOLOCKER deja una regularidad de otro tipo, descrita en la Sección~\ref{subsec:exp2c_determinista}. Pero \textbf{SUNCRYPT y NOTPETYA sí añaden datos no aleatorios al final} ---SUNCRYPT tiene, con 4,78 bits/byte, la entropía de cola más baja de todo el conjunto--- y aun así no se identifican bien. La explicación más plausible es que ese bloque \textbf{varía en cada archivo}: una clave, un identificador de víctima o un contador. Es estructura, pero no es firma de familia, y por eso ni la regla de coincidencia exacta del Experimento 2b ni el clasificador posicional pueden aprovecharla.
+
+Obsérvese también que la referencia invierte la intuición: el \textit{resto} de las familias tiene entropía \textit{menor} (7,03 en cabecera y 7,44 en cola) que las difíciles. Justamente porque añaden estructura, su contenido es menos aleatorio. La entropía baja no es señal de cifrado débil sino de marca presente.
+
+Los dos errores extremos del grupo son de signo opuesto y se leen distinto. \textbf{DARKSIDE} obtiene una precisión de 0,459 frente a un recall de 0,881: actúa como clase de destino por defecto, absorbiendo los archivos que el modelo no logra atribuir a nadie. \textbf{NOTPETYA} hace lo contrario, con precisión de 0,806 y recall de 0,261: cuando el modelo la nombra suele acertar, pero solo reconoce a una cuarta parte de sus archivos.
+
+\subsection{Familias que destruyen el nombre original}
+\label{subsec:exp2c_renombrado}
+
+Un recuento de los nombres de archivo del conjunto reveló que dos familias no se limitan a añadir una extensión: \textbf{sustituyen el nombre base por una cadena aleatoria}. CERBER lo hace en \textbf{981} de sus aproximadamente 1.001 archivos (\texttt{002PWX5w8Z.bed4}, \texttt{-00CAjTujp.bed4}) y BLACKMATTER en 12 (\texttt{00n0P97.HpWl7Oyll}, \texttt{01EPRnN.HpWl7Oyll}). El resto del conjunto conserva el nombre del documento de origen y solo le agrega la extensión de la familia.
+
+La consecuencia es doble. Por un lado, para CERBER \textbf{un método basado en el nombre original no tiene con qué trabajar}, porque ese nombre ya no existe: solo queda el patrón con que la familia lo sustituye; es un argumento independiente a favor de la comparación honesta con ID Ransomware, que es la del archivo renombrado. Por otro, el clasificador sobre bytes la identifica sin dificultad: \textbf{CERBER obtiene un F1 de 1,000 $\pm$ 0,000} sobre diez semillas (BLACKMATTER, que sustituye el nombre solo en doce muestras, 0,989 $\pm$ 0,003). Es la ilustración más nítida del argumento de emplear el contenido y no los metadatos: allí donde el metadato desaparece por completo, el contenido sigue bastando.
+
+Este mismo comportamiento explica que CERBER quede fuera de los pliegues de la Sección~\ref{subsec:exp2c_tipos}: un archivo cuyo nombre fue reemplazado no puede asignarse a un tipo de documento. La ausencia de BLACKMATTER de la mayoría de esos pliegues tiene otra causa, que se detalla allí: casi todas sus muestras son imágenes.
+
+\subsection{Verificación de integridad del conjunto de datos}
+\label{subsec:exp2c_integridad}
+
+La inspección de nombres descrita arriba condujo a una constatación sobre el conjunto de datos que corresponde declarar. La carpeta de CERBER contiene 988 archivos con extensión \texttt{.bed4}, un \texttt{.pdf} de documentación y \textbf{12 archivos \texttt{.jpg} que conservan nombre y extensión originales}. Un volcado hexadecimal muestra que empiezan por \texttt{FF D8 FF E0 00 10 4A 46 49 46}, que es la cabecera JPEG/JFIF: son \textbf{imágenes en claro, sin cifrar}, etiquetadas como pertenecientes a CERBER.
+
+No se atribuye una causa. Puede tratarse de un artefacto del empaquetado del conjunto o de archivos que la familia no llegó a cifrar ---varias familias omiten archivos por tamaño o por ubicación---; con los datos disponibles no es posible decidirlo, y se reporta como constatación verificada por sus bytes de cabecera y no como diagnóstico.
+
+La magnitud es pequeña ---12 sobre 1.001 archivos de CERBER, un 1,2\,\%, que en la muestra de 500 por familia se traduce en unos 6 archivos, el 0,04\,\% del conjunto de 15.000--- pero el efecto no es meramente cosmético: son archivos en claro con etiqueta de familia, de modo que el clasificador podría aprender la regla «cabecera JPEG válida implica CERBER», que no generaliza a nada. Por eso se repitió el Experimento 2c excluyéndolos, moviéndolos a un subdirectorio de forma reversible.
+
+El resultado del control es que \textbf{la exclusión no altera las conclusiones}. Sobre el corpus verificado la exactitud es de 0,909 y el macro-F1 de 0,907, frente a 0,910 y 0,910 en la corrida que los incluía: una diferencia de 0,001 y 0,003 respectivamente, por debajo del umbral de 0,005 fijado de antemano. Debe señalarse la dirección del cambio, porque invita al error contrario: las métricas \textbf{bajan} ligeramente al excluirlos, de modo que lo escribible es que la exclusión no altera el resultado, nunca que lo mejora. La propia CERBER pasa de una precisión de 1,00 con recall de 0,99 a 1,00 y 1,00: su firma binaria de 64 bytes se basta sola, y la cabecera JFIF no era la muleta. Todas las cifras del Experimento 2c reportadas en este capítulo provienen de la corrida sobre el corpus verificado.
+
+\subsection{Ampliación de la verificación: censo completo del conjunto}
+\label{subsec:exp2c_integridad_censo}
+
+La constatación anterior se originó en una inspección de nombres y quedó acotada a los doce archivos de CERBER que la motivaron. Un censo posterior extendió la comprobación a la totalidad del conjunto: se examinaron los \textbf{29.676 archivos} de las treinta carpetas, contrastando los primeros bytes de cada uno contra ocho firmas de tipo en claro ---JPEG, PDF, ZIP/OOXML, OLE, PNG, GIF, RTF y GZIP--- en el desplazamiento cero y de forma exacta. La probabilidad de que datos cifrados coincidan por azar con una firma de tres o cuatro bytes es del orden de $2^{-24}$, de modo que sobre 29.676 archivos cabría esperar menos de una coincidencia espuria. La Tabla~\ref{tab:censo_integridad} resume el resultado.
+
+\begin{table}[ht]
+\centering
+\caption{Censo de integridad por firma de tipo sobre las treinta carpetas completas. Se contabiliza todo archivo cuyos primeros bytes coinciden exactamente con una firma de documento en claro.}
+\label{tab:censo_integridad}
+\begin{tabular}{|l|c|c|l|}
+\hline
+\textbf{Familia} & \textbf{En claro} & \textbf{Total} & \textbf{Naturaleza} \\
+\hline
+CERBER & 988 & 988 & cabecera original preservada (cifrado parcial) \\
+NOTPETYA & 32 & 833 & archivos sin cifrar \\
+JIGSAW & 8 & 998 & archivos sin cifrar \\
+Las otras 27 familias & 0 & 26.857 & sin anomalías \\
+\hline
+\textbf{Total} & \textbf{1.028} & \textbf{29.676} & 988 de cifrado parcial + 40 sin cifrar \\
+\hline
+\end{tabular}
+\end{table}
+
+El censo separa dos fenómenos que conviene no confundir, porque tienen causas y consecuencias distintas.
+
+\textbf{Cuarenta archivos sin cifrar} ---treinta y dos de NOTPETYA y ocho de JIGSAW, el 0,13\,\% del conjunto--- son del mismo tipo que los doce de CERBER descritos arriba: conservan nombre y extensión originales y su contenido es el documento de partida. Se apartaron a subdirectorios de la misma forma reversible. Dado que excluir los doce de CERBER movió las métricas entre 0,001 y 0,003, cuarenta archivos se sitúan en el mismo orden de magnitud; la base queda declarada.
+
+\textbf{La totalidad de los archivos de CERBER}, en cambio, no es un defecto del conjunto sino un comportamiento del programa. Los 988 archivos llevan nombre sustituido por una cadena aleatoria y extensión \texttt{.bed4} ---es decir, CERBER los procesó--- y sin embargo empiezan con la firma del documento de origen, y con firmas distintas entre sí. Un perfil de entropía sobre una muestra de seis de esos archivos lo confirma: medida sobre ventanas de 512 bytes, la \textbf{cabecera} arroja entre \textbf{0,88 y 6,46} bits/byte mientras que el \textbf{cuerpo y la cola} arrojan entre \textbf{7,58 y 7,64}, es decir el techo de esa ventana. En los archivos de la muestra cuyo origen es OLE o ZIP, la entropía de cabecera de 0,88 indica que prácticamente la totalidad de la ventana de 512 bytes es estructura original: la cabecera OLE completa con su relleno de ceros, o la cabecera local del contenedor ZIP seguida del nombre \texttt{[Content\_Types].xml}.
+
+La lectura es que \textbf{CERBER cifra parcialmente y preserva el comienzo del archivo}: una forma de cifrado intermitente, técnica documentada en la literatura reciente sobre ransomware~\cite{ineza2025intermittent}. Es, por tanto, un resultado sobre la familia y no una anomalía que corregir. Sí obliga a una precisión respecto de lo escrito más arriba: dado que las restantes familias cifran su cabecera ---la entropía media de cabecera del resto del conjunto es 7,03 y la de las seis familias difíciles 7,59---, \textbf{CERBER es la única familia cuya cabecera resulta legible}, de modo que esa cabecera constituye un rasgo discriminante y no un elemento común a todas. Su F1 de 1,000 queda entonces sobredeterminado: lo explican tanto su sufijo constante de 64 bytes con cobertura 1,00 como su cabecera preservada. Conviene añadir que la ventana de 512 bytes de cabecera empleada en el Experimento 2c lee, para esta familia, contenido no cifrado.
+
+\subsection{Un sesgo en la selección de archivos y su corrección}
+\label{subsec:exp2c_sesgo_pdf}
+
+El mismo censo reveló un defecto en el procedimiento de carga que corresponde declarar. Cada carpeta de NapierOne contiene, junto a las muestras, un archivo \texttt{<FAMILIA>.pdf} de aproximadamente 3,5 MB con la documentación del conjunto. Para excluirlo, los guiones de carga descartaban todo archivo con extensión \texttt{.pdf}.
+
+El criterio es correcto para veintiocho familias, cuyos documentos PDF cifrados reciben la extensión propia de la familia y no son alcanzados por el filtro. No lo es para \textbf{BADRABBIT y NOTPETYA}, que ---como se describe en la Sección~\ref{sec:exp2b}--- no modifican la extensión de los archivos que cifran: sus documentos PDF cifrados siguen denominándose \texttt{.pdf}, de modo que el filtro los descartaba junto con la documentación. La comprobación por entropía distingue unos de otros sin ambigüedad: el archivo de documentación presenta cabecera \texttt{\%PDF-1.4} y entropía 5,41, mientras que los restantes presentan entropía de cabecera de 7,57 a 7,58 y no comienzan con firma PDF alguna.
+
+En total se descartaban \textbf{310 muestras cifradas} ---143 de BADRABBIT y 167 de NOTPETYA---, todas pertenecientes a las dos únicas familias que no renombran, y todas del mismo tipo de documento. Se trataba, por tanto, de un sesgo sistemático y no de una pérdida aleatoria: NOTPETYA, que es la familia con menor F1 del Experimento 2c, quedaba evaluada sobre el 83\,\% de sus archivos, faltándole un tipo de documento completo.
+
+Las cifras reportadas en las secciones anteriores no son incorrectas ---están medidas sobre un conjunto determinado y reproducible---, pero la descripción de ese conjunto debe precisarse: no comprendía la totalidad de los archivos de esas dos familias. El criterio se sustituyó por la exclusión del único archivo cuyo nombre base coincide con el de la familia, que identifica la documentación sin descartar muestras. Repetida la medición sobre el conjunto completo, la exactitud es de \textbf{0,9123}, frente a 0,9128 del mismo procedimiento sobre el conjunto sin corregir y al 0,912 $\pm$ 0,002 publicado: las tres cifras son indistinguibles. Al incorporar los archivos \texttt{.pdf}, el control de integridad detectó además dos de JIGSAW que comienzan con firma PDF en claro; permanecen en el conjunto y se declaran aquí. La corrección era necesaria por exactitud en la descripción del conjunto, no porque alterase el resultado.
+
+\subsection{Cuántos archivos por familia hacen falta}
+\label{subsec:exp2c_curva}
+
+La pregunta simétrica a la que se plantea en el frente de notas ---allí la moneda son las plantillas, aquí los archivos--- se responde con una curva de aprendizaje sobre subconjuntos \textbf{anidados}: para cada semilla se permutan una sola vez los índices de cada familia y cada tamaño toma un prefijo, de modo que la curva mide el efecto de agregar datos y no el de cambiar de muestra. Tres semillas de submuestreo, representación de solo bytes del Experimento 2c.
+
+\begin{table}[ht]
+\centering
+\caption{Curva de aprendizaje del frente de archivos. Subconjuntos anidados, solo bytes, cinco pliegues, media y desvío sobre tres semillas de submuestreo.}
+\label{tab:curva_archivos}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Archivos/familia} & \textbf{Total} & \textbf{Exactitud} & \textbf{Macro-F1} \\
+\hline
+10 & 300 & 0,8111 $\pm$ 0,0158 & 0,7809 $\pm$ 0,0184 \\
+25 & 750 & 0,8627 $\pm$ 0,0074 & 0,8464 $\pm$ 0,0086 \\
+50 & 1.500 & 0,8809 $\pm$ 0,0105 & 0,8723 $\pm$ 0,0114 \\
+100 & 3.000 & 0,8918 $\pm$ 0,0070 & 0,8880 $\pm$ 0,0054 \\
+200 & 6.000 & 0,9055 $\pm$ 0,0029 & 0,9045 $\pm$ 0,0024 \\
+350 & 10.500 & 0,9102 $\pm$ 0,0008 & 0,9096 $\pm$ 0,0009 \\
+\textbf{500} & \textbf{15.000} & \textbf{0,9124 $\pm$ 0,0005} & \textbf{0,9117 $\pm$ 0,0005} \\
+\hline
+\end{tabular}
+\end{table}
+
+El valor con 500 archivos por familia reproduce el 0,912 $\pm$ 0,002 reportado en la Sección~\ref{sec:exp2c}, lo que verifica que la curva mide lo mismo que el experimento.
+
+El delta pareado entre tamaños consecutivos, en macro-F1 y con intervalo de confianza del 95\,\%, es: $10\to25$ \textbf{+0,0654} [+0,0015; +0,1294] $\cdot$ $25\to50$ \textbf{+0,0259} [+0,0146; +0,0372] $\cdot$ $50\to100$ +0,0158 [$-$0,0023; +0,0338] $\cdot$ $100\to200$ \textbf{+0,0164} [+0,0082; +0,0246] $\cdot$ $200\to350$ +0,0051 [$-$0,0007; +0,0109] $\cdot$ $350\to500$ +0,0021 [$-$0,0006; +0,0048].
+
+\textbf{Con 200 archivos por familia el frente de archivos alcanza 0,9045 de macro-F1; los 300 archivos adicionales hasta 500 aportan +0,0072 en total, y ningún paso individual a partir de ahí presenta un intervalo que excluya el cero.} Merece señalarse el extremo opuesto: con \textbf{diez} archivos por familia ---trescientos en total--- el clasificador ya alcanza 0,7809 de macro-F1, lo que sitúa las necesidades de muestra de este frente muy por debajo de las del frente de notas, donde varias familias no llegan a dos plantillas distintas.
+
+Una precisión sobre la lectura. Con tres semillas el estadístico $t$ vale 4,303 y los intervalos resultan anchos, hasta el punto de que el paso $50\to100$ (+0,0158) queda indistinguible del cero mientras que $100\to200$ (+0,0164) no lo queda, pese a tener un delta casi idéntico: lo que difiere entre ambos es la dispersión, no el efecto. En esta tabla «indistinguible del cero» debe leerse como \textit{no medible con tres semillas}, y no como ausencia de efecto.
+
+\subsection{Qué distingue por contenido a las familias difíciles}
+\label{subsec:exp2c_determinista}
+
+Para saber por qué las familias difíciles se confunden, y no solo constatar que lo hacen, se examinaron directamente los bytes de los 29.948 archivos del conjunto completo, sin entrenar ningún modelo: los prefijos y sufijos de dieciséis bytes de cada familia ---en total y por tipo de documento---, su coincidencia con los de otras familias, el resto del tamaño módulo 16 y, para las seis familias difíciles, un perfil de entropía de hasta 32 bloques de 512 bytes repartidos a lo largo del archivo.
+
+\paragraph{CRYPTOLOCKER cifra de forma determinista.} La Tabla~\ref{tab:prefijos_tipo} cuenta, para cada tipo de documento, cuántos prefijos distintos presentan los archivos de cada familia.
+
+\begin{table}[ht]
+\centering
+\caption{Prefijos de dieciséis bytes por tipo de documento, expresados como archivos / prefijos distintos. Un único prefijo para todos los archivos de un tipo indica cifrado determinista. Base: conjunto completo, 29.948 archivos, sin aprendizaje.}
+\label{tab:prefijos_tipo}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|c|c|c|c|c|c|c|}
+\hline
+\textbf{Familia} & \textbf{doc} & \textbf{xls} & \textbf{jpg} & \textbf{pdf} & \textbf{xlsx} & \textbf{docx} & \textbf{pptx} \\
+\hline
+CRYPTOLOCKER & \textbf{143 / 1} & \textbf{143 / 1} & 143 / 13 & 143 / 17 & 142 / 46 & 143 / 117 & 143 / 140 \\
+NOTPETYA & 149 / 35 & 152 / 105 & --- & 167 / 32 & 166 / 70 & 167 / 136 & 167 / 161 \\
+JIGSAW, DARKSIDE, WASTEDLOCKER, SUNCRYPT & \multicolumn{7}{c|}{un prefijo distinto por archivo, en todos los tipos} \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+Los 143 documentos \texttt{.doc} de CRYPTOLOCKER comienzan con los mismos dieciséis bytes cifrados, y lo mismo ocurre con sus 143 \texttt{.xls}. Es la huella de un cifrado con clave fija y sin vector de inicialización propio de cada archivo: dos documentos que comienzan igual en claro comienzan igual cifrados. El patrón coincide con esa explicación en todos los tipos. Los documentos OLE (\texttt{doc}, \texttt{xls}) comparten sus primeros bytes en claro ---la firma del formato seguida de ceros--- y producen un único prefijo, mientras que los contenedores OOXML (\texttt{docx}, \texttt{pptx}, \texttt{xlsx}) incluyen en su cabecera la fecha y la suma de verificación del contenido, que varían de un archivo a otro, y producen prefijos distintos. NOTPETYA presenta el mismo fenómeno de forma parcial.
+
+El recuento global lo confirma por otra vía. CRYPTOLOCKER, BADRABBIT, MEDUZALOCKER y RANSOMEXX presentan exactamente la misma estructura ---332 prefijos distintos entre sus 1.000 archivos, con el más frecuente presente en el 28,6\,\% de ellos--- y ninguno de sus prefijos aparece en otra familia, como corresponde a un cifrado determinista aplicado al mismo conjunto base de documentos con una clave propia de cada familia. Las otras tres escriben además un sufijo constante, presente en el 96,5\,\%, el 100\,\% y el 100\,\% de sus archivos, que es lo que las sitúa en un F1 cercano a 1. CRYPTOLOCKER carece de sufijo fijo ---sus 1.000 archivos presentan 997 sufijos distintos---, de modo que su única regularidad de contenido es el prefijo, que no resulta aprovechable en los documentos OOXML.
+
+Esta observación precisa lo afirmado en la Sección~\ref{sec:exp2b}, donde CRYPTOLOCKER figura entre las familias que solo poseen extensión propia. El procedimiento de aquel experimento exige que un prefijo sea común a al menos el 90\,\% de la familia, y una regularidad por tipo de documento no puede satisfacer ese criterio por construcción. Conviene señalar su naturaleza: no es una marca que el programa escriba, sino una consecuencia de su forma de cifrar, y el prefijo concreto depende de la clave, que es propia de la campaña. Lo que sería propio del código es la propiedad de que los prefijos se repitan, no su valor.
+
+\paragraph{DARKSIDE no cifra de forma intermitente en este conjunto.} La literatura reciente incluye a DARKSIDE entre las familias que emplean cifrado intermitente~\cite{ineza2025intermittent}, que dejaría bloques sin cifrar en el interior del archivo. El perfil de entropía no lo registra: solo el 5,8\,\% de sus archivos presenta algún bloque con entropía inferior a 6,5 bits/byte, y en promedio lo hace el 0,6\,\% de los bloques. Es coherente con que ese modo se reserve para archivos de gran tamaño, que no abundan en NapierOne.
+
+\paragraph{Las familias que se confunden coinciden en lo medible.} Dos pares explican buena parte de la confusión del grupo. DARKSIDE y WASTEDLOCKER presentan un prefijo y un sufijo distintos en cada archivo, cifrado completo y el mismo reparto del resto del tamaño módulo 16, con resto cero en el 33,5\,\% y el 34,1\,\% de sus archivos respectivamente. JIGSAW y CRYPTOLOCKER coinciden en los documentos OOXML: prefijos sin repetición, sufijo aleatorio y tamaño múltiplo de 16 en el 99,8\,\% y el 100\,\% de los casos. Una precisión acota esta observación: WASTEDLOCKER sí mejora con los rasgos estructurales del Experimento~2e (Sección~\ref{sec:exp2e}), de modo que algo la separa de DARKSIDE por contenido, en propiedades de tamaño que este recuento no examina. La coincidencia debe entenderse, por tanto, respecto de lo medido aquí.
+
+La lectura conjunta es que el residuo no se debe a la ausencia de toda regularidad en el contenido, sino a que familias concretas coinciden en las propiedades que el contenido permite observar.
+
+
 \subsection{Limitación}
 \label{subsec:exp2c_limitacion}
 
-El conjunto NapierOne representa cada familia mediante una única campaña, obtenida ejecutando una muestra concreta del ransomware. En consecuencia, el valor de 0,912 mide la capacidad de identificar \textit{esa campaña}, y no puede afirmarse que se extienda a campañas futuras de la misma familia, que podrían modificar sus cabeceras o colas. Esta limitación es análoga a la observada en el corpus de notas de rescate, donde la baja variabilidad de plantillas produce el mismo efecto (Sección~\ref{subsec:res_variabilidad}), y su evaluación requeriría un conjunto de datos con múltiples campañas por familia, no disponible en la actualidad.
+El conjunto NapierOne representa cada familia mediante una única campaña, obtenida ejecutando una muestra concreta del ransomware. En consecuencia, el valor de 0,912 mide la capacidad de identificar \textit{esa campaña}, y no puede afirmarse que se extienda a campañas futuras de la misma familia, que podrían modificar sus cabeceras o colas. Esta limitación es análoga a la observada en el corpus de notas de rescate, donde la baja variabilidad de plantillas produce el mismo efecto (Sección~\ref{subsec:res_variabilidad}), y su evaluación requeriría un conjunto de datos con múltiples campañas por familia, del que no se dispuso para este trabajo.
+
+\section{Experimento 2d: Aporte del Nombre del Archivo sobre el Contenido}
+\label{sec:exp2d}
+
+\subsection{Motivación y diseño}
+
+El Experimento 2c excluyó deliberadamente el nombre y la extensión para medir qué información reside en el contenido. Esa exclusión es una decisión de diseño, y toda decisión de diseño tiene un costo que conviene medir en lugar de suponer. Este experimento lo cuantifica, y responde además a la pregunta que deja abierta el Experimento 2b: cuatro de las familias que la regla exacta solo detectaba por el nombre ---JIGSAW, DARKSIDE, CRYPTOLOCKER y WASTEDLOCKER--- son precisamente las que el clasificador sobre bytes no resuelve.
+
+La distinción que organiza el experimento es entre la \textbf{forma} del nombre y la \textbf{cadena literal}. La forma se describe con dieciocho rasgos numéricos: longitud total, de la base y de la extensión; cuenta y proporción de dígitos, letras, separadores, mayúsculas y caracteres hexadecimales; entropía de la base; y cuatro indicadores binarios (base íntegramente hexadecimal, base íntegramente numérica, extensión solo alfabética, extensión con dígitos). \textbf{Ninguno de ellos registra qué cadena concreta aparece.} La distinción es la que hace defendible la comparación: un atacante que cambie la cadena manteniendo el formato ---otra extensión de seis letras, otro identificador de treinta y dos caracteres hexadecimales--- seguiría siendo reconocible por la forma, mientras que uno que cambie el formato no lo sería.
+
+Se evalúan \textbf{cinco columnas sobre la misma partición}, para que los deltas sean pareados: las tres que combinan representaciones y dos controles sin bytes, cuya función se explica más abajo. Quince mil archivos, treinta familias, cinco semillas, cinco pliegues y los hiperparámetros del Experimento 2c, que no se vuelven a buscar: lo que se mide es el aporte de las características y no una nueva selección de modelo.
+
+\subsection{La extensión como identificador de campaña, medida}
+
+Antes de entrenar se comprobó si la extensión determina la etiqueta en este conjunto, en lugar de afirmarlo. El recuento arroja que \textbf{25 de las 30 familias poseen una única extensión} y que solo \textbf{5 de 905 extensiones distintas} aparecen en más de una familia: \texttt{.doc}, \texttt{.docx}, \texttt{.pptx}, \texttt{.xls} y \texttt{.xlsx}, compartidas por BADRABBIT, NOTPETYA y JIGSAW, que son las familias que no renombran. El número elevado de extensiones distintas se explica por SUNCRYPT, que asigna una diferente a cada archivo.
+
+Sobre esa base, una \textbf{tabla de consulta sin aprendizaje} ---que asigna a cada extensión la familia más frecuente--- alcanza una exactitud de \textbf{0,9724} dentro de la muestra. La columna que incorpora la extensión literal mide, por tanto, la memorización de un diccionario de identificadores de campaña, y se reporta como cota superior declarada y no como método.
+
+\subsection{Resultados}
+
+\begin{table}[ht]
+\centering
+\caption{Experimento 2d: cinco representaciones sobre la misma partición. Media y desvío sobre cinco semillas de muestreo; 15.000 archivos, 30 familias, cinco pliegues. Las dos primeras filas son controles que no emplean el contenido del archivo.}
+\label{tab:exp2d}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Representación} & \textbf{Exactitud} & \textbf{Macro-F1} \\
+\hline
+Solo forma del nombre \textit{(control)} & 0,5830 $\pm$ 0,0024 & 0,5771 $\pm$ 0,0033 \\
+Solo extensión literal \textit{(control)} & 0,9380 $\pm$ 0,0011 & 0,9244 $\pm$ 0,0036 \\
+\hline
+Solo bytes (configuración del Exp. 2c) & 0,9128 $\pm$ 0,0012 & 0,9117 $\pm$ 0,0011 \\
+\textbf{Bytes + forma del nombre} & \textbf{0,9998 $\pm$ 0,0002} & \textbf{0,9998 $\pm$ 0,0002} \\
+Bytes + extensión literal & 0,9718 $\pm$ 0,0020 & 0,9699 $\pm$ 0,0024 \\
+\hline
+\end{tabular}
+\end{table}
+
+La columna de solo bytes obtiene 0,9128 de exactitud, que reproduce el 0,912 $\pm$ 0,002 del Experimento 2c y opera como control de que las cinco columnas son comparables con lo ya reportado.
+
+Los deltas pareados por semilla contra la configuración de solo bytes, en macro-F1, son: \textbf{+0,0880} [+0,0866; +0,0894] para la forma del nombre y \textbf{+0,0581} [+0,0555; +0,0608] para la extensión literal, ambos con las cinco semillas a favor. La forma del nombre supera a la extensión literal por \textbf{+0,0146} [+0,0134; +0,0158], también 5 de 5.
+
+\subsection{Para qué sirven los controles}
+
+Un incremento de casi nueve centésimas admite dos lecturas opuestas, y sin los controles no hay forma de elegir entre ellas: puede que el nombre aporte información que los bytes no tienen, o puede que el nombre resuelva por sí solo la tarea y los bytes queden de acompañantes. Los controles la deciden.
+
+\textbf{La forma del nombre, por sí sola, alcanza 0,5771 de macro-F1}: treinta y cuatro centésimas por debajo de la configuración de solo bytes. No es, por tanto, un identificador suficiente. Combinada con los bytes llega a 0,9998 ---tres errores sobre quince mil---, de modo que el incremento proviene de la \textbf{combinación} y no de ninguna de las dos partes. La interpretación que se sostiene es que la forma del nombre define agrupaciones gruesas de familias, con numerosas colisiones entre ellas, y que los bytes discriminan dentro de cada agrupación; ninguna de las dos representaciones hace el trabajo de la otra.
+
+\textbf{La extensión literal, por sí sola, alcanza 0,9244 de macro-F1}: más que la configuración de solo bytes, que obtiene 0,9117. El delta pareado es de +0,0127 [+0,0083; +0,0171], con las cinco semillas a favor. Corresponde reportarlo tal cual: \textit{en este conjunto de datos, un diccionario sin aprendizaje supera al método}. Esa comparación no habla del método sino del conjunto, por la razón expuesta arriba. Obsérvese además que la extensión literal rinde peor que la forma cuando se la combina con los bytes ---0,9699 frente a 0,9998---, pese a superarla aisladamente: la codificación dispersa de novecientas extensiones diluye la contribución de los bytes, y para las familias que no renombran la extensión transporta el tipo del documento original, que es ruido a los efectos de identificar la familia.
+
+\subsection{Limitación}
+\label{subsec:exp2d_limitacion}
+
+Los controles descartan que la forma del nombre resuelva la tarea por sí sola, pero no pueden descartar que sea una huella de la \textit{campaña}. Que el esquema de renombrado lo fije el código del programa ---una extensión aleatoria de longitud constante, una base hexadecimal de longitud fija--- o lo elija el operador de cada campaña es una distinción que este conjunto de datos no permite resolver, porque cada familia está representada en él por una única campaña. Es la misma limitación descrita en la Sección~\ref{subsec:exp2c_limitacion}.
+
+En consecuencia, el resultado se enuncia con sus tres componentes y no se separa ninguno: sobre NapierOne, agregar la forma del nombre a los bytes eleva el macro-F1 de 0,9117 a 0,9998; la forma del nombre por sí sola alcanza 0,5771, de modo que la mejora corresponde a la combinación y no al nombre; y con una única campaña por familia no puede afirmarse que la forma del nombre generalice a campañas no observadas.
+
+La validación posterior sobre tipos de documento nunca vistos agregó un cuarto componente, que ningún control de este experimento podía detectar: calculados sobre el nombre completo, los rasgos de forma aprenden también la base del nombre que NapierOne asignó a cada archivo, y esa base difiere entre imágenes y documentos. El efecto y su corrección se describen en las Secciones~\ref{sec:exp2f} y~\ref{sec:exp2g}: con los rasgos calculados solo sobre la extensión final, el sistema completo mantiene 0,9998 y deja de depender del tipo de documento.
+
+\section{Experimento 2e: Rasgos Estructurales del Archivo}
+\label{sec:exp2e}
+
+\subsection{Motivación}
+
+Dos mediciones previas, tomadas juntas, señalan una limitación de la representación y no del problema. La primera: el 79,6\,\% de la importancia del clasificador se concentra en la cola del archivo. La segunda (Tabla~\ref{tab:exp2c_dificiles}): de las seis familias que quedan por debajo de 0,75 de F1, \textbf{dos sí depositan estructura al final} ---SUNCRYPT presenta una entropía de cola de 4,78 bits/byte y NOTPETYA de 6,58, frente a 7,44 del resto--- y aun así no se identifican. La explicación ofrecida allí es que ese bloque \textit{varía en cada archivo}: una clave, un identificador de víctima o un contador.
+
+Ahí reside la oportunidad. La representación posicional aprende \textbf{valores de byte en desplazamientos fijos}, de modo que un bloque cuyo contenido cambia en cada archivo le resulta invisible \textit{aunque su presencia, su tamaño y su grado de aleatoriedad sean constantes dentro de la familia}. Dicho de otro modo: «hay doscientos bytes poco aleatorios al final y el tamaño es múltiplo de dieciséis» constituye un rasgo de familia aun cuando esos doscientos bytes sean distintos en cada archivo, y ninguna representación por valores posicionales puede expresarlo.
+
+Se incorporan \textbf{44 rasgos que describen la forma del archivo y no su contenido}: entropía de Shannon a ocho profundidades en cada extremo (de 16 a 4.096 bytes), entropía de ocho bloques repartidos a lo largo del archivo y sus cuatro estadísticos, longitud del bloque final no aleatorio, tamaño del archivo y sus restos módulo 16, 512 y 4.096, estadístico $\chi^2$ contra la distribución uniforme, número de valores de byte distintos, frecuencia máxima, cantidad de ceros y fracción de caracteres imprimibles. \textbf{Ninguno emplea el nombre ni la extensión}, lo que distingue este experimento del anterior: la mejora que resulte, si la hay, procede del contenido y no arrastra la limitación de campaña discutida en la Sección~\ref{subsec:exp2d_limitacion}.
+
+\subsection{Resultados}
+
+\begin{table}[ht]
+\centering
+\caption{Experimento 2e: aporte de los rasgos estructurales. Tres representaciones sobre la misma partición, sin emplear nombre ni extensión. Media y desvío sobre cinco semillas; 15.000 archivos, 30 familias, cinco pliegues.}
+\label{tab:exp2e}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Representación} & \textbf{Características} & \textbf{Exactitud} & \textbf{Macro-F1} \\
+\hline
+Bytes 512+512 (configuración del Exp. 2c) & 1.024 & 0,9123 $\pm$ 0,0003 & 0,9114 $\pm$ 0,0004 \\
+\textbf{Bytes + rasgos estructurales} & 1.068 & \textbf{0,9357 $\pm$ 0,0005} & \textbf{0,9359 $\pm$ 0,0004} \\
+Solo rasgos estructurales \textit{(control)} & 44 & 0,8699 $\pm$ 0,0030 & 0,8680 $\pm$ 0,0032 \\
+\hline
+\end{tabular}}
+\end{table}
+
+El delta pareado por semilla es de \textbf{+0,0246 de macro-F1, con intervalo de confianza del 95\,\% [+0,0237; +0,0254] y las cinco semillas a favor}; en exactitud, +0,0234 [+0,0228; +0,0241].
+
+\subsection{Dónde se produce la mejora}
+
+El incremento agregado, con ser modesto, oculta un reparto muy desigual. Comparando el F1 por familia entre ambas representaciones, \textbf{el delta medio de las seis familias difíciles es de +0,1186, frente a +0,0006 en las veinticuatro restantes}.
+
+\begin{table}[ht]
+\centering
+\caption{Efecto de los rasgos estructurales sobre las familias que el Experimento 2c no resuelve. F1 por familia; base: una semilla, 15.000 archivos, cinco pliegues. Se incluye BADRABBIT por ser la única familia fuera del grupo con un cambio apreciable.}
+\label{tab:exp2e_dificiles}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Familia} & \textbf{Solo bytes} & \textbf{Con estructura} & \textbf{$\Delta$} \\
+\hline
+WASTEDLOCKER & 0,6397 & \textbf{0,8317} & +0,1920 \\
+JIGSAW & 0,4285 & 0,5711 & +0,1426 \\
+DARKSIDE & 0,5982 & 0,7327 & +0,1345 \\
+NOTPETYA & 0,3614 & 0,4839 & +0,1224 \\
+SUNCRYPT & 0,7719 & 0,8394 & +0,0675 \\
+CRYPTOLOCKER & 0,6026 & 0,6552 & +0,0526 \\
+\hline
+BADRABBIT & 0,9827 & \textbf{1,0000} & +0,0173 \\
+\hline
+\end{tabular}
+\end{table}
+
+Las veintitrés familias no incluidas en la tabla se mueven entre +0,0050 y $-$0,0061, de modo que \textbf{ninguna se degrada de forma apreciable}: la mayor pérdida corresponde a HELLOKITTY, con $-$0,0061. El promedio de las seis familias difíciles pasa de 0,5671 a 0,6857; WASTEDLOCKER supera el umbral de 0,75 y JIGSAW el de 0,50. El residuo identificado en la Sección~\ref{subsec:exp2c_dificiles} \textbf{se reduce, pero no desaparece}: cuatro familias permanecen por debajo de 0,75. Esa cuenta corresponde a una semilla: con el promedio de cinco semillas del Experimento 2f, DARKSIDE queda en 0,7515 y las familias por debajo de 0,75 son \textbf{tres} ---NOTPETYA, JIGSAW y CRYPTOLOCKER--- (Tabla~\ref{tab:exp2g_familias}).
+
+\subsection{Qué rasgos sostienen la mejora}
+
+Que una representación funcione no explica por qué funciona, y la explicación es aquí necesaria porque los rasgos pertenecen a categorías muy distintas. Se midió mediante \textbf{ablación por grupo}: se retira un grupo completo de rasgos y se observa la caída, con la misma validación cruzada.
+
+\begin{table}[ht]
+\centering
+\caption{Ablación por grupo sobre la representación de solo rasgos estructurales. La caída es lo que el grupo aporta y ningún otro cubre. Base: una semilla, 15.000 archivos, cinco pliegues; la representación completa obtiene 0,8716 de macro-F1 y 0,5704 sobre las seis familias difíciles.}
+\label{tab:exp2e_ablacion}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Grupo retirado} & \textbf{Rasgos} & \textbf{Caída global} & \textbf{Caída en las seis} \\
+\hline
+\textbf{Tamaño} & 5 & $-$0,1227 & \textbf{$-$0,2247} \\
+Entropía de cabecera & 8 & $-$0,0103 & $-$0,0498 \\
+Entropía del medio & 12 & $-$0,0082 & $-$0,0303 \\
+Distribución de bytes & 9 & $-$0,0174 & $-$0,0233 \\
+Entropía de cola & 8 & $-$0,0566 & $-$0,0177 \\
+Salto cabecera-cola & 1 & $-$0,0029 & $-$0,0092 \\
+Longitud del bloque final no aleatorio & 1 & +0,0001 & $-$0,0005 \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{El grupo de tamaño es el que sostiene la mejora}: retirarlo cuesta 0,2247 de F1 sobre las seis familias difíciles, cuatro veces y media lo que cuesta el segundo grupo. \textbf{Pero no la explica por sí solo}: los cinco rasgos de tamaño aislados alcanzan apenas 0,3272 de macro-F1 global y 0,1151 sobre esas seis familias. El tamaño es necesario y no suficiente, y la señal reside en su combinación con el perfil de entropía.
+
+El rasgo individual más informativo de los cuarenta y cuatro es el \textbf{resto del tamaño del archivo módulo 16} ---el tamaño de bloque de AES---, un 28\,\% por encima del segundo. Admite una explicación mecánica: puesto que todas las familias cifraron el mismo conjunto base de documentos, el tamaño de partida es común y lo que varía es la transformación. Una familia que emplea cifrado por bloques con relleno deja el tamaño en múltiplo de dieciséis más la longitud de su añadido; una que emplea cifrado de flujo conserva el resto original. La distribución de ese resto dentro de una familia constituye, por tanto, una huella del \textit{modo de cifrado} y del \textit{tamaño del añadido}, y ambos los determina el código del programa.
+
+Las importancias del bosque ordenan los grupos de modo distinto ---el tamaño aparece cuarto--- y la discrepancia es esperable: ocho rasgos de entropía de cola medidos a ocho profundidades capturan información en gran medida redundante, de forma que cada uno recibe una fracción de la importancia y el grupo suma un total elevado, pero retirarlos todos cuesta poco porque los demás grupos cubren lo mismo. Los cinco rasgos de tamaño carecen de sustituto. Por esa razón se reporta la ablación, que mide qué ocurre cuando el rasgo falta, y las importancias se emplean únicamente para identificar rasgos individuales.
+
+\subsection{Generalización a tipos de documento nunca vistos}
+\label{subsec:exp2e_tipos}
+
+Incorporar esta configuración al sistema del frente exige someterla a la misma comprobación que validó a la de solo bytes en la Sección~\ref{subsec:exp2c_tipos}: entrenar sin un tipo de documento y evaluar sobre ese tipo. La comprobación es aquí más necesaria que allí, porque entre los rasgos estructurales figura el tamaño del archivo, que correlaciona con el tipo de documento; si la representación se apoyara en «cuánto mide un PDF» y no en «cuánto agrega la familia», debería degradarse más que los bytes al retirar los PDF del entrenamiento. Se replicó el procedimiento con los mismos siete tipos y, sobre cada pliegue, las dos representaciones, de modo que el delta es pareado. La base difiere de la Tabla~\ref{tab:exp2c_tipos} en dos aspectos que conviene declarar: treinta familias en lugar de veintinueve, y el conjunto corregido de la Sección~\ref{subsec:exp2c_sesgo_pdf}, con lo que el pliegue \texttt{pdf} incorpora a BADRABBIT y NOTPETYA y \textbf{los siete pliegues cubren 28 familias}, frente a 25 a 28 en la medición anterior.
+
+\begin{table}[ht]
+\centering
+\caption{Validación \textit{dejar-un-tipo-fuera} de bytes y rasgos estructurales. Las dos representaciones se evalúan sobre el mismo pliegue. La prueba cubre 28 familias en cada pliegue: CERBER, que sustituye el nombre del archivo, participa solo del entrenamiento; BLACKMATTER, casi todas cuyas muestras son imágenes, solo entra a la prueba del pliegue \texttt{jpg}, y NOTPETYA, que no tiene imágenes en el conjunto, falta de ese pliegue. Base: 15.000 archivos, 30 familias, conjunto corregido, un ajuste por pliegue con los hiperparámetros del Experimento 2c.}
+\label{tab:exp2e_tipos}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Tipo excluido} & \textbf{Prueba} & \textbf{Bytes: exact. / F1} & \textbf{Bytes + estructura: exact. / F1} & \textbf{$\Delta$ exact.} & \textbf{$\Delta$ F1} \\
+\hline
+doc & 2.071 & 0,8957 / 0,8843 & 0,9367 / 0,9337 & +0,0410 & +0,0494 \\
+docx & 2.007 & 0,8974 / 0,8860 & 0,9113 / 0,9023 & +0,0139 & +0,0163 \\
+jpg & 2.401 & 0,6951 / 0,7987 & 0,6997 / 0,8052 & +0,0046 & +0,0065 \\
+pdf & 1.977 & 0,8012 / 0,7746 & 0,8336 / 0,8131 & +0,0324 & +0,0385 \\
+pptx & 2.056 & 0,8838 / 0,8691 & 0,9027 / 0,8893 & +0,0189 & +0,0202 \\
+xls & 1.974 & 0,8931 / 0,8835 & 0,9179 / 0,9037 & +0,0248 & +0,0202 \\
+xlsx & 2.007 & 0,8949 / 0,8846 & 0,9118 / 0,9047 & +0,0169 & +0,0201 \\
+\hline
+\textbf{Promedio} & --- & 0,8516 / 0,8544 & \textbf{0,8734 / 0,8789} & +0,0218 & \textbf{+0,0245} \\
+\hline
+\end{tabular}}
+\end{table}
+
+El delta pareado por pliegue es de \textbf{+0,0245 de macro-F1, con intervalo de confianza del 95\,\% [+0,0110; +0,0379] y los siete pliegues a favor}; el menor corresponde a \texttt{jpg}, con +0,0065, y ninguno es negativo. El promedio de solo bytes, 0,8516 de exactitud, queda por debajo del 0,879 de la Sección~\ref{subsec:exp2c_tipos}, y la diferencia no es solo de base. La hay de base en el pliegue \texttt{pdf}, que incorpora ahora a NOTPETYA y BADRABBIT, y NOTPETYA es la familia que peor generaliza a tipos no vistos. Pero la hay también de método: esta validación se ejecutó sin la ponderación de clases que emplearon la de la Sección~\ref{subsec:exp2c_tipos} y todas las validaciones cruzadas, y eso pesa en el pliegue \texttt{jpg}. Como 988 de las 1.000 muestras de BLACKMATTER son imágenes, al retirarlas esa familia queda casi sin entrenamiento, y sin ponderación el clasificador no reconoce ninguna de sus imágenes: su F1 en ese pliegue es 0 en las dos representaciones. Siendo cerca del 20\,\% de la prueba de \texttt{jpg}, eso explica que la exactitud de ese pliegue caiga a 0,6951 mientras su macro-F1 se mantiene en 0,7987. Como afecta por igual a las dos representaciones, los deltas de la tabla no cambian; las cifras absolutas no son comparables con las de la Sección~\ref{subsec:exp2c_tipos}.
+
+La lectura decisiva está en comparar la pérdida de cada representación al retirar el tipo del entrenamiento. Respecto de la validación cruzada aleatoria de la Tabla~\ref{tab:exp2e}, la representación de solo bytes pasa de 0,9114 a 0,8544 de macro-F1 y la de bytes con estructura de 0,9359 a 0,8789: \textbf{una pérdida de 0,057 en ambos casos}, de la que una parte, igual para las dos, corresponde a BLACKMATTER en el pliegue \texttt{jpg}. El delta entre ellas bajo tipo no visto, +0,0245, coincide con el delta bajo validación aleatoria, +0,0246. Si los rasgos estructurales estuvieran aprendiendo el tipo de documento, su pérdida sería mayor y el delta se reduciría; no ocurre ni una cosa ni la otra. \textbf{La mejora que aportan es independiente del tipo de documento}, y la configuración de bytes y estructura supera, por tanto, la misma prueba que superó la de solo bytes.
+
+Sobre las seis familias difíciles el patrón se repite bajo la prueba más exigente: promediando su F1 sobre los siete pliegues, WASTEDLOCKER pasa de 0,3929 a 0,6418, JIGSAW de 0,3400 a 0,5154 y NOTPETYA de 0,1190 a 0,2675, mientras DARKSIDE permanece en 0,50. Conviene observar los valores absolutos: bajo tipo no visto estas familias quedan muy por debajo de sus cifras con validación aleatoria, en las dos representaciones. El tipo no visto castiga sobre todo a las familias sin firma, y los rasgos estructurales alivian esa penalización sin eliminarla.
+
+
+\subsection{Alcance}
+
+Dos observaciones acotan el resultado y una lo proyecta.
+
+La primera es que \textbf{la representación estructural no sustituye a la de bytes}: por sí sola alcanza 0,8680 de macro-F1, frente a 0,9114 de los 1.024 bytes posicionales. Que lo haga con \textbf{veintitrés veces menos características} es notable, y sugiere que buena parte de la información de familia admite una descripción muy compacta, pero la combinación supera a ambas y ninguna contiene a la otra.
+
+La segunda es que el rasgo diseñado expresamente para capturar el bloque final poco aleatorio de SUNCRYPT y NOTPETYA \textbf{no aporta nada}: retirarlo de la representación cambia el macro-F1 en +0,0001, es decir, nada. Las familias que más mejoran ---WASTEDLOCKER y DARKSIDE--- son precisamente aquellas cuya entropía se sitúa en el techo en ambos extremos, de modo que el mecanismo que las rescata no puede ser el del bloque final. Se consigna porque el experimento produjo el efecto buscado por una razón distinta de la que lo motivó.
+
+La proyección, que se enuncia como argumento y no como medición, es la siguiente: los rasgos estructurales deberían resistir el cambio de campaña mejor que los valores de byte en posiciones fijas. Una campaña nueva de la misma familia modifica claves e identificadores de víctima ---que son valores de byte--- pero no el modo de cifrado, el tamaño del añadido ni el perfil de entropía, que están determinados por el código. \textbf{Sobre NapierOne esa hipótesis no puede comprobarse}, por la razón expuesta en la Sección~\ref{subsec:exp2c_limitacion}, y se deja planteada para un conjunto de datos con varias campañas por familia.
+
+\section{Experimento 2f: Sistema Completo}
+\label{sec:exp2f}
+
+\subsection{Motivación y diseño}
+
+Las técnicas del frente de archivos no son alternativas entre las que elegir, sino capas de una misma secuencia: cada una incorpora información que las anteriores no contienen. Los bytes posicionales capturan los marcadores que cada familia escribe en posiciones fijas (Sección~\ref{sec:exp2c}); los rasgos estructurales, la forma del archivo que esos valores no pueden expresar (Sección~\ref{sec:exp2e}); y la forma del nombre, el esquema de renombrado (Sección~\ref{sec:exp2d}). Hasta aquí cada capa se había medido de a pares contra los bytes, y la combinación de las tres no se había evaluado nunca. El resultado del frente es el del sistema que las apila, y la limitación de campaña se declara junto a él en lugar de emplearse para excluir una capa.
+
+Se miden cuatro columnas sobre la misma partición ---bytes; bytes y estructura; bytes, estructura y forma del nombre; y esta última con la extensión literal como variable adicional---, con quince mil archivos, treinta familias, cinco semillas y cinco pliegues. Respecto de los experimentos anteriores se agregan dos cosas: el F1 por familia se promedia sobre las cinco semillas, de modo que el estado de cada familia difícil deja de depender de una única corrida, y el sistema se somete a la validación sobre tipos de documento nunca vistos, con los mismos pliegues que las Secciones~\ref{subsec:exp2c_tipos} y~\ref{subsec:exp2e_tipos}. Las cuatro predicciones se registraron en el guion antes de ejecutarlo: el sistema alcanzaría al menos 0,9990 de macro-F1 (F1); la extensión literal no le sumaría más de 0,0010 (F2); las treinta familias superarían 0,99 de F1 medio (F3); y bajo tipo no visto el sistema mejoraría a bytes y estructura en los siete pliegues (F4).
+
+\subsection{Resultados}
+
+\begin{table}[ht]
+\centering
+\caption{Experimento 2f: las capas del frente apiladas sobre la misma partición. Media y desvío sobre cinco semillas; 15.000 archivos, 30 familias, cinco pliegues.}
+\label{tab:exp2f}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Representación} & \textbf{Exactitud} & \textbf{Macro-F1} \\
+\hline
+Bytes (configuración del Exp. 2c) & 0,9123 $\pm$ 0,0003 & 0,9114 $\pm$ 0,0004 \\
++ rasgos estructurales (Exp. 2e) & 0,9357 $\pm$ 0,0005 & 0,9359 $\pm$ 0,0004 \\
++ rasgos estructurales + forma del nombre & 0,9998 $\pm$ 0,0001 & 0,9998 $\pm$ 0,0001 \\
++ estructura + forma del nombre + extensión literal & 0,9998 $\pm$ 0,0001 & 0,9998 $\pm$ 0,0001 \\
+\hline
+\end{tabular}
+\end{table}
+
+Las dos primeras filas reproducen las del Experimento 2e, lo que confirma que las cuatro columnas son comparables con lo ya reportado. Agregar la forma del nombre sobre bytes y estructura aporta \textbf{+0,0639 de macro-F1 [+0,0634; +0,0644], con las cinco semillas a favor}, y la extensión literal no agrega nada sobre ese sistema: +0,0000 [$-$0,0001; +0,0001]. Queda afuera, por tanto, por los datos y no por criterio. Las treinta familias superan 0,99 de F1 medio, incluidas NOTPETYA, JIGSAW, CRYPTOLOCKER y DARKSIDE, las cuatro más bajas bajo solo contenido. Las predicciones F1, F2 y F3 se cumplen.
+
+\subsection{Por qué falla la validación sobre tipos no vistos}
+
+La predicción F4 \textbf{no se cumple}, y no por un margen estrecho. En seis de los siete pliegues la forma del nombre mejora a bytes y estructura entre +0,06 y +0,17 de macro-F1; en el pliegue de las imágenes \texttt{jpg}, en cambio, \textbf{lo hunde de 0,8052 a 0,2167}, una caída de 0,5885 respecto de no emplear el nombre (Tabla~\ref{tab:exp2g_tipos}, columna «+ nombre»). El delta medio sobre los siete pliegues, +0,0054 con intervalo [$-$0,2386; +0,2493], no permite afirmar mejora alguna.
+
+La causa se estableció mirando los nombres de los archivos antes de formular ninguna explicación. En la carpeta de AVOSLOCKER, por ejemplo, un documento se llama \texttt{0001-\allowbreak doc.doc.avos2} y una imagen \texttt{0001-\allowbreak jpg-\allowbreak fromweb.jpg.avos2}: la familia agrega \texttt{.avos2} a ambos, pero la base del nombre la asignó NapierOne al construir su conjunto, y en las imágenes incluye un \texttt{-fromweb} que en los documentos no figura ---una base de veinte caracteres frente a doce---. Los rasgos de forma del Experimento 2d se calculan sobre el nombre \textit{completo} ---longitud total, longitud de la base, su composición---, de modo que aprendieron también \textbf{cómo nombró NapierOne sus archivos}, y no solo cómo los renombra cada familia. Con las imágenes fuera del entrenamiento, el clasificador nunca vio nombres de esa forma y los asigna a familias equivocadas. La explicación se comprobó por intervención en el experimento siguiente: con los rasgos calculados solo sobre la extensión final, el colapso desaparece.
+
+El episodio tiene un valor metodológico que excede a este experimento. La validación por tipos de documento se diseñó para descartar que el clasificador aprendiera el documento en lugar del ransomware; lo que detectó aquí fue un \textbf{artefacto de la curaduría del conjunto de datos}, invisible para la validación cruzada aleatoria, que reparte las imágenes entre entrenamiento y prueba y por eso nunca enfrenta al clasificador con una base de nombre que no haya visto.
+
+\section{Experimento 2g: Nombre Robusto}
+\label{sec:exp2g}
+
+\subsection{Diseño}
+
+El arreglo consiste en describir únicamente lo que agrega el ransomware. Los dieciocho rasgos de forma del nombre se reemplazan por \textbf{catorce rasgos que no examinan la base heredada de NapierOne}. Trece se calculan sobre la extensión final: su longitud; la cuenta de dígitos, letras y mayúsculas, y sus proporciones; la proporción de caracteres hexadecimales; su entropía; tres indicadores (extensión íntegramente hexadecimal, solo alfabética, con dígitos); y un indicador de si es la extensión de un tipo de documento conocido, que identifica a las familias que no renombran sin depender de cuál sea el tipo. El decimocuarto es la cantidad de puntos del nombre, que no depende del tipo porque documentos e imágenes tienen un punto en la base.
+
+La partición, las semillas y los pliegues son los del Experimento 2f, de modo que la comparación con la forma completa es pareada. Las predicciones, registradas antes de ejecutar, fueron cuatro: el sistema alcanzaría al menos 0,995 de macro-F1 en validación cruzada (G1); en el pliegue \texttt{jpg} no colapsaría, es decir, no quedaría más de 0,02 por debajo de bytes y estructura (G2); mejoraría a bytes y estructura en los siete pliegues (G3); y NOTPETYA, JIGSAW, CRYPTOLOCKER y DARKSIDE superarían 0,95 de F1 (G4). Se acordó de antemano que, si se cumplían las tres primeras, este sería el sistema completo del frente.
+
+\subsection{Resultados}
+
+En validación cruzada, bytes, estructura y forma de la extensión alcanzan \textbf{0,9998 $\pm$ 0,0001 de exactitud y de macro-F1}, el mismo valor que la forma del nombre completo con las mismas semillas y particiones: restringir los rasgos a la extensión \textbf{no pierde nada}. El delta pareado respecto de bytes y estructura es de \textbf{+0,0639 [+0,0634; +0,0644], con las cinco semillas a favor}.
+
+\begin{table}[ht]
+\centering
+\caption{Validación \textit{dejar-un-tipo-fuera} del sistema completo, macro-F1. «+ nombre»: forma del nombre completo (Experimento 2f); «+ extensión»: forma de la extensión final (Experimento 2g); ambas sobre bytes y estructura. Mismos pliegues que la Tabla~\ref{tab:exp2e_tipos}; un ajuste por pliegue con los hiperparámetros del Experimento 2c.}
+\label{tab:exp2g_tipos}
+\small
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Tipo excluido} & \textbf{Bytes + estr.} & \textbf{+ nombre} & \textbf{+ extensión} & \textbf{$\Delta$ nombre} & \textbf{$\Delta$ extensión} \\
+\hline
+doc & 0,9337 & 0,9943 & 0,9943 & +0,0606 & +0,0606 \\
+docx & 0,9023 & 1,0000 & 1,0000 & +0,0977 & +0,0977 \\
+jpg & 0,8052 & \textbf{0,2167} & \textbf{0,9997} & $-$0,5885 & +0,1945 \\
+pdf & 0,8131 & 0,9791 & 0,9800 & +0,1660 & +0,1669 \\
+pptx & 0,8893 & 1,0000 & 1,0000 & +0,1107 & +0,1107 \\
+xls & 0,9037 & 0,9995 & 0,9995 & +0,0958 & +0,0958 \\
+xlsx & 0,9047 & 1,0000 & 1,0000 & +0,0953 & +0,0953 \\
+\hline
+\textbf{Promedio} & 0,8789 & 0,8842 & \textbf{0,9962} & +0,0054 & \textbf{+0,1174} \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{El colapso desaparece}: en el pliegue \texttt{jpg}, donde la forma completa daba 0,2167, la forma de la extensión da 0,9997, y en los seis restantes ambas coinciden (Tabla~\ref{tab:exp2g_tipos}). El delta pareado por pliegue respecto de bytes y estructura es de \textbf{+0,1174 de macro-F1 [+0,0743; +0,1604], con los siete pliegues a favor}; el menor corresponde a \texttt{doc}, con +0,0606.
+
+La comparación más informativa es, de nuevo, la de las pérdidas. Al pasar de la validación cruzada aleatoria a un tipo de documento no visto, bytes y bytes con estructura pierden 0,057 de macro-F1 (Sección~\ref{subsec:exp2e_tipos}); \textbf{el sistema completo pierde 0,0036}, de 0,9998 a 0,9962. Una parte menor de esa diferencia está en el pliegue \texttt{jpg} y corresponde a BLACKMATTER: sin ponderación de clases, las representaciones de contenido no reconocen ninguna de sus imágenes (Sección~\ref{subsec:exp2e_tipos}) y la de la extensión sí. La extensión que agrega el ransomware no depende del tipo del documento cifrado, de modo que la capa del nombre, lejos de acoplar el clasificador al tipo, lo vuelve casi insensible a él. El pliegue más bajo es \texttt{pdf}, con 0,9800.
+
+\begin{table}[ht]
+\centering
+\caption{F1 por familia a lo largo de las capas del sistema, media sobre cinco semillas (Experimentos 2f y 2g); 15.000 archivos, cinco pliegues. Se muestran las seis familias que el Experimento 2c no resolvía; las veinticuatro restantes superan 0,99 en el sistema completo.}
+\label{tab:exp2g_familias}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Familia} & \textbf{Bytes} & \textbf{+ estructura} & \textbf{+ estructura + extensión} \\
+\hline
+NOTPETYA & 0,3850 & 0,4811 & \textbf{0,9978} \\
+JIGSAW & 0,4338 & 0,5739 & \textbf{0,9990} \\
+CRYPTOLOCKER & 0,6128 & 0,6576 & \textbf{1,0000} \\
+DARKSIDE & 0,5981 & 0,7515 & \textbf{1,0000} \\
+WASTEDLOCKER & 0,6266 & 0,8352 & \textbf{1,0000} \\
+SUNCRYPT & 0,7590 & 0,8296 & \textbf{1,0000} \\
+\hline
+\end{tabular}
+\end{table}
+
+Las treinta familias superan 0,99 de F1 medio. Las más bajas son NOTPETYA (0,9978), BADRABBIT (0,9988) y JIGSAW (0,9990); veinticinco quedan en 1,0000, y la única que desciende respecto de bytes y estructura es CUBA, de 1,0000 a 0,9996. La Tabla~\ref{tab:exp2g_familias} muestra además lo que ocurre bajo solo contenido con el promedio de cinco semillas: DARKSIDE queda en 0,7515, de modo que las familias por debajo de 0,75 son tres, NOTPETYA, JIGSAW y CRYPTOLOCKER. \textbf{Las cuatro predicciones se cumplen}, y por la regla fijada de antemano esta configuración es el sistema completo del frente.
+
+\subsection{Alcance y limitación}
+
+La validación por tipos de documento acredita que el sistema no depende del tipo del archivo cifrado; \textbf{no acredita que resista un cambio de campaña}, que es una pregunta distinta. La limitación de campaña alcanza a todo el frente ---el 0,912 de solo bytes ya se declaró como medición de \textit{esa campaña} (Sección~\ref{subsec:exp2c_limitacion})---, y la capa de la extensión es la más expuesta a ella. En NapierOne cada familia está representada por una única campaña y veinticinco de las treinta poseen una única extensión (Sección~\ref{sec:exp2d}), de modo que esa capa aprende el esquema de renombrado de cada campaña; si ese esquema lo fija el código del programa ---una extensión aleatoria de longitud constante, por ejemplo--- o lo elige el operador de cada campaña es una distinción que este conjunto de datos no permite resolver.
+
+Por eso la cifra del sistema se enuncia junto con su descomposición: la parte de contenido, \textbf{0,936 de macro-F1} (Sección~\ref{sec:exp2e}), no emplea el nombre y no depende del esquema de renombrado; la capa de la extensión eleva la cifra a 0,9998 y es la que más depende de la campaña. Se reportan ambas, y ninguna se omite.
 
 \section{Síntesis del Frente de Archivos Cifrados}
 \label{sec:sintesis_archivos}
 
-La Figura~\ref{fig:progresion} resume la progresión de los cuatro enfoques evaluados sobre el mismo conjunto de archivos cifrados.
+La Figura~\ref{fig:progresion} resume la progresión de los cuatro primeros enfoques evaluados sobre el mismo conjunto de archivos cifrados; los experimentos posteriores (Secciones~\ref{sec:exp2d} a~\ref{sec:exp2g}) se incorporan al cierre de esta síntesis.
 
 \begin{figure}[ht]
 \centering
@@ -308,7 +965,15 @@ La Figura~\ref{fig:progresion} resume la progresión de los cuatro enfoques eval
 
 Cada etapa responde a una objeción de la anterior: la ampliación del espacio de características descarta que el resultado negativo inicial se debiera a una representación pobre; la localización explícita de firmas identifica dónde reside la señal; y el aprendizaje sobre bytes extiende esa señal a la totalidad del conjunto sin recurrir a metadatos del nombre.
 
-La conclusión del frente de archivos cifrados queda, por tanto, acotada con precisión: la indistinguibilidad estadística es real, pero se limita a \textbf{seis de las treinta familias evaluadas}: dos que no dejan marca alguna y cuatro que solo marcan el nombre del archivo, sin añadir estructura reconocible a su contenido. Para las veinticuatro restantes la información de familia está presente en el contenido del archivo y es extraíble automáticamente con una exactitud de 0,912 $\pm$ 0,002.
+Al cabo de esas etapas, la conclusión del frente de archivos cifrados queda acotada con precisión: la indistinguibilidad estadística es real, pero se limita a \textbf{seis de las treinta familias evaluadas}: dos que no dejan marca alguna y cuatro que solo marcan el nombre del archivo, sin añadir estructura reconocible a su contenido. Para las veinticuatro restantes la información de familia está presente en el contenido del archivo y es extraíble automáticamente con una exactitud de 0,912 $\pm$ 0,002.
+
+Los experimentos posteriores precisan esa conclusión en dos direcciones ---el nombre del archivo y su contenido--- que no tienen el mismo alcance, y culminan en un sistema que las apila.
+
+La primera concierne al \textbf{nombre del archivo}. Incorporar la forma del nombre ---no la cadena, sino sus propiedades de longitud y composición--- eleva el macro-F1 de 0,9117 a 0,9998 (Sección~\ref{sec:exp2d}): sobre este conjunto, las cuatro familias que solo marcan el nombre dejan de ser un residuo. El resultado, sin embargo, no puede separarse de la limitación de campaña: con una única campaña por familia no es posible saber si el esquema de renombrado que el clasificador aprende pertenece al programa o a esa campaña, y por ello se reporta como resultado sobre NapierOne y no como propiedad del método. La validación sobre tipos de documento reveló después que la forma del nombre completo aprendía también cómo nombró NapierOne sus archivos, y se desplomaba al retirar las imágenes del entrenamiento (Sección~\ref{sec:exp2f}); calculada solo sobre la extensión final, que es lo que agrega el ransomware, conserva el 0,9998 y supera esa validación (Sección~\ref{sec:exp2g}).
+
+La segunda concierne al \textbf{contenido}, y no depende del esquema de renombrado. Los rasgos estructurales del archivo ---tamaño y sus restos, perfil de entropía, distribución de bytes--- elevan la exactitud de 0,9123 a \textbf{0,9357 $\pm$ 0,0005} y el macro-F1 a \textbf{0,9359 $\pm$ 0,0004} sin emplear el nombre ni la extensión (Sección~\ref{sec:exp2e}). La mejora se concentra íntegramente en las seis familias difíciles, cuyo F1 medio pasa de 0,5671 a 0,6857 en la corrida con reporte por familia; en esa misma corrida WASTEDLOCKER supera el umbral de 0,75 y cuatro familias permanecen por debajo; con el promedio de cinco semillas son tres, porque DARKSIDE queda en 0,7515 (Tabla~\ref{tab:exp2g_familias}). Lo que la sostiene es el tamaño del archivo en combinación con su perfil de entropía: propiedades que dependen del modo de cifrado y del tamaño del añadido, es decir, del código de la familia.
+
+La cifra del frente de archivos cifrados es, en consecuencia, la del sistema que apila las tres capas ---bytes, rasgos estructurales y forma de la extensión---: \textbf{0,9998 $\pm$ 0,0001 de macro-F1 y de exactitud} sobre treinta familias, todas por encima de 0,99 de F1, y \textbf{0,9962 de macro-F1 bajo tipo de documento no visto} (Sección~\ref{sec:exp2g}). Se enuncia siempre junto con su descomposición, porque sus capas no tienen el mismo alcance. La parte de contenido, \textbf{0,936 de macro-F1 y 0,9357 $\pm$ 0,0005 de exactitud} (Sección~\ref{sec:exp2e}), no emplea el nombre ni la extensión. La configuración de solo bytes, con 0,912 $\pm$ 0,002, es la base sobre la que se construyó ---la que atravesó la validación anidada, la comprobación sobre tipos de documento nunca vistos y la ablación de ventana---, y cada capa que integra el sistema superó a su vez la comprobación sobre tipos no vistos (Secciones~\ref{subsec:exp2e_tipos} y~\ref{sec:exp2g}). La capa de la extensión es la que eleva la cifra de 0,936 a 0,9998, y es también la más expuesta a la limitación de campaña, que con una única campaña por familia no puede evaluarse. Bajo solo contenido, la indistinguibilidad estadística sigue siendo real para \textbf{tres de las treinta familias} ---NOTPETYA, JIGSAW y CRYPTOLOCKER, por debajo de 0,75 de F1 con el promedio de cinco semillas---, con DARKSIDE en el límite, en 0,7515; con el sistema completo, las cuatro superan 0,99.
 
 \section{Experimento 3: Clasificación por Notas de Rescate (NLP)}
 \label{sec:exp3}
@@ -489,6 +1154,10 @@ Canónica, protocolo P2 & 0,551 & 0,435 & + plantillas casi idénticas nunca rep
 
 Cada corrección reduce el valor nominal pero aumenta la validez: el 0,897 original medía en parte la capacidad del modelo de reconocer notas duplicadas; el protocolo P1 mide el reconocimiento de nuevas instancias de plantillas conocidas; y el protocolo P2, la generalización a contenido nunca visto.
 
+% Secciones del frente de notas redactadas aparte; incorporadas el 2026-09-28.
+\input{resultados_notas_ampliacion}
+
+
 \section{Ajustes al Protocolo Experimental}
 \label{sec:ajustes_protocolo}
 
@@ -548,7 +1217,7 @@ La Tabla~\ref{tab:comparacion_final} integra los resultados de los tres experime
 
 \begin{table}[ht]
 \centering
-\caption{Comparación de los enfoques evaluados}
+\caption{Comparación de los enfoques evaluados. La fila del Exp. 2g incorpora la forma de la extensión que agrega el ransomware, la capa más expuesta a la limitación de campaña (Sección~\ref{sec:exp2g}).}
 \label{tab:comparacion_final}
 \resizebox{\textwidth}{!}{
 \begin{tabular}{|l|c|c|l|}
@@ -559,7 +1228,9 @@ Exp. 1: Binaria (archivos) & 2 & 88,6\% acc. & Random Forest \\
 Exp. 2: Multiclase, 2 características & 31 & 9,9\% acc. & Gradient Boosting \\
 Exp. 2: Multiclase, 19 características & 29 & 60,3\% acc. & Random Forest \\
 Exp. 2b: Firmas binarias (donde aplican) & 30 & 98,4\% acc. (57\% cobert.) & Coincidencia exacta \\
-Exp. 2c: Aprendizaje sobre bytes & 30 & \textbf{91,2\% acc. / 0,911 macro-F1} & Random Forest (posicional) \\
+Exp. 2c: Aprendizaje sobre bytes & 30 & 91,2\% acc. / 0,911 macro-F1 & Random Forest (posicional) \\
+Exp. 2e: Bytes + rasgos estructurales (solo contenido) & 30 & 93,6\% acc. / 0,936 macro-F1 & Random Forest (posicional + estructura) \\
+Exp. 2g: Sistema completo (+ forma de la extensión) & 30 & \textbf{99,98\% acc. / 0,9998 macro-F1} & Random Forest (posicional + estructura + extensión) \\
 Exp. 3: NLP notas, P1 (plantilla conocida) & 30 & 81,8\% acc. / 0,760 macro-F1 & LinearSVC (caracteres) \\
 Exp. 3: NLP notas, P2 (variante nueva) & 30 & 55,1\% acc. / 0,435 macro-F1 & LinearSVC (combinado) \\
 \hline
@@ -575,7 +1246,7 @@ Los resultados demuestran que:
 
 \begin{enumerate}
     \item Las métricas estadísticas de archivos cifrados son efectivas para la \textbf{detección binaria} de cifrado ($\sim$89\% de exactitud).
-    \item La \textbf{identificación de familia a partir de archivos cifrados es posible} (91,2\% $\pm$ 0,2 de exactitud sobre 30 familias, sin emplear metadatos del nombre), pero no mediante las propiedades criptográficas del contenido, sino a través de los artefactos estructurales que cada familia añade. La indistinguibilidad se limita a seis familias que cifran sin dejar estructura reconocible.
+    \item La \textbf{identificación de familia a partir de archivos cifrados es posible}, y no mediante las propiedades criptográficas del contenido sino a través de lo que cada familia agrega: los artefactos estructurales y la forma del archivo (0,936 de macro-F1 sobre 30 familias sin emplear el nombre, frente a 0,911 de los bytes solos) y la extensión que añade al nombre, con la que el sistema completo alcanza 0,9998 sobre una campaña por familia. Bajo solo contenido, la indistinguibilidad se limita a tres familias.
     \item Las notas de rescate permiten la identificación de familia con 81,8\% de exactitud en el escenario operativo comparable al de las herramientas existentes (P1), superando el 71,93\% de ID Ransomware, con la ventaja adicional de constituir un método automático y reproducible frente a reglas mantenidas manualmente.
     \item La generalización a variantes nunca vistas (P2, macro-F1 0,435) es sustancialmente más difícil y depende de la diversidad de plantillas disponible por familia, lo que fundamenta la expansión del corpus como línea de trabajo prioritaria.
 \end{enumerate}
@@ -593,7 +1264,7 @@ Los dos frentes del trabajo, desarrollados de forma independiente y sobre datos 
 \label{fig:simetria}
 \end{figure}
 
-En las \textbf{notas de rescate}, la señal fácil es la plantilla: reconocer una nueva instancia de un texto ya catalogado alcanza un macro-F1 de 0,760, mientras que atribuir una variante nunca vista desciende a 0,435. En los \textbf{archivos cifrados}, la señal fácil es la extensión añadida, que acierta el 100\% de los casos en que está presente pero identifica la campaña y no la familia; la señal de contenido, en cambio, alcanza 0,912 y resulta más estable porque proviene de marcadores que el propio programa escribe en el archivo.
+En las \textbf{notas de rescate}, la señal fácil es la plantilla: reconocer una nueva instancia de un texto ya catalogado alcanza un macro-F1 de 0,760, mientras que atribuir una variante nunca vista desciende a 0,435. En los \textbf{archivos cifrados}, la señal fácil es la extensión añadida, que acierta el 100\% de los casos en que está presente pero identifica la campaña y no la familia; la señal de contenido, en cambio, alcanza 0,912 con los bytes y 0,936 al incorporar la estructura del archivo, y resulta más estable porque proviene de marcadores que el propio programa escribe en el archivo. El sistema completo del frente combina las dos señales y alcanza 0,9998 de macro-F1 (Sección~\ref{sec:exp2g}); por esa razón se reporta siempre junto con su parte de contenido.
 
 Esta distinción explica por qué las herramientas basadas en catálogos de reglas, como ID Ransomware~\cite{idransomware} o el identificador propuesto por Lemmou et al.~\cite{paper_5_note_files}, funcionan satisfactoriamente sobre campañas conocidas y requieren actualización permanente: operan sobre la señal fácil. Un clasificador entrenado sobre el contenido no las reemplaza, pero cubre el caso que ellas no resuelven, que es precisamente el de las variantes no catalogadas.
 
@@ -603,7 +1274,7 @@ Los resultados permiten proponer un procedimiento por etapas en el que cada arte
 
 \begin{enumerate}
 \item \textbf{Confirmación del incidente} mediante métricas estadísticas sobre los archivos afectados (detección binaria, $\sim$89\% de exactitud). Los archivos cifrados son el único artefacto cuya presencia está garantizada: la nota puede haber sido eliminada, no encontrada, o directamente no existir.
-\item \textbf{Identificación de familia por el contenido del archivo cifrado} (91,2\%), aplicable a las veinticuatro familias en cuyo contenido persiste información de familia.
+\item \textbf{Identificación de familia por el archivo cifrado}: por su contenido (0,936 de macro-F1, con tres familias por debajo de 0,75) y, cuando se dispone del nombre del archivo cifrado, por el sistema completo, que suma la forma de la extensión (0,9998).
 \item \textbf{Identificación de familia por la nota de rescate} cuando esté disponible (81,8\% en el escenario comparable con las herramientas existentes), especialmente valiosa para las seis familias que no dejan estructura en los archivos.
 \end{enumerate}
 
