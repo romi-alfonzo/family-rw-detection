@@ -5,8 +5,8 @@ generar_figuras_cap4.py — Figuras del capítulo 4, LEÍDAS de los archivos de 
 Reescrito el 2026-08-17 (auditoría de la descarga): la versión anterior tenía las cifras
 hardcodeadas de corridas superadas (29 familias, Exp. 2b pre-corrección). Esta versión lee:
 
-  4_resultados/resultados_bytes/bytes_por_familia.txt        Exp. 2c por familia (job 3639)
-  4_resultados/resultados_bytes/bytes_resumen.csv            Exp. 2c resumen (job 3639)
+  4_resultados/resultados_bytes_multisemilla/..._job3648/    Exp. 2c, diez semillas (desde 2026-09-28;
+                                                             antes, la corrida única del job 3639)
   4_resultados/resultados_estructural/manifiesto.json        Exp. 2b corregido (job 3638)
   4_resultados/resultados_estructural/marcas_por_familia_umbral_90.csv
   4_resultados/resultados_ablacion_extendida/a_curva_ablacion.csv   (job 3630)
@@ -22,7 +22,7 @@ Salida: 1_documento/Plantilla_de_Tesis___Romina_Carlos/images/
 """
 import csv
 import json
-import re
+from collections import defaultdict
 from pathlib import Path
 
 import matplotlib
@@ -43,27 +43,37 @@ ROJO = "#a83e3e"
 
 # Única cifra sin CSV local: baseline de 2 características (SLURM job 3547; ver §4.3.1).
 EXACTITUD_2FEAT_29FAM = 0.166
+# Exactitud en validación cruzada (media de 5 semillas) del Exp. 2e (job 4058) y del sistema
+# completo del Exp. 2g (job 4091), transcritas del log pegado por Romina y registradas en
+# ESTADO_TESIS.md. Si las carpetas de resultados están bajadas en 4_resultados/, se leen de ahí
+# y se verifica que coincidan.
+EXACTITUD_2E, EXACTITUD_2G = 0.9357, 0.9998
 
 
 # ---------------------------------------------------------------- lectura de fuentes
+# 2026-09-28: las dos lecturas del Exp. 2c pasan de la corrida única del job 3639 al promedio de
+# DIEZ semillas del job 3648, que es la cifra que cita el capítulo (0,912 ± 0,002). La figura de
+# progresión mostraba 0,909 al lado de un texto que decía 0,912.
+MULTI_2C = RES / "resultados_bytes_multisemilla" / "resultados_bytes_multisemilla_job3648"
+
+
 def leer_por_familia_2c():
-    """Parsea el classification_report del Exp. 2c (job 3639, 30 familias)."""
-    txt = (RES / "resultados_bytes" / "bytes_por_familia.txt").read_text(encoding="utf-8")
-    f1 = {}
-    for linea in txt.splitlines():
-        m = re.match(r"\s*([A-Z]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+(\d+)\s*$", linea)
-        if m and m.group(1) not in ("accuracy",):
-            f1[m.group(1)] = float(m.group(4))
-    assert len(f1) == 30, f"se esperaban 30 familias, hay {len(f1)}"
+    """F1 por familia del Exp. 2c, media de diez semillas (job 3648, 30 familias)."""
+    suma, n = defaultdict(float), defaultdict(int)
+    with open(MULTI_2C / "bytes_multisemilla_por_familia.csv", encoding="utf-8") as fh:
+        for fila in csv.DictReader(fh):
+            suma[fila["familia"]] += float(fila["f1"])
+            n[fila["familia"]] += 1
+    f1 = {k: suma[k] / n[k] for k in suma}
+    assert len(f1) == 30 and set(n.values()) == {10}, "se esperaban 30 familias x 10 semillas"
     return f1
 
 
 def leer_resumen_2c():
-    """Fila final del Exp. 2c (job 3639)."""
-    with open(RES / "resultados_bytes" / "bytes_resumen.csv", encoding="utf-8") as fh:
-        filas = [f for f in csv.DictReader(fh) if f["etapa"] == "final"]
-    assert len(filas) == 1
-    return float(filas[0]["accuracy"]), float(filas[0]["f1_macro"])
+    """Exactitud y macro-F1 del Exp. 2c, media de diez semillas (job 3648)."""
+    with open(MULTI_2C / "bytes_multisemilla_resumen.csv", encoding="utf-8") as fh:
+        filas = {f["metrica"]: float(f["media"]) for f in csv.DictReader(fh)}
+    return filas["accuracy"], filas["f1_macro"]
 
 
 def leer_marcas_2b():
@@ -85,8 +95,24 @@ def leer_marcas_2b():
                 solo_ext.add(fam)
             else:
                 sin_marca.add(fam)
-    abl = man["criterios"]["umbral_90"]["ablacion"]
-    return con_firma, solo_ext, sin_marca, abl
+    return con_firma, solo_ext, sin_marca, leer_ablacion_2b_10semillas()
+
+
+def leer_ablacion_2b_10semillas():
+    """Ablación del Exp. 2b con criterio 0,90: media de las diez semillas del job 3651, que es la
+    base de la tabla del capítulo (57,2 % de cobertura, 0,563 de exactitud global para las firmas).
+    Hasta el 2026-09-28 la figura leía la corrida única del job 3638 (54 % y 0,533)."""
+    import glob
+    mans = sorted(glob.glob(str(RES / "resultados_estructural_10semillas" /
+                                "resultados_estructural_s*_job3651" / "manifiesto.json")))
+    assert len(mans) == 10, f"se esperaban 10 semillas del job 3651, hay {len(mans)}"
+    abl = defaultdict(lambda: defaultdict(float))
+    for m in mans:
+        d = json.loads(Path(m).read_text(encoding="utf-8"))["criterios"]["umbral_90"]["ablacion"]
+        for modalidad in ("solo_extension", "solo_firmas_binarias", "combinado"):
+            for clave in ("exactitud", "cobertura"):
+                abl[modalidad][clave] += d[modalidad][clave] / len(mans)
+    return abl
 
 
 def leer_notas():
@@ -106,9 +132,31 @@ def leer_referencia_19feat():
     return float(man["referencia_sin_ajustar"])
 
 
+def leer_cv_2e_2g():
+    """Exactitud media del Exp. 2e (bytes + estructura) y del sistema completo del Exp. 2g."""
+    import pandas as pd
+    valores = {}
+    for clave, carpeta, archivo, fila, fijo in (
+            ("2e", "resultados_exp2e_job4058", "exp2e_resumen.csv", None, EXACTITUD_2E),
+            ("2g", "resultados_exp2g_job4091", "cv_resumen.csv", "5_bytes_estructura_extension",
+             EXACTITUD_2G)):
+        ruta = RES / carpeta / archivo
+        if not ruta.exists():
+            print(f"  {clave}: {fijo} (transcrita del log; {carpeta} no está bajada)")
+            valores[clave] = fijo
+            continue
+        t = pd.read_csv(ruta, header=[0, 1], index_col=0)
+        acc = t[("accuracy", "mean")]
+        v = float(acc.loc[fila] if fila else acc.max())
+        assert abs(v - fijo) < 5e-5, f"{clave}: el CSV dice {v}, el log decía {fijo}"
+        print(f"  {clave}: {v} (leída de {carpeta}/{archivo})")
+        valores[clave] = v
+    return valores["2e"], valores["2g"]
+
+
 # ---------------------------------------------------------------- Figura 1
-def fig_progresion(acc_2c, abl):
-    """Progresión de enfoques sobre los archivos cifrados."""
+def fig_progresion(acc_2c, abl, acc_2e, acc_2g):
+    """Progresión de enfoques sobre los archivos cifrados, hasta el sistema completo."""
     v_19 = leer_referencia_19feat()
     v_firmas = abl["solo_firmas_binarias"]["exactitud"]
     c_firmas = abl["solo_firmas_binarias"]["cobertura"]
@@ -119,35 +167,39 @@ def fig_progresion(acc_2c, abl):
                  "Estadísticas\nregionales\n(19 caract., 29 fam.)",
                  "Firmas binarias\nexactas\n(Exp. 2b)",
                  "Extensión\ndel archivo\n(Exp. 2b)",
-                 "Aprendizaje\nsobre bytes\n(Exp. 2c)"]
-    valores = [EXACTITUD_2FEAT_29FAM, v_19, v_firmas, v_ext, acc_2c]
-    cobertura = [1.00, 1.00, c_firmas, c_ext, 1.00]
-    colores = [GRIS, AZUL, NARANJA, "#b0b0b0", VERDE]
+                 "Aprendizaje\nsobre bytes\n(Exp. 2c)",
+                 "Bytes + rasgos\nestructurales\n(Exp. 2e)",
+                 "Sistema completo:\n+ forma de la\nextensión (Exp. 2g)"]
+    valores = [EXACTITUD_2FEAT_29FAM, v_19, v_firmas, v_ext, acc_2c, acc_2e, acc_2g]
+    cobertura = [1.00, 1.00, c_firmas, c_ext, 1.00, 1.00, 1.00]
+    colores = [GRIS, AZUL, NARANJA, "#b0b0b0", VERDE, VERDE, "#1f3f5c"]
 
-    fig, ax = plt.subplots(figsize=(9.2, 4.6))
+    fig, ax = plt.subplots(figsize=(11.0, 4.9))
     x = np.arange(len(valores))
     barras = ax.bar(x, valores, color=colores, width=0.62, edgecolor="white")
+    barras[-1].set_hatch("//")
 
-    ax.axhline(1 / 30, color=ROJO, ls="--", lw=1.2)
-    ax.text(len(valores) - 0.42, 0.055, "azar (1/30 = 0,033)", color=ROJO,
-            fontsize=8.5, ha="right")
+    ax.axhline(1 / 30, color=ROJO, ls="--", lw=1.2, label="azar (1/30 = 0,033)")
+    ax.legend(loc="upper left", fontsize=8.5, frameon=False)
 
-    for b, v, c in zip(barras, valores, cobertura):
-        ax.text(b.get_x() + b.get_width() / 2, v + 0.018, f"{v:.3f}".replace(".", ","),
-                ha="center", fontsize=10, fontweight="bold")
+    for i, (b, v, c) in enumerate(zip(barras, valores, cobertura)):
+        cx = b.get_x() + b.get_width() / 2
+        # cuatro decimales cerca del techo: 0,9998 redondeado a tres dice «1,000», que no es cierto
+        txt = (f"{v:.4f}" if v > 0.995 else f"{v:.3f}").replace(".", ",")
+        ax.text(cx, v + 0.018, txt, ha="center", fontsize=10, fontweight="bold")
         if c < 1.0:
-            ax.text(b.get_x() + b.get_width() / 2, v / 2,
-                    f"cobertura\n{c:.0%}", ha="center", va="center",
+            ax.text(cx, v / 2, f"cobertura\n{c:.0%}", ha="center", va="center",
                     fontsize=8, color="white")
+        if i in (3, 6):
+            ax.text(cx, v + 0.075, "usa el nombre\ndel archivo", ha="center", fontsize=8,
+                    color=ROJO, style="italic")
 
-    ax.text(3, -0.075, "usa el nombre\ndel archivo", ha="center", fontsize=8,
-            color=ROJO, style="italic")
-
-    ax.set_xticks(x, etiquetas, fontsize=8.6)
+    ax.set_xticks(x, etiquetas, fontsize=8.4)
     ax.set_ylabel("Exactitud multiclase")
-    ax.set_ylim(0, 1.02)
-    ax.set_title("Identificación de familia a partir de archivos cifrados:\n"
-                 "la información no está en la aleatoriedad del cifrado sino en la estructura",
+    ax.set_ylim(0, 1.2)
+    ax.set_yticks(np.arange(0, 1.01, 0.2))
+    ax.set_title("Identificación de familia a partir de archivos cifrados: la información no está\n"
+                 "en la aleatoriedad del cifrado sino en lo que cada familia agrega al archivo",
                  fontsize=10.5, pad=12)
     ax.spines[["top", "right"]].set_visible(False)
     ax.grid(axis="y", alpha=0.25, lw=0.6)
@@ -179,7 +231,8 @@ def fig_por_familia(f1, con_firma, solo_ext, sin_marca):
 
     ax.axvline(0.98, color=GRIS, ls=":", lw=1)
     ax.set_xlim(0, 1.09)
-    ax.set_xlabel("F1 por familia (Experimento 2c: aprendizaje sobre bytes, 30 familias)")
+    ax.set_xlabel("F1 por familia (Experimento 2c: aprendizaje sobre bytes, 30 familias,\n"
+                  "media de diez semillas)")
     ax.set_title("Las familias que dejan estructura en el archivo se identifican\n"
                  "casi perfectamente; las que no, forman un grupo de confusión mutua",
                  fontsize=10.5, pad=12)
@@ -314,7 +367,8 @@ if __name__ == "__main__":
     p1, p2 = leer_notas()
     print(f"  fuentes: 2c acc={acc_2c} | 2b firmas={len(con_firma)} ext={len(solo_ext)} "
           f"sin={len(sin_marca)} | notas P1={p1:.3f} P2={p2:.3f}")
-    fig_progresion(acc_2c, abl)
+    acc_2e, acc_2g = leer_cv_2e_2g()
+    fig_progresion(acc_2c, abl, acc_2e, acc_2g)
     fig_por_familia(f1, con_firma, solo_ext, sin_marca)
     fig_simetria(p1, p2, abl, acc_2c)
     fig_ablacion_extendida()
