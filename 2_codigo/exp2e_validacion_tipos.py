@@ -83,8 +83,10 @@ try:
 except Exception:
     pass
 
-# Los mismos de analisis_bytes.py::RF_PARAMS, que son los del Exp. 2c. Sin class_weight, como
-# allí, para que la columna (1) sea la misma medición que la publicada.
+# Hiperparámetros del Exp. 2c, pero SIN class_weight. ⚠ Este comentario decía «sin class_weight,
+# como allí», y era FALSO: analisis_bytes.py (la validación por tipos publicada) usa
+# class_weight="balanced". Detectado el 2026-09-28. Se deja el modelo como estaba para que la
+# corrida del job 4079 sea reproducible; la medición con ponderación es validacion_tipos_ponderada.py.
 RF_PARAMS = dict(n_estimators=300, max_depth=20, min_samples_leaf=2, max_features=0.3,
                  random_state=42, n_jobs=N_JOBS)
 MIN_ARCHIVOS_TIPO = 200
