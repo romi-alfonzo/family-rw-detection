@@ -47,6 +47,13 @@ Q6. Sobre el NUCLEO de 30 el efecto NO es negativo (Delta >= 0 dentro del IC). S
     nucleo, no se adopta aunque mejore la Base B: son dos bases separadas y el nucleo manda.
 Q7. La cobertura de la regla BAJA en la Base B: se descartan mas claves que antes.
 =============================================================================================
+CORRECCION (2026-09-28, DESPUES de la primera corrida -- se declara como tal).
+La primera version guardaba solo si cada nota se habia acertado, no QUE se habia predicho, y
+calculaba el macro-F1 con `f1_score(y, where(acerto, y, "__mal__"))`. Eso esta MAL: al mandar
+todos los errores a una clase inexistente, ninguna familia recibe falsos positivos, la precision
+sale 1 por construccion y el F1 refleja solo el recall. Por eso daba 0,7342 donde la Base B vale
+0,6485. La exactitud, el acierto de la capa de reglas y toda la Parte 1 NO estaban afectados:
+se calculan sobre aciertos y no necesitan la prediccion. Ahora se guardan las predicciones.
 
 Uso:  python extendido_parecido_y_filtro.py [--n-semillas 20] [--salida CARPETA]
 """
@@ -171,6 +178,7 @@ def main():
     cont = np.full((args.n_semillas, n), -1.0)
     ok = {m: np.zeros((args.n_semillas, n), bool) for m in ("actual", "dominio")}
     apl = {m: np.zeros((args.n_semillas, n), bool) for m in ("actual", "dominio")}
+    pred = {m: np.empty((args.n_semillas, n), dtype=object) for m in ("actual", "dominio")}
     print("Evaluando ...")
     for s in range(args.n_semillas):
         rng = np.random.default_rng(20_000 + s)
@@ -188,20 +196,23 @@ def main():
                     cont[s, i] = C[i, propias].max()
                 for m in ("actual", "dominio"):
                     r = regla(i, dd[m], iocs, nombres)
-                    ok[m][s, i] = (pt[k] if r is None else r) == y[i]
+                    p_i = pt[k] if r is None else r
+                    pred[m][s, i] = p_i
+                    ok[m][s, i] = p_i == y[i]
                     apl[m][s, i] = r is not None
         if (s + 1) % 5 == 0:
             print(f"  {s+1}/{args.n_semillas}")
 
     # ---------- puerta Q1 ----------
     acc_a = float(ok["actual"].mean())
-    f1_a = np.array([f1_score(y, np.where(ok["actual"][s], y, "__mal__"), average="macro",
+    f1_a = np.array([f1_score(y, pred["actual"][s], average="macro",
                               labels=familias, zero_division=0) for s in range(args.n_semillas)])
+    print(f"  macro-F1 {f1_a.mean():.4f} vs {CANON_B_F1}")
     print("\n" + "-" * 78)
     print("  Q1 -- PUERTA (exactitud de la Base B)")
     print("-" * 78)
     print(f"  exactitud {acc_a:.4f} vs {CANON_B_ACC}")
-    okp = abs(acc_a - CANON_B_ACC) <= TOL
+    okp = abs(acc_a - CANON_B_ACC) <= TOL and abs(f1_a.mean() - CANON_B_F1) <= TOL
     if not okp and not args.sin_puerta:
         sys.exit("ABORTADO (Q1).")
     print("  OK\n" if okp else "  FUERA DE TOLERANCIA\n")
@@ -235,7 +246,7 @@ def main():
     # ---------- PARTE 2: filtro por dominio ----------
     f1 = {}
     for m in ("actual", "dominio"):
-        f1[m] = np.array([f1_score(y, np.where(ok[m][s], y, "__mal__"), average="macro",
+        f1[m] = np.array([f1_score(y, pred[m][s], average="macro",
                                    labels=familias, zero_division=0)
                           for s in range(args.n_semillas)])
     acr = {m: float(np.mean([ok[m][s][apl[m][s]].mean() for s in range(args.n_semillas)
