@@ -283,14 +283,12 @@ def main():
 
     if args.solo_nucleo:
         nuc = {r["variante"]: r for r in filas}
-        print("
-  CONFIRMACION SOBRE EL NUCLEO (solo N4):")
+        print("\n  CONFIRMACION SOBRE EL NUCLEO (solo N4):")
         for v in ("B suave", "C dominio"):
             print(f"    {v:<10} macro-F1 {nuc[v]['macro_f1']:.4f} | "
                   f"D {nuc[v]['delta_macro_f1']} | {nuc[v]['semillas_positivas']} | "
                   f"acierto regla {nuc[v]['acierto_regla']:.4f}")
-        print(f"
-Salidas en {OUT}")
+        print(f"\nSalidas en {OUT}")
         return
     ext = {r["variante"]: r for r in filas if r["corpus"] == "EXTENDIDO 106"}
     nuc = {r["variante"]: r for r in filas if r["corpus"] == "NUCLEO 30"}
