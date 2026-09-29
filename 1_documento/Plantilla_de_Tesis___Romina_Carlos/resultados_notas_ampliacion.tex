@@ -35,6 +35,11 @@
 %   subsec:res_parecido · tab:parecido
 %   subsec:res_predictores · tab:patron
 %   subsec:res_linaje · tab:linaje · tab:confusion_linaje
+%   --- agregadas el 2026-09-28 ---
+%   subsec:res_ic_plantilla · tab:ic_plantilla
+%   subsec:res_mundo_abierto · tab:mundo_abierto
+%   subsec:res_error_linaje · tab:acierto_linaje
+%   subsec:res_vias_descartadas · tab:vias_descartadas
 % REFERENCIA PENDIENTE: el texto menciona el «Experimento 3c» (cohesión y
 %   grafo), todavía sin redactar. Si se incorpora antes que aquél, quitar esa
 %   mención o dejarla sin \ref.
@@ -851,6 +856,149 @@ La capa de marcadores reduce la confusión de linaje a menos de la mitad, lo que
 \end{itemize}
 
 La conclusión es que \textbf{el mecanismo de marcadores resuelve el parentesco cuando la familia reutiliza infraestructura entre campañas, y no puede hacer nada cuando no la reutiliza}. Para esos casos el límite no es del clasificador ni del protocolo: dos familias distintas emiten notas casi idénticas y sin señal propia que las separe.
+
+
+% =====================================================================
+% AGREGADO EL 2026-09-28 — mundo abierto, incertidumbre por plantilla,
+% el error de linaje y las vías de mejora exploradas.
+% Base: 149 notas, 99 plantillas, 30 familias, P2bal, salvo donde se diga.
+% =====================================================================
+
+\subsection{Incertidumbre: cuánto se movería la cifra con otro corpus}
+\label{subsec:res_ic_plantilla}
+
+Los intervalos reportados hasta aquí se calculan entre semillas, y miden cuánto se mueve el resultado al cambiar la partición. No miden la otra fuente de incertidumbre, que es el corpus: se dispone de 149 notas y podrían haber sido otras. Estimarlo por remuestreo de \textit{notas} sería incorrecto, porque las notas de una misma plantilla son casi copias y no constituyen observaciones independientes; remuestrearlas por separado simula un tamaño de muestra que no existe y \textbf{estrecha artificialmente el intervalo}. La unidad independiente es la plantilla.
+
+El remuestreo se hace además \textbf{estratificado por familia}, y la razón es de diseño: las 30 familias no son una muestra aleatoria sino un conjunto fijado por NapierOne, de modo que la pregunta pertinente no es «¿y si el corpus tuviera otras familias?» sino \textbf{«¿y si se hubieran conseguido otras plantillas de estas mismas familias?»}. Remuestrear las plantillas sin estratificar responde a la primera pregunta, que el diseño de este trabajo no se formula, e introduce además un sesgo: toda remuestra pierde en promedio 2,15 familias de 30, a las que el macro-F1 asigna cero.
+
+\begin{table}[ht]
+\centering
+\caption{Intervalos de confianza del 95\% según la fuente de incertidumbre (149 notas, P2bal)}
+\label{tab:ic_plantilla}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Sistema} & \textbf{Estimación} & \textbf{IC entre semillas} & \textbf{IC por remuestreo de plantillas} \\
+\hline
+Texto solo & 0,6551 & [0,6454; 0,6648] & [0,5654; 0,7446] \\
+\textbf{Cascada} & \textbf{0,7417} & [0,7328; 0,7505] & \textbf{[0,6585; 0,8187]} \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+El intervalo honesto es del orden de \textbf{diez veces más ancho} que el que se obtiene entre semillas. Aun así, \textbf{el intervalo completo de la cascada permanece por encima de 0,50}, con un margen de 0,159; el del clasificador de texto también, con un margen de 0,065. La afirmación de que el sistema supera de forma sostenida el umbral de referencia se mantiene bajo la estimación más exigente disponible.
+
+El cálculo se realizó con dos implementaciones independientes, desarrolladas por separado y sobre predicciones recalculadas desde cero, que coinciden hasta el cuarto decimal.
+
+
+\subsection{Comportamiento ante familias fuera del catálogo}
+\label{subsec:res_mundo_abierto}
+
+Todas las cifras anteriores corresponden a un escenario de \textbf{mundo cerrado}: la familia de la nota evaluada pertenece siempre al catálogo, aunque su plantilla no se haya visto. En un incidente real esa condición no se cumple, porque aparecen campañas nuevas. Esta sección mide qué hace el sistema en ese caso.
+
+\subsubsection*{Diseño}
+
+Se retira una familia completa del entrenamiento y se evalúa el sistema sobre sus notas; el procedimiento se repite con las treinta. El modelo carece de esa clase, de modo que \textbf{no puede acertar}: la pregunta no es cuánto acierta sino \textbf{si se abstiene o si asigna la nota a otra familia con confianza}.
+
+El diseño es simétrico de manera deliberada. Por cada familia retirada se retiene además una plantilla de cada una de las veintinueve restantes, y \textbf{el mismo modelo} evalúa los dos conjuntos: las notas de la familia ausente y las plantillas retenidas de las presentes. Sin esa simetría, el conjunto de familias conocidas provendría de un modelo entrenado con más material y la diferencia de abstención sería un artefacto del tamaño de entrenamiento.
+
+\begin{table}[ht]
+\centering
+\caption{La abstención como detector de familias desconocidas (30 familias, una fuera por turno)}
+\label{tab:mundo_abierto}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+\textbf{Umbral} & \textbf{Se abstiene ante familia desconocida} & \textbf{Se abstiene ante conocida} & \textbf{Separación} & \textbf{Acierto en lo que responde} \\
+\hline
+0,10 & 0,4215 & 0,0856 & +0,336 & 0,8734 \\
+0,30 & 0,6745 & 0,1538 & +0,521 & 0,9011 \\
+\textbf{0,50} & \textbf{0,7909} & \textbf{0,1884} & \textbf{+0,603} & \textbf{0,9156} \\
+0,75 & 0,8409 & 0,2348 & +0,606 & 0,9403 \\
+1,00 & 0,8755 & 0,3063 & +0,569 & 0,9910 \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+En el punto de operación de umbral 0,50, \textbf{el sistema se abstiene ante el 79,1\% de las notas de una familia que nunca vio, al costo de abstenerse también ante el 18,8\% de las notas de familias conocidas}, sobre las cuales acierta 0,9156 cuando responde. Ambas cifras deben reportarse juntas: una tasa de rechazo elevada se obtiene trivialmente subiendo el umbral hasta no responder nunca.
+
+Dos controles respaldan la medición. El acierto sobre las familias desconocidas es \textbf{exactamente nulo}, como corresponde a una clase ausente del modelo; un valor superior habría indicado una fuga. Y la capa de reglas exactas, que responde sin pasar por el umbral, \textbf{apenas se activa ante lo desconocido}: 0,0956 de cobertura, frente a 0,5138 ante familias conocidas. Los marcadores de una campaña nueva no figuran en un diccionario construido con el entrenamiento, que es precisamente lo que se esperaba.
+
+\subsubsection*{Dónde falla el mecanismo, y por qué era previsible}
+
+El rechazo no se distribuye de manera uniforme. Las familias que \textbf{tienen un pariente de linaje presente en el catálogo} —los pares caracterizados en la Sección~\ref{subsec:res_linaje}— se rechazan mucho menos: \textbf{0,5097 frente a 0,8421}. Ante una campaña nueva emparentada con una conocida, el clasificador no duda: \textbf{le atribuye la familia del pariente}.
+
+Es el mismo mecanismo que explica la concentración de errores en mundo cerrado, manifestándose ahora en un escenario distinto. La limitación de mundo cerrado que este trabajo declara no desaparece con la abstención: \textbf{se reduce donde la campaña nueva es genuinamente nueva, y persiste donde reutiliza el molde de una familia ya catalogada}.
+
+
+\subsection{Cuánto del error es confusión entre familias emparentadas}
+\label{subsec:res_error_linaje}
+
+La Sección~\ref{subsec:res_linaje} estableció que los errores se concentran en pares de familias que comparten el molde de la nota. Esta sección cuantifica qué proporción del error total representan.
+
+La medida natural es el acierto tratando cada par como una sola clase. \textbf{Esa métrica, sin embargo, crece siempre por construcción}: fusionar dos clases cualesquiera eleva el acierto sin que el sistema haya mejorado en nada. Por sí sola no informa. La pregunta pertinente no es si aumenta, sino \textbf{si aumenta más que al fusionar pares arbitrarios}, y para responderla se emplea un control: se fusionan tres pares elegidos al azar entre familias sin parentesco, promediando sobre doscientos sorteos.
+
+\begin{table}[ht]
+\centering
+\caption{Acierto tratando como una sola clase los tres pares que comparten molde (149 notas, P2bal)}
+\label{tab:acierto_linaje}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Sistema} & \textbf{Clases} & \textbf{Exactitud} & \textbf{Fusión aleatoria} & \textbf{Ventaja} \\
+\hline
+Sin fusión & 30 & 0,8123 & --- & --- \\
+\textbf{Cascada} & 27 & \textbf{0,8585} & 0,8132 & \textbf{+0,0453} \\
+Texto solo & 27 & 0,8056 & 0,7206 & +0,0850 \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{La fusión aleatoria prácticamente no altera el resultado}: 0,8123 pasa a 0,8132, apenas nueve milésimas. El efecto trivial que obligaba a introducir el control resulta despreciable, y en consecuencia la ganancia obtenida al fusionar los pares emparentados —de 0,0462— es \textbf{casi íntegramente ventaja real}. Los errores se concentran genuinamente en esos pares.
+
+En términos interpretables: de los 18,8 puntos porcentuales de error del sistema, \textbf{cerca de 4,6 corresponden a confundir dos familias que comparten el molde de la nota}, esto es, aproximadamente \textbf{una cuarta parte del error total}.
+
+La ganancia es además menor para la cascada que para el clasificador de texto (+0,0462 frente a +0,0866), lo que resulta coherente con lo establecido en la Sección~\ref{subsec:res_linaje}: la capa de marcadores ya resuelve por sí sola buena parte de la confusión de linaje.
+
+
+\subsection{Vías de mejora exploradas y descartadas}
+\label{subsec:res_vias_descartadas}
+
+Establecido que una cuarta parte del error proviene del parentesco entre familias, se evaluaron cinco vías para reducirlo. \textbf{Ninguna produjo mejora}, y el valor de reportarlas reside en que \textbf{fracasan por razones distintas}, cada una de las cuales delimita dónde se encuentra el límite del frente de notas. Todas se evaluaron con predicción registrada antes de ejecutarse y con una prueba de entrada que exige reproducir la cifra de referencia.
+
+\begin{table}[ht]
+\centering
+\caption{Vías de mejora evaluadas sobre el sistema adoptado (149 notas, P2bal, 50 semillas)}
+\label{tab:vias_descartadas}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|c|p{7.4cm}|}
+\hline
+\textbf{Vía evaluada} & \textbf{$\Delta$ macro-F1} & \textbf{Causa del resultado nulo} \\
+\hline
+Clasificación jerárquica por linaje & $-$0,0011 & Un clasificador dedicado exclusivamente a separar las dos familias del par más difícil acierta 0,5878, frente a 0,5000 de una decisión al azar \\
+Capa de contención literal & +0,0000 & La señal ya está explotada: 4.163 decisiones de la capa sin una sola discrepancia con el clasificador de texto \\
+Extensión de cifrado como clave exacta & +0,0000 & Solo 12 de 149 notas la conservan; las fuentes publican las notas saneadas \\
+Combinación de vistas por votación & $-$0,0015 & La concatenación vigente ya constituye una forma adecuada de combinarlas \\
+Forma del nombre del archivo & sin aporte & La señal está contaminada por convenciones de catalogación ajenas al ransomware \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+Dos resultados merecen destacarse por su valor explicativo.
+
+\textbf{Sobre la indistinguibilidad de CLOP y RYUK.} Un clasificador binario entrenado exclusivamente con las notas de ese par, sin interferencia alguna de las restantes veintiocho familias, alcanza un acierto de \textbf{0,5878} frente al 0,5000 que obtendría decidiendo al azar. Se trata de la evidencia más directa de que \textbf{la información necesaria para separarlas no está presente en el texto}: no es que el clasificador multiclase se confunda por sobrecarga, sino que la señal no existe. Esas confusiones representan el 11,3\% del error total del sistema.
+
+\textbf{Sobre la extensión de cifrado.} Aun disponiendo de la respuesta correcta en las doce notas que conservan la extensión, el macro-F1 solo alcanzaría 0,7454, esto es, \textbf{+0,0038 en el mejor caso concebible}. Y la sustitución del diccionario aprendido por el catálogo de referencia MISP ---735 extensiones registradas, 673 de ellas asociadas a una única familia--- \textbf{no resuelve ninguna nota}, porque las extensiones que las notas mencionan son en su mayoría \textbf{cadenas generadas aleatoriamente por víctima}, no registrables en catálogo alguno. Este hallazgo delimita también el alcance de las herramientas de producción que se apoyan en la extensión, entre ellas ID Ransomware.
+
+Sumadas a los resultados negativos previos ---búsqueda de hiperparámetros, abstracción de marcadores, representación semántica multilingüe, metadatos y estilometría--- se acumulan \textbf{nueve evaluaciones convergentes} que atacan aspectos distintos del método: hiperparámetro, representación, estructura de clases, señales nuevas, señales exactas y agregación de decisiones. \textbf{El límite del frente de notas no reside en el método.}
+
+\subsubsection*{Un defecto de implementación, y lo que revela}
+
+La única mejora medible identificada no proviene del método sino de la implementación. El filtro que descarta los marcadores compartidos entre familias operaba sobre el valor literal de cada dirección, y en consecuencia \textbf{el mismo sitio ingresaba al diccionario fragmentado en varias claves}: la dirección del navegador Tor aparece bajo siete formas distintas, con y sin prefijo, con y sin barra final. Una variante poco frecuente puede quedar asociada a una única familia del pliegue, superar el filtro y provocar que la regla responda con certeza injustificada.
+
+Unificar esas variantes eleva el macro-F1 a \textbf{0,7492} ($\Delta$ +0,0076, intervalo [+0,0049; +0,0102], sin una sola semilla desfavorable en cincuenta) y el acierto de la capa de reglas a 0,9977. \textbf{La corrección no se incorpora a las cifras de este capítulo}, que se reportan con la implementación original; se documenta porque delimita el margen restante: \textbf{lo que queda por ganar está en el detalle de implementación, no en el método}.
 
 
 \subsection{Construcción del corpus de notas: criterios de admisión}
