@@ -7473,6 +7473,61 @@ mezclarlas sin decir la base.**
 
 ---
 
+---
+
+### ★★ BASE B: EL PARECIDO CON LO CONOCIDO, Y EL FILTRO POR DOMINIO (2026-09-28)
+
+`extendido_parecido_y_filtro.py`, **preregistro Q1–Q7 commiteado antes de correr**. Log
+`_log_extendido_parecido.txt`. **Los seis preregistros medibles CUMPLEN.**
+
+#### Parte 1 — qué pasa cuando la nota se parece a lo que ya conoce
+
+| tramo | notas | **Base B (106 fam.)** | Base A (30 fam.) | caída |
+|---|---|---|---|---|
+| con hermana contenida ≥ 0,5 | 193,4 (32,5 %) | **0,9587** | 0,9891 | **0,0304** |
+| sin hermana parecida | 397,6 (66,7 %) | **0,6624** | 0,7434 | **0,0810** |
+| sin plantilla propia en entrenamiento | 5,0 | 0,0000 | 0,0000 | — |
+
+**Q3 CUMPLE y es el resultado:** la caída al pasar de 30 a 106 familias **se concentra en el
+tramo sin parecido** (0,0810 contra 0,0304). Ante una variante de algo ya visto, el sistema con
+106 familias sigue acertando **0,9587**.
+
+> **Escalar el catálogo no daña el reconocimiento de variantes conocidas; daña la generalización
+> a notas nuevas.** Es la lectura que corresponde y es la esperable.
+
+#### Parte 2 — el filtro por DOMINIO manteniendo la URL como clave
+
+| variante | macro-F1 | exactitud | cobertura de la regla | **acierto de la regla** |
+|---|---|---|---|---|
+| filtro actual | 0,6485 | 0,7529 | 0,5119 | 0,9427 |
+| **filtro por dominio** | **0,6543** | **0,7672** | 0,4964 | **0,9706** |
+
+**Δ macro-F1 +0,0059** [+0,0026; +0,0092], 16/20 semillas. **Δ exactitud +0,0143.**
+
+La clave sigue siendo la URL completa —conserva su especificidad— pero el **filtro mira el
+dominio**, así que si el dominio cruza familias se descartan **todas** sus variantes a la vez.
+Es lo que le faltaba a la normalización por dominio, que unía las claves además de filtrarlas y
+por eso **empeoraba** la Base B (−0,0080).
+
+**Q6 (efecto sobre el núcleo de 30) NO se midió**, porque la decisión ya está tomada: el núcleo
+queda como está. Sin esa medición la variante **no es adoptable en la Base A**.
+
+#### 🐛 BUG PROPIO EN LA PRIMERA CORRIDA, corregido
+
+La primera versión guardaba solo **si** cada nota se había acertado, no **qué** se había predicho,
+y calculaba el macro-F1 con `f1_score(y, where(acertó, y, "__mal__"))`. Al mandar todos los
+errores a una clase inexistente, **ninguna familia recibe falsos positivos**, la precisión sale 1
+por construcción y el F1 refleja solo el recall: daba **0,7342** donde la Base B vale 0,6485.
+
+**Lo delató que el número no cuadrara con una cifra ya conocida.** Es el cuarto caso del día en
+que un control de coherencia atrapa un error que ningún test declarado habría detectado, y se
+agregó esa verificación a la puerta del script.
+
+**No estaban afectados** —se calculan sobre aciertos y no necesitan la predicción— **la exactitud,
+el acierto de la capa de reglas y toda la Parte 1.**
+
+---
+
 ## 📌 LAS DOS BASES DEL FRENTE DE NOTAS — NO SE MEZCLAN (decisión de Romina, 2026-09-28)
 
 A partir de acá conviven dos conjuntos, **con cifras propias que no son comparables entre sí**.
@@ -10201,6 +10256,41 @@ también la frase de `subsec:exp2c_renombrado` «su familia queda fuera del plie
 **Código corregido (commit `51c2d05`):** `exp2e_validacion_tipos.py` y `analisis_bytes.py` ahora
 imprimen «Familias con archivos sin tipo reconocible (esos archivos solo entrenan)» y, aparte,
 «Familias que no entran a ningún pliegue de prueba», calculadas. No cambia ningún resultado.
+
+**✅ VERIFICADO el mismo día (comando sobre `tipos_por_familia.csv` del job 4079, pegado por Romina).**
+Familias que NO están en la prueba de cada pliegue:
+
+| Pliegue | Familias en la prueba | Fuera de la prueba |
+|---|---|---|
+| doc, docx, pdf, pptx, xls, xlsx | 28 | BLACKMATTER, CERBER |
+| **jpg** | 28 | **CERBER, NOTPETYA** |
+
+- **CERBER** no entra a ninguna prueba (sustituye el nombre: el tipo no se puede leer). ✔ lo que decía.
+- **BLACKMATTER SÍ entra, pero solo al pliegue jpg.** La leyenda decía «solo entrenamiento»: **falso**.
+- **NOTPETYA falta del pliegue jpg** (no tiene imágenes; coincide con el «—» del diagnóstico 4082). La
+  leyenda no lo decía.
+- Los 28 por pliegue eran correctos; lo que estaba mal era **cuáles**.
+
+**Causa de lo de BLACKMATTER — HIPÓTESIS, no verificada:** su carpeta tendría casi solo imágenes.
+Apoyos aritméticos: (1) el pliegue jpg tiene **2.401** archivos contra 1.974–2.071 de los demás; con
+~71 por familia y tipo (500/7), las otras 27 familias darían ~1.920 y BLACKMATTER aportaría **~480
+jpg de sus 500**; (2) el censo del 16-08 dice que BLACKMATTER renombra solo 13 archivos, así que no es
+el renombrado lo que la saca de los pliegues de documentos; (3) explicaría la rareza anotada en el
+2e-c: en jpg la exactitud cae a 0,6951 mientras el macro-F1 queda en 0,7987 — una familia con el 20 %
+de los archivos del pliegue y casi sin entrenamiento (sin sus jpg le quedan ~16 archivos) baja mucho
+la exactitud y poco el macro-F1. **Pedido a Romina un listado de la carpeta** (conteo por tipo) y el
+F1 de BLACKMATTER en el pliegue jpg del 4079 para confirmarlo. Si se confirma, corregir también:
+§4.5.5 (`subsec:exp2c_tipos`, «las familias que sustituyen por completo el nombre… no pueden
+asignarse a ningún pliegue») y `subsec:exp2c_renombrado` («su familia queda fuera del pliegue»), que
+atribuyen la ausencia de BLACKMATTER al renombrado.
+
+**Corregido en la tesis ya** (compila, 93 págs., 0 errores):
+- Leyenda de `tab:exp2e_tipos` con lo medido: CERBER solo entrena; BLACKMATTER solo entra a la
+  prueba de jpg; NOTPETYA, sin imágenes, falta de ese pliegue. **Sin atribuirle causa a BLACKMATTER.**
+- **«Configuración canónica» eliminado del frente de archivos:** en el 2d significaba solo bytes, en
+  el 2e-c bytes + estructura, y ahora el canónico es el 2g. Se nombra cada una por lo que es (§4.5
+  curva, §4.6 tres veces, §4.7.5 dos veces; «Adoptar esta configuración como resultado del frente» →
+  «Incorporar esta configuración al sistema del frente»).
 
 ## Llevado a la tesis y a los informes el mismo día
 
