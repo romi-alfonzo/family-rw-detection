@@ -184,9 +184,14 @@ def main():
                         if c >= MIN_ARCHIVOS_TIPO and t != "desconocido")
     sin_tipo = sorted({f for f, t in zip(y, tipos)
                        if t == "desconocido" or cuenta[t] < MIN_ARCHIVOS_TIPO})
+    nunca_en_prueba = sorted(set(y) - set(y[np.isin(tipos, candidatos)]))
     log(f"  Tipos evaluables: {candidatos}")
     if sin_tipo:
-        log(f"  Familias que renombran por completo (solo entrenamiento): {sin_tipo}")
+        # Tener ALGÚN archivo sin tipo no saca a la familia de la prueba (BLACKMATTER renombra
+        # 13 de ~1.000): lo que solo entrena son esos archivos. Las familias que no entran a
+        # ninguna prueba se calculan aparte.
+        log(f"  Familias con archivos sin tipo reconocible (esos archivos solo entrenan): {sin_tipo}")
+    log(f"  Familias que no entran a ningún pliegue de prueba: {nunca_en_prueba or 'ninguna'}")
 
     columnas = {"1_solo_bytes": Xb, "2_bytes_mas_estructura": X2}
     filas, porfam = [], []

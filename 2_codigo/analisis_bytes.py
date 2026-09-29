@@ -171,22 +171,23 @@ def main():
     log("  (a) GENERALIZACIÓN A TIPOS DE ARCHIVO NUNCA VISTOS")
     log("=" * 74)
     log("  Se entrena con todos los tipos salvo uno y se evalúa sobre ese tipo.")
-    # Algunas familias renombran por completo el archivo, de modo que no conservan el
-    # tipo del documento original ('desconocido' o cadenas aleatorias). Esas familias
-    # participan del entrenamiento pero no aparecen en los conjuntos de prueba por tipo;
-    # no se exige, por tanto, que cada tipo cubra las 29 familias. Solo se usan como
-    # tipo excluido los formatos con volumen suficiente.
+    # Algunos archivos no conservan el tipo del documento original en el nombre
+    # ('desconocido' o cadenas aleatorias): la familia reemplazó el nombre entero. Esos
+    # ARCHIVOS participan del entrenamiento pero no de ninguna prueba por tipo. La FAMILIA
+    # queda fuera de la prueba solo si le pasa a todos sus archivos (CERBER casi todos,
+    # BLACKMATTER 13 de ~1.000), y eso se calcula aparte. Solo se usan como tipo excluido
+    # los formatos con volumen suficiente.
     cuenta_tipos = Counter(tipos)
     candidatos = sorted(t for t, c in cuenta_tipos.items()
                         if c >= 200 and t != "desconocido")
     sin_tipo = sorted({f for f, t in zip(y, tipos)
                        if t == "desconocido" or cuenta_tipos[t] < 200})
+    nunca_en_prueba = sorted(set(y) - set(y[np.isin(tipos, candidatos)]))
     log(f"  Tipos evaluables: {candidatos}")
     if sin_tipo:
-        log(f"  Familias que renombran el archivo por completo (participan solo del "
-            f"entrenamiento): {sin_tipo}\n")
-    else:
-        log("")
+        log(f"  Familias con archivos sin tipo reconocible (esos archivos solo entrenan): "
+            f"{sin_tipo}")
+    log(f"  Familias que no entran a ningún pliegue de prueba: {nunca_en_prueba or 'ninguna'}\n")
 
     filas_a = []
     for tipo in candidatos:
