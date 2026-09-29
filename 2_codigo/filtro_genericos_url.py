@@ -223,6 +223,8 @@ def main():
     ap.add_argument("--salida", type=Path, default=OUT_DEF)
     ap.add_argument("--n-semillas", type=int, default=20)
     ap.add_argument("--sin-puerta", action="store_true")
+    ap.add_argument("--solo-nucleo", action="store_true",
+                    help="corre solo el nucleo de 30, para confirmar con mas semillas")
     args = ap.parse_args()
     OUT = args.salida
     OUT.mkdir(parents=True, exist_ok=True)
@@ -240,7 +242,10 @@ def main():
     print(f"Nucleo   : {len(idx_c)} notas, {len(np.unique(y[idx_c]))} familias\n")
 
     filas = []
-    for etq, sub in (("NUCLEO 30", idx_c), ("EXTENDIDO 106", np.arange(len(y)))):
+    conjuntos = [("NUCLEO 30", idx_c)]
+    if not args.solo_nucleo:
+        conjuntos.append(("EXTENDIDO 106", np.arange(len(y))))
+    for etq, sub in conjuntos:
         tt = [textos[i] for i in sub]
         yy, gg = y[sub], grupos[sub]
         nn = [nombres[i] for i in sub]
@@ -276,6 +281,17 @@ def main():
     print("\n=== RESULTADO ===")
     print(df.to_string(index=False))
 
+    if args.solo_nucleo:
+        nuc = {r["variante"]: r for r in filas}
+        print("
+  CONFIRMACION SOBRE EL NUCLEO (solo N4):")
+        for v in ("B suave", "C dominio"):
+            print(f"    {v:<10} macro-F1 {nuc[v]['macro_f1']:.4f} | "
+                  f"D {nuc[v]['delta_macro_f1']} | {nuc[v]['semillas_positivas']} | "
+                  f"acierto regla {nuc[v]['acierto_regla']:.4f}")
+        print(f"
+Salidas en {OUT}")
+        return
     ext = {r["variante"]: r for r in filas if r["corpus"] == "EXTENDIDO 106"}
     nuc = {r["variante"]: r for r in filas if r["corpus"] == "NUCLEO 30"}
     print("\n" + "=" * 78)
