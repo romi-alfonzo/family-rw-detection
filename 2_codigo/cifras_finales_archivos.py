@@ -459,6 +459,95 @@ for v_, (f_t, f_s, a_t) in ven.items():
     C(g, f"ventana {v_}, sin relleno", "macro-F1", f_s, (lambda v=v_: float(t(v, "sin_relleno")["f1_macro"])),
       "a_curva_ablacion.csv")
     C(g, f"ventana {v_}, 15.000", "exactitud", a_t, (lambda v=v_: float(t(v)["accuracy"])), "a_curva_ablacion.csv")
+tam = lambda v: csv(D["c2_ven"] / "0_tamanos.csv").set_index("ventana").loc[v]
+for v, n, pct in ((1024, "84", "0,6"), (2048, "143", None), (4096, "217", "1,4")):
+    C(g, f"archivos más cortos que la ventana de {v} bytes por extremo", "archivos", n,
+      (lambda v_=v: float(tam(v_)["archivos_mas_cortos"])), "0_tamanos.csv")
+    if pct:
+        C(g, f"archivos más cortos que la ventana de {v} bytes por extremo", "% del conjunto", pct,
+          (lambda v_=v: float(tam(v_)["pct"])), "0_tamanos.csv")
+bm = lambda c: csv(D["c2_ven"] / "b_bloque_medio.csv").set_index("config").loc[c]
+for c, cit in (("solo medio 1024", "0,058"), ("cabecera+cola 512", "0,905"), ("cabecera+cola+medio 512", "0,903"),
+               ("solo cola 512", "0,746"), ("solo cabecera 512", "0,348")):
+    C(g, f"bloques: {c}", "macro-F1", cit, (lambda c_=c: float(bm(c_)["f1_macro"])), "b_bloque_medio.csv")
+imp_pos = lambda: csv(D["c2_an"] / "b_importancia_por_posicion.csv")
+cola_share = lambda lo, hi: float(imp_pos().query("region == 'cola' and offset >= @lo and offset <= @hi").importancia.sum()
+                                  / imp_pos().importancia.sum() * 100)
+C(g, "importancia de la cabecera", "%", "20,4",
+  lambda: float(imp_pos().query("region == 'cabecera'").importancia.sum() / imp_pos().importancia.sum() * 100),
+  "b_importancia_por_posicion.csv", rec=True)
+C(g, "importancia de los últimos dieciséis bytes", "%", "27,8", lambda: cola_share(-16, -1), "b_importancia_por_posicion.csv", rec=True)
+C(g, "importancia del pico secundario, desplazamientos −128 a −255", "%", "21,5", lambda: cola_share(-255, -128),
+  "b_importancia_por_posicion.csv", rec=True)
+C(g, "los doce desplazamientos más informativos, en el orden de la tesis (1 = sí)", "sí/no", "1",
+  lambda: float(list(imp_pos().sort_values("importancia", ascending=False).head(12).offset)
+                == [-5, -133, -1, -2, -3, -6, -4, -10, -100, -168, -257, -129]
+                and set(imp_pos().sort_values("importancia", ascending=False).head(12).region) == {"cola"}),
+  "b_importancia_por_posicion.csv", rec=True)
+C(g, "con 128 bytes, fracción del macro-F1 máximo", "%", "87",
+  lambda: float(100 * csv(D["c2_ven"] / "a_curva_ablacion.csv").query("subconjunto == 'todos'").set_index("ventana").f1_macro.pipe(
+      lambda s: s["64+64"] / s.max())), "a_curva_ablacion.csv", rec=True)
+marcas_2b = lambda: csv(RES / "resultados_estructural" / "marcas_por_familia_umbral_90.csv")
+firma = lambda: marcas_2b().query("prefijo_len >= 4 or sufijo_len >= 4")
+C(g, "firmas binarias del 2b (prefijo o sufijo de 4 bytes o más)", "familias", "16", lambda: float(len(firma())),
+  "marcas_por_familia_umbral_90.csv (3638)", rec=True)
+C(g, "firmas binarias del 2b que son sufijos", "familias", "12", lambda: float((firma().sufijo_len >= 4).sum()),
+  "marcas_por_familia_umbral_90.csv (3638)", rec=True)
+C(g, "firmas binarias del 2b que son prefijos", "familias", "4", lambda: float((firma().prefijo_len >= 4).sum()),
+  "marcas_por_familia_umbral_90.csv (3638)", rec=True)
+
+
+def entropia_uniforme(n, reps, que):
+    rng = np.random.default_rng(0)
+    h = []
+    for _ in range(reps):
+        p = np.bincount(rng.integers(0, 256, n), minlength=256) / n
+        p = p[p > 0]
+        h.append(-(p * np.log2(p)).sum())
+    return float(np.mean(h) if que == "media" else np.std(h, ddof=1))
+
+
+for n, reps, cit, que in ((512, 4000, "7,590", "media"), (512, 4000, "0,034", "desvío"), (256, 4000, "7,175", "media"),
+                          (65536, 200, "7,997", "media")):
+    C(g, f"techo de entropía de {n} bytes uniformemente aleatorios (simulación)", que, cit,
+      (lambda n_=n, r=reps, q=que: entropia_uniforme(n_, r, q)), "simulación, semilla 0", rec=True, tol_extra=0.001)
+C(g, "la cabecera de las seis difíciles: la más baja (NOTPETYA)", "entropía", "7,34",
+  lambda: float(csv(D["c2_an"] / "d_familias_dificiles.csv").entropia_cabecera.min()), "d_familias_dificiles.csv")
+C(g, "la cabecera de las seis difíciles: la más alta", "entropía", "7,59",
+  lambda: float(csv(D["c2_an"] / "d_familias_dificiles.csv").entropia_cabecera.max()), "d_familias_dificiles.csv")
+C(g, "CERBER con solo bytes (10 semillas)", "F1", "1,000", lambda: float(pf2c().f1.mean()["CERBER"]),
+  "bytes_multisemilla_por_familia.csv", rec=True)
+C(g, "BLACKMATTER con solo bytes (10 semillas)", "F1", "0,989", lambda: float(pf2c().f1.mean()["BLACKMATTER"]),
+  "bytes_multisemilla_por_familia.csv", rec=True)
+C(g, "BLACKMATTER con solo bytes (10 semillas)", "F1 (desvío)", "0,003", lambda: float(pf2c().f1.std()["BLACKMATTER"]),
+  "bytes_multisemilla_por_familia.csv", rec=True)
+for fam, (p_, r_) in (("NOTPETYA", ("0,806", "0,261")), ("DARKSIDE", ("0,459", "0,881"))):
+    C(g, f"{fam} con solo bytes (10 semillas)", "precisión", p_, (lambda f=fam: float(pf2c().precision.mean()[f])),
+      "bytes_multisemilla_por_familia.csv", rec=True)
+    C(g, f"{fam} con solo bytes (10 semillas)", "recall", r_, (lambda f=fam: float(pf2c().recall.mean()[f])),
+      "bytes_multisemilla_por_familia.csv", rec=True)
+for job, cits in (("3633", ("0,910", "0,910")), ("3639", ("0,909", "0,907"))):
+    for (m, pat), cit in zip((("exactitud", r"=> exactitud ([0-9.]+)"), ("macro-F1", r"macro-F1 ([0-9.]+)")), cits):
+        C(g, f"control de los 12 JPEG en claro: etapa final del job {job}", m, cit,
+          (lambda j=job, p=pat: log(RES / "_logs_slurm_2026-08-17" / f"slurm-bytes-{j}.out", "ETAPA FINAL", p, dentro=40)),
+          f"slurm-bytes-{job}.out")
+diag = lambda f: csv(RES / "resultados_diagnostico_dificiles_job4082" / "por_familia.csv").set_index("familia").loc[f]
+for f in ("CRYPTOLOCKER", "BADRABBIT", "MEDUZALOCKER", "RANSOMEXX"):
+    C(g, f"diagnóstico 4082, {f}", "prefijos distintos", "332", (lambda x=f: float(diag(x)["pre_distintos"])), "por_familia.csv (4082)")
+    C(g, f"diagnóstico 4082, {f}", "prefijo más frecuente, %", "28,6", (lambda x=f: 100 * float(diag(x)["pre_top"])),
+      "por_familia.csv (4082)")
+for f, cit in (("BADRABBIT", "96,5"), ("MEDUZALOCKER", "100"), ("RANSOMEXX", "100")):
+    C(g, f"diagnóstico 4082, {f}", "sufijo constante, % de archivos", cit, (lambda x=f: 100 * float(diag(x)["suf_top"])),
+      "por_familia.csv (4082)")
+C(g, "diagnóstico 4082, CRYPTOLOCKER", "sufijos distintos", "997", lambda: float(diag("CRYPTOLOCKER")["suf_distintos"]),
+  "por_familia.csv (4082)")
+pasos = lambda: csv(D["d2"] / "a3_curva_pasos.csv")
+for i, (d_, lo, hi) in enumerate((("+0,0654", "+0,0015", "+0,1294"), ("+0,0259", "+0,0146", "+0,0372"), ("+0,0158", "-0,0023", "+0,0338"),
+                                  ("+0,0164", "+0,0082", "+0,0246"), ("+0,0051", "-0,0007", "+0,0109"), ("+0,0021", "-0,0006", "+0,0048"))):
+    for campo, cit in (("delta", d_), ("ic95_inf", lo), ("ic95_sup", hi)):
+        C(g, f"curva de aprendizaje, paso {i + 1}", campo, cit, (lambda k=i, c=campo: float(pasos().iloc[k][c])), "a3_curva_pasos.csv (3937)")
+C(g, "t de Student con tres semillas (dos grados de libertad)", "t", "4,303",
+  lambda: __import__("scipy.stats", fromlist=["t"]).t.ppf(0.975, 2), "scipy.stats")
 C(g, "sesgo PDF: solo bytes sin los 310 PDF (2d, job 3937)", "exactitud", "0,9128",
   lambda: ms(csv(D["d2"] / "exp2d_por_semilla.csv").query("columna == '1_solo_bytes'").accuracy)[0],
   "exp2d_por_semilla.csv", rec=True)
