@@ -598,6 +598,33 @@ for fam, (b, e, x) in fams.items():
       (lambda f=fam: familia_cv(D["g2"], "2_bytes_estructura", f)), "cv_por_familia_y_semilla.csv (4091)", rec=True)
     C(g, f"familia {fam}, 5 semillas: + extensión (2g)", "F1", x,
       (lambda f=fam: familia_cv(D["g2"], "5_bytes_estructura_extension", f)), "cv_por_familia_y_semilla.csv (4091)", rec=True)
+cv2e = lambda col: ms(csv(D["e2"] / "exp2e_por_semilla.csv").query("columna == @col").f1_macro)[0]
+C(g, "pérdida de los bytes al pasar de CV a tipo no visto", "macro-F1", "0,050",
+  lambda: cv2e("1_bytes_canonico") - promedio_tipos(1), "exp2e_por_semilla.csv + tipos_por_familia.csv", rec=True)
+C(g, "pérdida de bytes + estructura al pasar de CV a tipo no visto", "macro-F1", "0,055",
+  lambda: cv2e("2_bytes_mas_estructura") - promedio_tipos(2), "exp2e_por_semilla.csv + tipos_por_familia.csv", rec=True)
+C(g, "pérdida del sistema completo al pasar de CV a tipo no visto", "macro-F1", "0,0015",
+  lambda: cv_semillas(D["g2"], "cv_por_semilla.csv", "cv_por_familia_y_semilla.csv",
+                      "5_bytes_estructura_extension", "f1_rec")[0] - ms(cinco_semillas_tipos())[0],
+  "cv_por_familia_y_semilla.csv + tipos", rec=True, tol_extra=1e-4)
+for que, cit, pat in (("Δ", "+0,0639", r"macro-F1: ([+-][0-9.]+)"), ("IC 95 %, extremo inferior", "+0,0634", r"\[([+-][0-9.]+);"),
+                      ("IC 95 %, extremo superior", "+0,0644", r"; ([+-][0-9.]+)\]")):
+    C(g, "2g: sistema completo frente a bytes + estructura, pareado por semilla", que, cit,
+      (lambda p=pat: log(D["g2"] / "log.txt", "Δ (5)-(2) macro-F1", p)), "log.txt (4091)")
+full_2g = lambda: familias_cv_todas(D["g2"], "5_bytes_estructura_extension")
+be_2g = lambda: familias_cv_todas(D["g2"], "2_bytes_estructura")
+C(g, "sistema completo: familias en 1,0000 (media de 5 semillas)", "familias", "25",
+  lambda: float((full_2g().round(4) == 1).sum()), "cv_por_familia_y_semilla.csv (4091)", rec=True)
+for fam, cit in (("NOTPETYA", "0,9978"), ("BADRABBIT", "0,9988"), ("JIGSAW", "0,9990"), ("CUBA", "0,9996")):
+    C(g, f"sistema completo, {fam} (media de 5 semillas)", "F1", cit, (lambda f=fam: float(full_2g()[f])),
+      "cv_por_familia_y_semilla.csv (4091)", rec=True)
+C(g, "familias que bajan del sistema frente a bytes + estructura", "familias", "1",
+  lambda: float((full_2g() < be_2g()).sum()), "cv_por_familia_y_semilla.csv (4091)", rec=True)
+C(g, "G3: el sistema mejora a bytes + estructura (semilla 0, con ponderación)", "pliegues de 7", "7",
+  lambda: float(sum(pliegue_rec(t, 5) > pliegue_rec(t, 2) for t in TIPOS)), "tipos_por_familia.csv", rec=True)
+C(g, "G4: NOTPETYA, JIGSAW, CRYPTOLOCKER y DARKSIDE en el sistema completo", "F1 mínimo", "0,95",
+  lambda: float(full_2g()[["NOTPETYA", "JIGSAW", "CRYPTOLOCKER", "DARKSIDE"]].min()),
+  "cv_por_familia_y_semilla.csv (4091)", modo="min_ge", rec=True)
 C(g, "las otras 24 familias en el sistema completo", "F1 mínimo", "0,99",
   lambda: float(familias_cv_todas(D["g2"], "5_bytes_estructura_extension").drop(list(fams)).min()),
   "cv_por_familia_y_semilla.csv (4091)", modo="min_ge", rec=True)
