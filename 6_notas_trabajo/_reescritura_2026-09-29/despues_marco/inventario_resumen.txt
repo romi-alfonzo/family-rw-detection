@@ -1,0 +1,25 @@
+Archivos incluidos desde main.tex: 1
+  marco_teorico.tex: 79 cifras
+
+Total de cifras: 79
+Por tipo: entero 60, porcentaje 10, millar 6, anio 2, decimal 1
+
+Por seccion (archivo | seccion | cifras):
+  marco_teorico.tex | section: Ransomware: Definición y Taxonomía | 3
+  marco_teorico.tex | section: Dataset NapierOne | 11
+  marco_teorico.tex | subsection: Entropía de Shannon | 8
+  marco_teorico.tex | subsection: Prueba Chi-Cuadrado | 10
+  marco_teorico.tex | subsection: Estimación Monte Carlo de \texorpdfstring{$\pi$}{pi} | 1
+  marco_teorico.tex | subsection: Coeficiente de Correlación Serial de Bytes (SBCC) | 11
+  marco_teorico.tex | subsection: Regresión Logística | 3
+  marco_teorico.tex | subsection: Máquinas de Soporte Vectorial (SVM) | 4
+  marco_teorico.tex | subsection: Árboles de Decisión | 1
+  marco_teorico.tex | subsection: Random Forest | 2
+  marco_teorico.tex | subsection: Multilayer Perceptron (MLP) | 1
+  marco_teorico.tex | subsection: TF-IDF (Term Frequency -- Inverse Document Frequency) | 1
+  marco_teorico.tex | subsection: N-gramas de Palabras y Caracteres | 5
+  marco_teorico.tex | subsection: Análisis de Ejecutables de Ransomware | 2
+  marco_teorico.tex | subsection: Análisis de Archivos Cifrados | 6
+  marco_teorico.tex | subsection: Análisis de Notas de Rescate | 5
+  marco_teorico.tex | subsection: Herramientas de Identificación Existentes | 3
+  marco_teorico.tex | subsection: Síntesis y Brecha de Investigación | 2
