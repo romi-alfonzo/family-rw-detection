@@ -4,14 +4,9 @@
 % ARCHIVO APARTE A PROPÓSITO. La parte de notas del capítulo 4 la está
 % redactando otra persona sobre `resultados.tex`; estas secciones se
 % mantienen fuera para no pisar ese trabajo ni duplicar texto.
-%
-% CÓMO INCORPORARLAS, cuando se decida:
-%   1. Revisar que no se solapen con lo que ya haya redactado la otra parte.
-%   2. Agregar en resultados.tex, después de la subsección
-%      «Comparación con los Resultados Previos del Proyecto» y antes de
-%      \section{Ajustes al Protocolo Experimental}:
-%          \input{resultados_notas_ampliacion}
-%      (o pegar el contenido directamente, si se prefiere un solo archivo).
+% YA INCORPORADO (2026-09-28): resultados.tex lo trae con
+%     \input{resultados_notas_ampliacion}
+% antes de \section{Ajustes al Protocolo Experimental}.
 %
 % BASE DE LAS CIFRAS: corpus de 149 notas, 99 plantillas, 30 familias,
 % salvo la tabla comparativa, que declara las tres bases (146 / 155 / 149).
@@ -25,7 +20,6 @@
 %   de admision", que pertenece al capitulo 3, se movio a
 %   metodologia_corpus_notas.tex al incorporar este archivo a resultados.tex.
 %   Ese archivo todavia NO esta incluido en metodologia.tex.
-%   Esta aca solo para no tocar ese archivo, que tambien puede estar en edicion.
 %
 % ETIQUETAS QUE ESTE ARCHIVO DEFINE:
 %   subsec:res_curva · tab:curva_pasos · tab:curva_negativos · tab:curva_techo
@@ -45,20 +39,22 @@
 % REFERENCIA PENDIENTE: el texto menciona el «Experimento 3c» (cohesión y
 %   grafo), todavía sin redactar. Si se incorpora antes que aquél, quitar esa
 %   mención o dejarla sin \ref.
+% PASE DE FORMA (2026-09-29): reescritura de estilo contra la muestra de tono
+%   aprobada por Romina. No se tocó ninguna cifra, métrica, base ni matiz.
 % =====================================================================
 
 \subsection{Experimento 3b: cuánto material hace falta por familia}
 \label{subsec:res_curva}
 
-La pregunta que motiva este experimento es operativa: si el rendimiento bajo P2 está limitado por la cantidad de material disponible, ¿cuánto material adicional habría que reunir y hasta dónde llevaría? La respuesta condiciona la estrategia del trabajo, porque distingue entre un problema que se resuelve recolectando y uno que no.
+Este experimento responde a una pregunta operativa: si el rendimiento bajo P2 está limitado por la cantidad de material disponible, ¿cuánto material adicional habría que reunir y hasta dónde llevaría? De la respuesta depende la estrategia del trabajo, porque separa un problema que se resuelve recolectando de uno que no.
 
 \subsubsection*{Diseño}
 
-Se construyó una curva de aprendizaje sobre el corpus de \textbf{149 notas, 99 plantillas y 30 familias}, limitando el material de entrenamiento de \textit{todas} las familias a un tope $k$ y midiendo el rendimiento resultante. El tope se aplicó de dos maneras, que responden a dos estrategias de recolección distintas:
+Se construyó una curva de aprendizaje sobre el corpus de 149 notas, 99 plantillas y 30 familias, limitando a un tope $k$ el material de entrenamiento de todas las familias y midiendo el rendimiento resultante. El tope se aplicó de dos maneras, que corresponden a dos estrategias de recolección distintas:
 
 \begin{itemize}
-  \item \textbf{Tope por plantillas}: las notas que se agregan son textos distintos. Mide el valor de la \textit{diversidad}, que es lo caro de conseguir.
-  \item \textbf{Tope por notas}: se agregan notas al azar, que con frecuencia repiten un texto ya presente. Mide el valor del \textit{volumen}, que es lo barato.
+  \item \textbf{Tope por plantillas}: las notas que se agregan son textos distintos. Mide el valor de la diversidad, que es lo caro de conseguir.
+  \item \textbf{Tope por notas}: se agregan notas al azar, que con frecuencia repiten un texto ya presente. Mide el valor del volumen, que es lo barato.
 \end{itemize}
 
 Cada punto se promedió sobre 100 repeticiones con retención aleatoria, y las diferencias entre puntos consecutivos se contrastaron de forma pareada por repetición, con intervalo de confianza del 95\%. El procedimiento se validó exigiendo que el punto $k=\text{todo}$ reprodujera exactamente el evaluador canónico: la diferencia fue nula en los dos protocolos ($0{,}00\mathrm{e}{-}00$).
@@ -76,22 +72,22 @@ La Tabla~\ref{tab:curva_pasos} presenta el aporte de cada paso sobre el eje de p
 \hline
 \textbf{Conjunto} & \textbf{1 $\rightarrow$ 2 plantillas} & \textbf{2 $\rightarrow$ 3} & \textbf{3 $\rightarrow$ 4} \\
 \hline
-30 familias (P2 con retención) & \textbf{+0,079} [+0,064; +0,093] & \textbf{+0,015} [+0,005; +0,024] & $-$0,006 [$-$0,013; +0,002] \\
-15 familias con $\geq$ 4 plantillas & \textbf{+0,107} [+0,082; +0,132] & \textbf{+0,060} [+0,039; +0,082] & $-$0,001 [$-$0,018; +0,015] \\
-3 familias con $\geq$ 5 plantillas & \textbf{+0,058} [+0,013; +0,103] & \textbf{+0,107} [+0,059; +0,156] & +0,025 [$-$0,010; +0,060] \\
-30 familias (P1) & \textbf{+0,125} [+0,105; +0,145] & \textbf{+0,025} [+0,013; +0,038] & +0,007 [$-$0,008; +0,021] \\
+30 familias (P2 con retención) & +0,079 [+0,064; +0,093] & +0,015 [+0,005; +0,024] & $-$0,006 [$-$0,013; +0,002] \\
+15 familias con $\geq$ 4 plantillas & +0,107 [+0,082; +0,132] & +0,060 [+0,039; +0,082] & $-$0,001 [$-$0,018; +0,015] \\
+3 familias con $\geq$ 5 plantillas & +0,058 [+0,013; +0,103] & +0,107 [+0,059; +0,156] & +0,025 [$-$0,010; +0,060] \\
+30 familias (P1) & +0,125 [+0,105; +0,145] & +0,025 [+0,013; +0,038] & +0,007 [$-$0,008; +0,021] \\
 \hline
 \end{tabular}
 }
 \end{table}
 
-En los cuatro casos el intervalo de confianza del paso $3 \rightarrow 4$ contiene el cero, mientras que los dos anteriores lo excluyen. \textbf{La respuesta a la pregunta del tutor es, por lo tanto, tres textos distintos por familia}, y no más. Bajo P2 sin retención el corte es aún más temprano: el paso $2 \rightarrow 3$ ya resulta indistinguible de cero.
+En los cuatro casos el intervalo de confianza del paso $3 \rightarrow 4$ contiene el cero, mientras que los dos anteriores lo excluyen. La respuesta a la pregunta del tutor es, entonces, tres textos distintos por familia y no más. Bajo P2 sin retención el corte llega aún antes: el paso $2 \rightarrow 3$ ya resulta indistinguible de cero.
 
-Sobre el corpus se traduce en un objetivo finito: llevar todas las familias a tres plantillas requiere \textbf{once textos nuevos repartidos en nueve familias}; llevarlas a cuatro requeriría veintiséis en quince.
+Sobre el corpus, eso se traduce en un objetivo finito: llevar todas las familias a tres plantillas requiere once textos nuevos repartidos en nueve familias; llevarlas a cuatro requeriría veintiséis en quince.
 
 \subsubsection*{Pasado el corte, el material adicional degrada la métrica}
 
-El hallazgo menos esperado es que los pasos posteriores al corte no son neutros. La Tabla~\ref{tab:curva_negativos} reúne los cinco pasos cuyo intervalo de confianza queda \textit{íntegramente por debajo} del cero.
+Los pasos posteriores al corte no son neutros. La Tabla~\ref{tab:curva_negativos} reúne los cinco pasos cuyo intervalo de confianza queda íntegramente por debajo del cero.
 
 \begin{table}[ht]
 \centering
@@ -110,7 +106,7 @@ El hallazgo menos esperado es que los pasos posteriores al corte no son neutros.
 \end{tabular}
 \end{table}
 
-La interpretación es coherente con la baja cohesión intra-familia documentada en el Experimento~3c: en una familia cuyas plantillas se parecen poco entre sí, un texto adicional que tampoco se parece a los anteriores amplía la región del espacio de características asociada a esa clase y aumenta el solapamiento con las vecinas. \textbf{La recolección no es una operación monótona: más allá del punto de saturación, agregar material perjudica de forma medible}, y el criterio de admisión debe contemplarlo.
+Esto concuerda con la baja cohesión intra-familia documentada en el Experimento~3c: en una familia cuyas plantillas se parecen poco entre sí, un texto adicional que tampoco se parece a los anteriores amplía la región del espacio de características asociada a esa clase y aumenta el solapamiento con las vecinas. La recolección no es monótona: pasado el punto de saturación, agregar material perjudica de forma medible, y el criterio de admisión debe contemplarlo.
 
 \subsubsection*{El techo alcanzable, y el que no lo es}
 
@@ -125,20 +121,19 @@ Ajustando una ley de potencia a cada curva y estimando el intervalo por remuestr
 \hline
 \textbf{Protocolo} & \textbf{Techo estimado} & \textbf{Para macro-F1 = 0,70} & \textbf{Para macro-F1 = 0,80} \\
 \hline
-P1 & \textbf{0,822} [0,803; 0,847] & 1,2 plantillas/familia & 2,9 plantillas/familia \\
-P2 con retención & 0,651 [0,639; 0,663] & \textbf{no alcanzable} & no alcanzable \\
-P2 & \textbf{0,470} [0,411; 0,527] & no alcanzable & no alcanzable \\
+P1 & 0,822 [0,803; 0,847] & 1,2 plantillas/familia & 2,9 plantillas/familia \\
+P2 con retención & 0,651 [0,639; 0,663] & no alcanzable & no alcanzable \\
+P2 & 0,470 [0,411; 0,527] & no alcanzable & no alcanzable \\
 \hline
 \end{tabular}
 }
 \end{table}
 
-La fila de P2 es el resultado central de este experimento: el techo estimado es \textbf{0,470}, y el objetivo de 0,50 resulta \textbf{inalcanzable agregando notas} (se alcanza en el 16\% de las réplicas del remuestreo). Esto convierte una impresión en una medición: \textbf{bajo el protocolo P2, el rendimiento del frente de notas no está limitado por la cantidad de datos disponibles, sino por el protocolo de evaluación mismo}. La misma configuración, evaluada bajo P1, tiene un techo de 0,822 y alcanza 0,80 con menos de tres plantillas por familia.
+La fila de P2 es el resultado central de este experimento: el techo estimado es 0,470, y el objetivo de 0,50 no se alcanza agregando notas (se llega a él en el 16\% de las réplicas del remuestreo). Esto convierte una impresión en una medición: bajo el protocolo P2, lo que limita el rendimiento del frente de notas es el protocolo de evaluación mismo y no la cantidad de datos disponibles. La misma configuración, evaluada bajo P1, tiene un techo de 0,822 y alcanza 0,80 con menos de tres plantillas por familia.
 
 \subsubsection*{Advertencias al leer estas cifras}
 
-Tres precisiones son necesarias para que la tabla no se cite mal. Primero, los subconjuntos conservan por razones históricas los nombres «15 familias» y «3 familias» según el criterio de plantillas mínimas, de modo que \textbf{no son comparables entre sí ni con el conjunto completo}: su nivel de azar es 0,067 y 0,333 respectivamente, frente a 0,033 de las 30 familias. Segundo, los ajustes de ley de potencia sobre esos dos subconjuntos resultaron degenerados, con techos estimados superiores a 1, que es un valor imposible para un macro-F1; se descartan y no se reportan. Tercero, la extrapolación supone que el material adicional tendría las mismas propiedades que el ya reunido, supuesto que la sección anterior muestra optimista: los textos que aún faltan son, precisamente, los más difíciles de conseguir y los menos parecidos a los existentes.
-
+Tres precisiones evitan que la tabla se cite mal. Los subconjuntos conservan por razones históricas los nombres «15 familias» y «3 familias» según el criterio de plantillas mínimas, de modo que no son comparables entre sí ni con el conjunto completo: su nivel de azar es 0,067 y 0,333 respectivamente, frente a 0,033 de las 30 familias. Los ajustes de ley de potencia sobre esos dos subconjuntos resultaron degenerados, con techos estimados superiores a 1, que es un valor imposible para un macro-F1; se descartan y no se reportan. Y la extrapolación supone que el material adicional tendría las mismas propiedades que el ya reunido, supuesto que la sección anterior muestra optimista: los textos que aún faltan son, precisamente, los más difíciles de conseguir y los menos parecidos a los existentes.
 
 \subsection{Experimento 3c: qué predice el rendimiento por familia}
 \label{subsec:res_cohesion}
@@ -150,11 +145,11 @@ El análisis por familia mostró un rango de rendimiento muy amplio bajo P2, des
 Para cada familia se calcularon dos magnitudes sobre el corpus de 149 notas, usando la misma similitud de coseno con que se definen las plantillas:
 
 \begin{itemize}
-  \item \textbf{Cohesión}: similitud media entre las plantillas \textit{de la propia familia}. Por construcción es menor que 0,90, porque por encima de ese valor dos textos serían la misma plantilla.
-  \item \textbf{Margen}: la cohesión menos la similitud máxima con una plantilla \textit{de otra familia}. Un margen positivo significa que las notas de la familia se parecen más entre sí que a las de cualquier otra; uno negativo, lo contrario.
+  \item \textbf{Cohesión}: similitud media entre las plantillas de la propia familia. Por construcción es menor que 0,90, porque por encima de ese valor dos textos serían la misma plantilla.
+  \item \textbf{Margen}: la cohesión menos la similitud máxima con una plantilla de otra familia. Un margen positivo significa que las notas de la familia se parecen más entre sí que a las de cualquier otra; uno negativo, lo contrario.
 \end{itemize}
 
-La cohesión resultó muy desigual: mediana 0,558, con un mínimo de \textbf{0,220 en RYUK} y un máximo de \textbf{0,898 en WASTEDLOCKER} (Tabla~\ref{tab:cohesion_extremos}).
+La cohesión resultó muy desigual: mediana 0,558, con un mínimo de 0,220 en RYUK y un máximo de 0,898 en WASTEDLOCKER (Tabla~\ref{tab:cohesion_extremos}).
 
 \begin{table}[ht]
 \centering
@@ -176,13 +171,13 @@ CLOP & 4 & 0,375 & $-$0,426 & NETWALKER & 2 & 0,809 & +0,225 \\
 \end{tabular}
 \end{table}
 
-La tabla ya contiene el resultado principal en forma implícita: las familias menos cohesionadas tienen \textit{más} plantillas que las más cohesionadas. CERBER, con ocho plantillas, es la quinta menos cohesionada; BLACKMATTER, DARKSIDE, NOTPETYA y NETWALKER, con dos cada una, están entre las seis más cohesionadas. \textbf{La cantidad de material y la calidad de la señal no son la misma cosa, y en este corpus apuntan en direcciones opuestas.}
+El resultado principal está ya en la tabla, aunque de forma implícita: las familias menos cohesionadas tienen más plantillas que las más cohesionadas. CERBER, con ocho plantillas, es la quinta menos cohesionada; BLACKMATTER, DARKSIDE, NOTPETYA y NETWALKER, con dos cada una, están entre las seis más cohesionadas. La cantidad de material y la calidad de la señal no son la misma cosa, y en este corpus apuntan en direcciones opuestas.
 
 \subsubsection*{Diecinueve familias se parecen más a otra familia que a sí mismas}
 
-El margen resultó negativo en \textbf{19 de las 30 familias}. Los casos extremos son RYUK ($-$0,582), JIGSAW ($-$0,538), CHIMERA ($-$0,513), BLACKBASTA ($-$0,512) y DHARMA ($-$0,510).
+El margen resultó negativo en 19 de las 30 familias. Los casos extremos son RYUK ($-$0,582), JIGSAW ($-$0,538), CHIMERA ($-$0,513), BLACKBASTA ($-$0,512) y DHARMA ($-$0,510).
 
-Este es el resultado que explica la magnitud de la caída de P1 a P2. En una familia de margen negativo, la plantilla más parecida a una nota de prueba pertenece, con frecuencia, a otra familia; y bajo P2 las plantillas de la propia familia son precisamente las que se retiran del entrenamiento. \textbf{La dificultad no es que las familias tengan pocas notas, sino que sus notas no son distintivas entre familias}: el vocabulario, la estructura y hasta los párrafos de cierre se comparten a través de linajes enteros.
+Este resultado explica la magnitud de la caída de P1 a P2. En una familia de margen negativo, la plantilla más parecida a una nota de prueba pertenece, con frecuencia, a otra familia; y bajo P2 las plantillas de la propia familia son precisamente las que se retiran del entrenamiento. Lo que dificulta la tarea no es la cantidad de notas por familia: es que esas notas no resultan distintivas entre familias. El vocabulario, la estructura y hasta los párrafos de cierre se comparten a través de linajes enteros.
 
 \subsubsection*{Qué correlaciona con el F1 y qué no}
 
@@ -196,39 +191,39 @@ La Tabla~\ref{tab:correlaciones} contrasta las dos hipótesis. Se emplea el coef
 \hline
 \textbf{Variable} & \textbf{$\rho$} & \textbf{$p$} & \textbf{$n$} \\
 \hline
-Cohesión interna & \textbf{+0,481} & \textbf{0,010} & 28 \\
+Cohesión interna & +0,481 & 0,010 & 28 \\
 Número de plantillas (las 30 familias) & +0,381 & 0,038 & 30 \\
 Número de plantillas (excluyendo las de una sola plantilla) & +0,231 & 0,237 & 28 \\
-Cohesión, contra el \textit{aporte} de una plantilla adicional & +0,010 & 0,932 & 70 \\
+Cohesión, contra el aporte de una plantilla adicional & +0,010 & 0,932 & 70 \\
 \hline
 \end{tabular}
 \end{table}
 
-Las tres primeras filas deben leerse juntas. Sobre las 30 familias, el número de plantillas parece predecir el rendimiento; pero dos de esas familias tienen una sola plantilla y por construcción un F1 nulo bajo P2 (Sección~\ref{subsec:res_ceros}). Al excluirlas, \textbf{la correlación con la cantidad de plantillas deja de ser significativa} ($p = 0{,}237$), mientras que la cohesión mantiene la suya. Dicho de otro modo: el efecto aparente de «tener más material» se explica enteramente por el caso degenerado de tener una sola plantilla, y una vez superado ese umbral mínimo lo que ordena a las familias es cuán parecidas son sus notas entre sí.
+Las tres primeras filas deben leerse juntas. Sobre las 30 familias, el número de plantillas parece predecir el rendimiento; pero dos de esas familias tienen una sola plantilla y por construcción un F1 nulo bajo P2 (Sección~\ref{subsec:res_ceros}). Al excluirlas, la correlación con la cantidad de plantillas deja de ser significativa ($p = 0{,}237$), mientras que la cohesión mantiene la suya. El efecto aparente de «tener más material» se explica entonces por el caso degenerado de tener una sola plantilla, y una vez superado ese umbral mínimo lo que ordena a las familias es cuán parecidas son sus notas entre sí.
 
-La cuarta fila previene un error de interpretación tentador. La cohesión predice el \textit{nivel} de rendimiento de una familia, pero no predice \textbf{cuánto ganaría esa familia con una nota adicional}: la correlación con el aporte medido en el Experimento~3b es nula ($\rho = +0{,}010$, $p = 0{,}932$). En consecuencia, \textbf{la cohesión no puede usarse como criterio para priorizar la recolección}, aunque sirva para explicar los resultados obtenidos.
+La cuarta fila previene un error de interpretación tentador. La cohesión predice el nivel de rendimiento de una familia, pero no cuánto ganaría esa familia con una nota adicional: la correlación con el aporte medido en el Experimento~3b es nula ($\rho = +0{,}010$, $p = 0{,}932$). La cohesión no sirve, por lo tanto, como criterio para priorizar la recolección, aunque sí para explicar los resultados obtenidos.
 
 \subsubsection*{Marcadores compartidos y el filtro de circularidad}
 
-El análisis de los marcadores extraídos de las notas (direcciones de correo, direcciones \textit{onion}, URL, identificadores y claves) refuerza el diagnóstico. De los valores presentes en el corpus, \textbf{75 aparecen en más de una familia}, y los más difundidos no son datos de contacto del atacante sino infraestructura común: la dirección \texttt{https://www.torproject.org/} aparece en 14 plantillas de \textbf{siete familias distintas}, y variantes de la misma URL en otras cinco y otras dos.
+El análisis de los marcadores extraídos de las notas (direcciones de correo, direcciones \textit{onion}, URL, identificadores y claves) refuerza el diagnóstico. De los valores presentes en el corpus, 75 aparecen en más de una familia, y los más difundidos son infraestructura común y no datos de contacto del atacante: la dirección \texttt{https://www.torproject.org/} aparece en 14 plantillas de siete familias distintas, y variantes de la misma URL en otras cinco y otras dos.
 
-Esto obliga a un filtro explícito: un marcador que aparece en varias familias no identifica a ninguna, y usarlo como evidencia produce una circularidad que infla el resultado sin aportar capacidad de discriminación. El filtro de valores genéricos empleado en los experimentos de cascada (Sección~\ref{subsec:res_cascadas}) descarta todo valor que en el conjunto de entrenamiento aparezca asociado a más de una familia. Finalmente, \textbf{13 plantillas no contienen ningún marcador}, y para ellas la decisión depende íntegramente del texto.
+Esto obliga a un filtro explícito: un marcador que aparece en varias familias no identifica a ninguna, y usarlo como evidencia produce una circularidad que infla el resultado sin aportar capacidad de discriminación. El filtro de valores genéricos empleado en los experimentos de cascada (Sección~\ref{subsec:res_cascadas}) descarta todo valor que en el conjunto de entrenamiento aparezca asociado a más de una familia. Quedan además 13 plantillas sin ningún marcador, y para ellas la decisión depende íntegramente del texto.
 
 \subsubsection*{Lectura}
 
-Los tres resultados apuntan en la misma dirección. El rendimiento por familia lo determina la distintividad de sus notas, no su cantidad; diecinueve de treinta familias son más parecidas a alguna otra familia que a sí mismas; y una fracción sustancial de los marcadores disponibles es infraestructura compartida que no distingue. \textbf{El límite del frente de notas es una propiedad del objeto de estudio: las notas de rescate se copian entre familias}, y ninguna cantidad de recolección adicional cambia eso, tal como cuantificó de forma independiente la extrapolación del Experimento~3b.
+Los tres resultados apuntan en la misma dirección. El rendimiento por familia lo determina la distintividad de sus notas y no su cantidad; diecinueve de treinta familias son más parecidas a alguna otra familia que a sí mismas; y una fracción sustancial de los marcadores disponibles es infraestructura compartida que no distingue. El límite del frente de notas resulta así una propiedad del objeto de estudio, porque las notas de rescate se copian entre familias, y ninguna cantidad de recolección adicional cambia eso, tal como cuantificó de forma independiente la extrapolación del Experimento~3b.
 
 
 \subsection{Cascada de reglas exactas sobre marcadores}
 \label{subsec:res_cascadas}
 
-Los experimentos anteriores establecen que el texto de las notas tiene un techo bajo el protocolo P2 y que ese techo proviene de la escasa distintividad del texto entre familias. Queda por explotar una señal que el clasificador de texto no aprovecha: las notas contienen \textbf{marcadores exactos} —direcciones de correo, direcciones \textit{onion}, URL, monederos, identificadores— que, cuando ya se observaron asociados a una única familia, la identifican sin ambigüedad. Esta sección evalúa una arquitectura en cascada que consulta primero esa evidencia exacta y recurre al clasificador de texto solo cuando no aplica.
+Los experimentos anteriores establecen que el texto de las notas tiene un techo bajo el protocolo P2 y que ese techo proviene de la escasa distintividad del texto entre familias. Queda por explotar una señal que el clasificador de texto no aprovecha: las notas contienen \textbf{marcadores exactos} (direcciones de correo, direcciones \textit{onion}, URL, monederos, identificadores) que, cuando ya se observaron asociados a una única familia, la identifican sin ambigüedad. Esta sección evalúa una arquitectura en cascada que consulta primero esa evidencia exacta y recurre al clasificador de texto solo cuando no aplica.
 
 \subsubsection*{Diseño y garantías}
 
-La regla opera así: durante el entrenamiento se construye un diccionario que asocia cada valor de marcador con la familia en que aparece; en prueba, si una nota contiene un valor del diccionario y \textit{todas} sus coincidencias apuntan a una única familia, se le asigna esa familia; ante conflicto o ausencia de coincidencia, decide el clasificador de texto entrenado en el mismo pliegue.
+La regla opera así: durante el entrenamiento se construye un diccionario que asocia cada valor de marcador con la familia en que aparece; en prueba, si una nota contiene un valor del diccionario y todas sus coincidencias apuntan a una única familia, se le asigna esa familia; ante conflicto o ausencia de coincidencia, decide el clasificador de texto entrenado en el mismo pliegue.
 
-Tres condiciones evitan que la mejora sea artificial. Primero, \textbf{el diccionario se construye únicamente con el pliegue de entrenamiento}, de modo que la etiqueta de la nota evaluada nunca participa. Segundo, la capa de texto se entrena una sola vez por partición y se comparte entre la base y las variantes, de modo que \textbf{la comparación es pareada por semilla} y no una comparación entre corridas distintas. Tercero, el procedimiento se somete a una \textit{puerta de entrada}: la capa de texto sola debe reproducir la cifra canónica declarada, y el experimento se aborta si no lo hace; en la corrida reportada la reprodujo con diferencia nula.
+Tres condiciones evitan que la mejora sea artificial. El diccionario se construye únicamente con el pliegue de entrenamiento, de modo que la etiqueta de la nota evaluada nunca participa. La capa de texto se entrena una sola vez por partición y se comparte entre la base y las variantes, con lo que la comparación queda pareada por semilla y no enfrenta corridas distintas. Y el procedimiento se somete a una puerta de entrada: la capa de texto sola debe reproducir la cifra canónica declarada, y el experimento se aborta si no lo hace; en la corrida reportada la reprodujo con diferencia nula.
 
 \subsubsection*{Resultado de la cascada sobre marcadores}
 
@@ -244,20 +239,20 @@ La Tabla~\ref{tab:cascada_ioc} reporta las tres magnitudes con que se evalúa un
 \textbf{Variante} & \textbf{Cobertura} & \textbf{Acierto donde aplica} & \textbf{Macro-F1} & \textbf{$\Delta$ pareado (IC 95\%)} \\
 \hline
 Solo texto (base) & --- & --- & 0,468 $\pm$ 0,100 & --- \\
-Sin filtro de circularidad & 0,252 $\pm$ 0,039 & \textbf{0,956 $\pm$ 0,064} & \textbf{0,496 $\pm$ 0,099} & \textbf{+0,028} [+0,012; +0,043] \\
+Sin filtro de circularidad & 0,252 $\pm$ 0,039 & 0,956 $\pm$ 0,064 & 0,496 $\pm$ 0,099 & +0,028 [+0,012; +0,043] \\
 Con filtro de circularidad & 0,230 $\pm$ 0,038 & 0,945 $\pm$ 0,088 & 0,474 $\pm$ 0,106 & +0,006 [$-$0,002; +0,015] \\
 \hline
 \end{tabular}
 }
 \end{table}
 
-La variante sin filtro de circularidad supera a la base con un intervalo de confianza que excluye el cero y con las diez semillas del lado positivo. El dato más informativo, sin embargo, no es el $\Delta$ agregado sino la comparación local: \textbf{sobre las notas que la regla cubre, acierta un 0,956, mientras que el clasificador de texto acierta un 0,793 sobre esas mismas notas}. La regla no se limita a resolver los casos fáciles; resuelve casos en que el texto se equivocaba en uno de cada cinco.
+La variante sin filtro de circularidad supera a la base con un intervalo de confianza que excluye el cero y con las diez semillas del lado positivo. Más informativo que el $\Delta$ agregado es, sin embargo, la comparación local: sobre las notas que la regla cubre, acierta un 0,956, mientras que el clasificador de texto acierta un 0,793 sobre esas mismas notas. La regla no se limita a resolver los casos fáciles; resuelve casos en que el texto se equivocaba en uno de cada cinco.
 
 Como control negativo se preinscribieron dos familias cuyos marcadores no se repiten entre plantillas y que, por lo tanto, la regla no debía tocar: RYUK y HELLOKITTY. En ninguna de las diez semillas la regla asignó una sola de sus notas, y su F1 se mantuvo idéntico. Que el mecanismo actúe exactamente donde se predijo y no donde se predijo que no actuaría es lo que permite atribuir la mejora al mecanismo y no a un artefacto de la partición.
 
 \subsubsection*{Cascada combinada: marcadores privados y nombre del archivo}
 
-La versión adoptada incorpora dos refinamientos. El primero descarta del diccionario los valores que en el entrenamiento aparecen en más de una familia, es decir la infraestructura compartida documentada en la Sección~\ref{subsec:res_cohesion}; el segundo agrega como clave el \textbf{nombre del archivo de la nota}, restringido a las notas cuyo nombre original está verificado contra la fuente y descartando los asignados por quien recolectó, que serían circulares.
+La versión adoptada incorpora dos refinamientos. El primero descarta del diccionario los valores que en el entrenamiento aparecen en más de una familia, es decir la infraestructura compartida documentada en la Sección~\ref{subsec:res_cohesion}. El segundo agrega como clave el nombre del archivo de la nota, restringido a las notas cuyo nombre original está verificado contra la fuente y descartando los asignados por quien recolectó, que serían circulares.
 
 \begin{table}[ht]
 \centering
@@ -268,21 +263,21 @@ La versión adoptada incorpora dos refinamientos. El primero descarta del diccio
 \textbf{Magnitud} & \textbf{Valor} \\
 \hline
 Macro-F1 de la capa de texto sola & 0,459 $\pm$ 0,075 \\
-Macro-F1 de la cascada combinada & \textbf{0,519} \\
-$\Delta$ pareado por semilla (IC 95\%) & \textbf{+0,060} [+0,053; +0,067], 50/50 semillas \\
+Macro-F1 de la cascada combinada & 0,519 \\
+$\Delta$ pareado por semilla (IC 95\%) & +0,060 [+0,053; +0,067], 50/50 semillas \\
 Cobertura de la regla & 0,455 \\
 \quad de la cual, aportada por el nombre & 0,118 \\
-Acierto donde la regla aplica & \textbf{0,976} \\
+Acierto donde la regla aplica & 0,976 \\
 Aporte aislado del nombre (IC 95\%) & +0,011 [+0,008; +0,014] \\
 \hline
 \end{tabular}
 \end{table}
 
-Filtrar los valores genéricos casi duplica la cobertura sin costo de precisión, y el resultado combinado es la mejor cifra alcanzada por el frente de notas bajo P2: \textbf{macro-F1 de 0,519, con una mejora de +0,060 respecto del texto solo}, positiva en las cincuenta semillas. El aporte aislado del nombre del archivo es pequeño pero medible (+0,011) y está acotado por una limitación del corpus, no del método: solo una fracción de las notas conserva su nombre original, porque los repositorios públicos de los que provienen renombran los archivos al catalogarlos.
+Filtrar los valores genéricos casi duplica la cobertura sin costo de precisión, y el resultado combinado es la mejor cifra alcanzada por el frente de notas bajo P2: un macro-F1 de 0,519, con una mejora de +0,060 respecto del texto solo, positiva en las cincuenta semillas. El aporte aislado del nombre del archivo es pequeño pero medible (+0,011) y está acotado por una limitación del corpus y no del método: solo una fracción de las notas conserva su nombre original, porque los repositorios públicos de los que provienen renombran los archivos al catalogarlos.
 
 \subsubsection*{Abstención: cambiar qué afirma el sistema, no cuánto sabe}
 
-La cobertura de la regla exacta es inferior a la mitad de las notas; en el resto decide el texto, con el acierto limitado que documentan las secciones anteriores. Una alternativa a mejorar esa decisión es \textbf{permitir que el sistema no la tome}. Se implementó un umbral de abstención sobre la confianza de la capa de texto, medida como el margen entre la primera y la segunda clase de la función de decisión, respetando la arquitectura de la cascada: donde la regla exacta aplica se responde siempre, y el umbral se aplica solo a las notas que quedan en manos del texto.
+La cobertura de la regla exacta es inferior a la mitad de las notas; en el resto decide el texto, con el acierto limitado que documentan las secciones anteriores. Una alternativa a mejorar esa decisión es permitir que el sistema no la tome. Se implementó un umbral de abstención sobre la confianza de la capa de texto, medida como el margen entre la primera y la segunda clase de la función de decisión, respetando la arquitectura de la cascada: donde la regla exacta aplica se responde siempre, y el umbral se aplica solo a las notas que quedan en manos del texto.
 
 \begin{table}[ht]
 \centering
@@ -295,37 +290,36 @@ La cobertura de la regla exacta es inferior a la mitad de las notas; en el resto
 0,00 (sin abstención) & 1,000 & 0,660 \\
 0,10 & 0,824 & 0,780 \\
 0,30 & 0,702 & 0,865 \\
-\textbf{0,50} & \textbf{0,646} & \textbf{0,900} \\
+0,50 & 0,646 & 0,900 \\
 1,00 & 0,550 & 0,969 \\
 1,50 & 0,468 & 0,976 \\
 \hline
 \end{tabular}
 \end{table}
 
-En el punto de operación de umbral 0,50 el sistema \textbf{responde el 65\% de las veces y acierta el 90\%}. La utilidad de la cascada vuelve a verificarse aquí por una vía independiente de los $\Delta$ agregados: a igual cobertura (en torno al 65\%), la cascada combinada acierta 0,900 mientras que el clasificador de texto solo alcanza 0,762, una diferencia de casi 0,14.
+En el punto de operación de umbral 0,50 el sistema responde el 65\% de las veces y acierta el 90\%. La utilidad de la cascada vuelve a verificarse aquí por una vía independiente de los $\Delta$ agregados: a igual cobertura (en torno al 65\%), la cascada combinada acierta 0,900 mientras que el clasificador de texto solo alcanza 0,762, una diferencia de casi 0,14.
 
-Debe subrayarse qué mide y qué no mide esta tabla. El macro-F1 global \textbf{no mejora}: a umbral nulo es exactamente el de la cascada. Lo que cambia es qué afirma el sistema, no cuánto sabe, y el macro-F1 «de las respondidas» no es comparable con el del sistema completo porque se calcula sobre un subconjunto elegido por el propio modelo. El umbral es, además, un parámetro de despliegue y no un hiperparámetro ajustado a los datos: se reporta la curva completa y el punto de operación se elige según el costo relativo del error y de la abstención.
-
+Importa precisar qué mide esta tabla y qué no. El macro-F1 global no mejora: a umbral nulo es exactamente el de la cascada. Lo que cambia es qué afirma el sistema, no cuánto sabe, y el macro-F1 «de las respondidas» no es comparable con el del sistema completo porque se calcula sobre un subconjunto elegido por el propio modelo. El umbral es, además, un parámetro de despliegue y no un hiperparámetro ajustado a los datos: se reporta la curva completa y el punto de operación se elige según el costo relativo del error y de la abstención.
 
 \subsection{Identificar no es clasificar: cómo leer los F1 nulos}
 \label{subsec:res_ceros}
 
-Dos familias del corpus, BADRABBIT y CRYPTOLOCKER, obtienen un F1 exactamente nulo bajo P2. Antes de interpretarlo como un fracaso del método conviene precisar de dónde sale ese cero, porque no proviene del clasificador sino del protocolo, y porque distinguirlo conduce a un resultado positivo.
+Dos familias del corpus, BADRABBIT y CRYPTOLOCKER, obtienen un F1 exactamente nulo bajo P2. Antes de leerlo como un fracaso del método conviene ver de dónde sale ese cero, que proviene del protocolo y no del clasificador, y cuya explicación conduce además a un resultado positivo.
 
 \subsubsection*{Dos tareas con requisitos de datos distintos}
 
-Ambas familias conservan una única plantilla: sus notas son casi idénticas entre sí. Bajo P2, las plantillas no se reparten entre entrenamiento y prueba, de modo que una familia con una sola plantilla \textbf{nunca puede estar simultáneamente en ambos conjuntos}. Su F1 es nulo por construcción, con independencia de la calidad del modelo.
+Ambas familias conservan una única plantilla: sus notas son casi idénticas entre sí. Bajo P2, las plantillas no se reparten entre entrenamiento y prueba, de modo que una familia con una sola plantilla nunca puede estar a la vez en ambos conjuntos. Su F1 es nulo por construcción, con independencia de la calidad del modelo.
 
-Ahora bien, clasificar no es la única forma de resolver el problema aplicado. Cabe distinguir:
+Clasificar no es, sin embargo, la única forma de resolver el problema aplicado. Hay que distinguir dos tareas:
 
 \begin{itemize}
-  \item \textbf{Clasificar}: entrenar un modelo que asigne una familia a una nota nunca vista, incluida una variante nueva. Requiere al menos \textbf{dos} plantillas por familia. Es lo que miden P1 y P2.
-  \item \textbf{Identificar por similitud}: buscar en un catálogo de notas conocidas la más parecida y devolver su familia. No hay modelo entrenado. Requiere \textbf{una} sola nota conocida por familia. Es el mecanismo de las herramientas de identificación en producción, y coincide con el paso de recuperación por similitud del trabajo de Lemmou \textit{et al.}~\cite{paper_5_note_files}.
+  \item \textbf{Clasificar}: entrenar un modelo que asigne una familia a una nota nunca vista, incluida una variante nueva. Requiere al menos dos plantillas por familia. Es lo que miden P1 y P2.
+  \item \textbf{Identificar por similitud}: buscar en un catálogo de notas conocidas la más parecida y devolver su familia. No hay modelo entrenado. Basta una sola nota conocida por familia. Es el mecanismo de las herramientas de identificación en producción, y coincide con el paso de recuperación por similitud del trabajo de Lemmou \textit{et al.}~\cite{paper_5_note_files}.
 \end{itemize}
 
 \subsubsection*{Medición de la identificación por similitud}
 
-Se evaluó la segunda tarea sobre el mismo corpus, retirando una \textit{nota} por vez y asignándole la familia de su vecino más cercano por similitud de coseno entre las 148 restantes.
+Se evaluó la segunda tarea sobre el mismo corpus, retirando una nota por vez y asignándole la familia de su vecino más cercano por similitud de coseno entre las 148 restantes.
 
 \begin{table}[ht]
 \centering
@@ -335,36 +329,36 @@ Se evaluó la segunda tarea sobre el mismo corpus, retirando una \textit{nota} p
 \hline
 \textbf{Magnitud} & \textbf{Valor} \\
 \hline
-Acierto identificando por vecino más cercano & \textbf{0,819} (122 de 149) \\
+Acierto identificando por vecino más cercano & 0,819 (122 de 149) \\
 Macro-F1 clasificando bajo P2 (combinado + LinearSVC) & 0,459 $\pm$ 0,075 \\
 Similitud con el vecino cuando acierta & mediana 0,932 (mínimo 0,437) \\
 Similitud con el vecino cuando se equivoca & mediana 0,543 (máximo 0,956) \\
 \hline
 \multicolumn{2}{|l|}{\textbf{Las dos familias de F1 nulo bajo P2}} \\
 \hline
-BADRABBIT & \textbf{2 de 2 identificadas} \\
-CRYPTOLOCKER & \textbf{2 de 2 identificadas} \\
+BADRABBIT & 2 de 2 identificadas \\
+CRYPTOLOCKER & 2 de 2 identificadas \\
 \hline
 \end{tabular}
 \end{table}
 
-\textbf{Las dos familias que el protocolo de clasificación no puede evaluar se identifican sin error.} Sus notas se reconocen entre sí con similitudes de 0,949 y 0,988 respectivamente. El cero, por lo tanto, no significa que el sistema sea incapaz de reconocer esas familias en un caso real: significa que no puede \textit{aprender a generalizar} a variantes nuevas de ellas, que es una afirmación mucho más acotada y además correcta.
+Las dos familias que el protocolo de clasificación no puede evaluar se identifican sin error. Sus notas se reconocen entre sí con similitudes de 0,949 y 0,988 respectivamente. El cero no significa, por lo tanto, que el sistema sea incapaz de reconocer esas familias en un caso real: significa que no puede aprender a generalizar a variantes nuevas de ellas, que es una afirmación mucho más acotada y además correcta.
 
-El fenómeno no se limita a esas dos. Nueve familias más obtienen identificando al menos 0,30 por encima de su F1 de clasificación, y cinco de ellas alcanzan el 1,000 (BLACKMATTER, CUBA, DARKSIDE, NETWALKER y NOTPETYA), todas familias de dos plantillas muy cohesionadas. La relación con el Experimento~3c es directa: \textbf{la cohesión que perjudica a la clasificación —porque no aporta variedad— es exactamente la que favorece a la identificación}.
+El fenómeno no se limita a esas dos. Nueve familias más obtienen identificando al menos 0,30 por encima de su F1 de clasificación, y cinco de ellas alcanzan el 1,000 (BLACKMATTER, CUBA, DARKSIDE, NETWALKER y NOTPETYA), todas familias de dos plantillas muy cohesionadas. La relación con el Experimento~3c es directa: la cohesión que perjudica a la clasificación, porque no aporta variedad, es exactamente la que favorece a la identificación.
 
 \subsubsection*{Dónde la identificación es peor, y por qué}
 
-La comparación no favorece siempre a la búsqueda por similitud. CHIMERA y HELLOKITTY no identifican \textit{ninguna} de sus notas, mientras que el clasificador entrenado obtiene algo distinto de cero en ambas. Son las dos familias de menor cohesión con margen negativo: sus propias plantillas no se parecen entre sí, de modo que el vecino más cercano de cada nota pertenece a otra familia. El clasificador, en cambio, puede apoyarse en rasgos distribuidos que la similitud global no captura.
+La comparación no favorece siempre a la búsqueda por similitud. CHIMERA y HELLOKITTY no identifican ninguna de sus notas, mientras que el clasificador entrenado obtiene algo distinto de cero en ambas. Son las dos familias de menor cohesión con margen negativo: sus propias plantillas no se parecen entre sí, de modo que el vecino más cercano de cada nota pertenece a otra familia. El clasificador, en cambio, puede apoyarse en rasgos distribuidos que la similitud global no captura.
 
 \subsubsection*{Límites de esta medición}
 
-Tres precisiones. Primero, el procedimiento retira una \textbf{nota} y no un grupo de casi-duplicados, de modo que aprovecha deliberadamente que una familia tenga dos notas casi iguales; eso es lo que se quiere medir, pero impide comparar esta cifra con el macro-F1 de P2 como si fueran la misma métrica. Segundo, y más importante, \textbf{la identificación por similitud presupone mundo cerrado}: ante una nota de una familia ausente del catálogo, el vecino más cercano será necesariamente incorrecto. La separación entre la similitud del acierto (mediana 0,932) y la del error (mediana 0,543) es lo que permite fijar un umbral por debajo del cual conviene abstenerse, en la línea de la Sección~\ref{subsec:res_cascadas}. Tercero, esta medición no reemplaza a P2 ni constituye la métrica del método propuesto: describe una tarea distinta y se reporta como tal.
+El procedimiento retira una nota y no un grupo de casi-duplicados, de modo que aprovecha deliberadamente que una familia tenga dos notas casi iguales; eso es lo que se quiere medir, pero impide comparar esta cifra con el macro-F1 de P2 como si fueran la misma métrica. La identificación por similitud presupone además mundo cerrado: ante una nota de una familia ausente del catálogo, el vecino más cercano será necesariamente incorrecto. La separación entre la similitud del acierto (mediana 0,932) y la del error (mediana 0,543) es lo que permite fijar un umbral por debajo del cual conviene abstenerse, en la línea de la Sección~\ref{subsec:res_cascadas}. Y esta medición no reemplaza a P2 ni constituye la métrica del método propuesto: describe una tarea distinta y se reporta como tal.
 
 \subsubsection*{Verificación con un caso real fuera del catálogo}
 
-La limitación de mundo cerrado pudo contrastarse con un caso externo. En agosto de 2026 se analizó la nota de rescate de un incidente real contra servidores de correo, correspondiente a una campaña activa con varias víctimas. El sistema, entrenado con las 30 familias, asignó una familia con un margen de 0,050 —inferior al de cualquier nota del corpus, cuyo mínimo es 0,129— y \textbf{ninguna de las 30 clases obtuvo una puntuación positiva}, situación que no ocurre en ninguna de las 149 notas conocidas. En el punto de operación de la Sección~\ref{subsec:res_cascadas} el sistema se habría abstenido, que es la respuesta correcta.
+La limitación de mundo cerrado pudo contrastarse con un caso externo. En agosto de 2026 se analizó la nota de rescate de un incidente real contra servidores de correo, correspondiente a una campaña activa con varias víctimas. El sistema, entrenado con las 30 familias, asignó una familia con un margen de 0,050 (inferior al de cualquier nota del corpus, cuyo mínimo es 0,129) y ninguna de las 30 clases obtuvo una puntuación positiva, situación que no ocurre en ninguna de las 149 notas conocidas. En el punto de operación de la Sección~\ref{subsec:res_cascadas} el sistema se habría abstenido, que es la respuesta correcta.
 
-La verificación se extendió ampliando el catálogo a 320 familias reunidas de cinco repositorios públicos, sin cambio en el diagnóstico, y consultando los catálogos de referencia disponibles. La familia responsable \textbf{no estaba nombrada en ninguno}, y tampoco fue identificada por la herramienta de producción con la que se compara este trabajo (Sección~\ref{sec:res_herramientas}). El caso confirma así dos cosas: que el mecanismo de abstención se comporta como se diseñó ante una familia fuera del catálogo, y que \textbf{la limitación de mundo cerrado no es una particularidad de este trabajo sino del estado del campo}, dado que ninguna herramienta disponible pudo nombrar una campaña con pocos días de antigüedad.
+La verificación se extendió ampliando el catálogo a 320 familias reunidas de cinco repositorios públicos, sin cambio en el diagnóstico, y consultando los catálogos de referencia disponibles. La familia responsable no estaba nombrada en ninguno, y tampoco fue identificada por la herramienta de producción con la que se compara este trabajo (Sección~\ref{sec:res_herramientas}). El caso confirma así dos cosas: que el mecanismo de abstención se comporta como se diseñó ante una familia fuera del catálogo, y que la limitación de mundo cerrado es del estado del campo y no una particularidad de este trabajo, dado que ninguna herramienta disponible pudo nombrar una campaña con pocos días de antigüedad.
 
 
 \subsection{Experimento 3e: representación semántica multilingüe}
@@ -372,7 +366,7 @@ La verificación se extendió ampliando el catálogo a 320 familias reunidas de 
 
 El corpus contiene notas en varios idiomas, y familias enteras cuyas plantillas difieren precisamente en el idioma. Cabe entonces la hipótesis de que una representación semántica multilingüe, capaz de acercar textos equivalentes escritos en lenguas distintas, supere a la representación TF-IDF, que opera sobre coincidencias literales de caracteres y palabras.
 
-La hipótesis se evaluó con el modelo \texttt{paraphrase-multilingual-MiniLM-L12-v2} de \textit{sentence-transformers} (384 dimensiones, vectores normalizados), sobre el corpus de \textbf{155 notas y 106 plantillas} y con el mismo clasificador, protocolo y semillas que la corrida canónica correspondiente. Se preinscribieron dos variantes: sustituir la representación TF-IDF por el \textit{embedding}, y concatenar ambas.
+La hipótesis se evaluó con el modelo \texttt{paraphrase-multilingual-MiniLM-L12-v2} de \textit{sentence-transformers} (384 dimensiones, vectores normalizados), sobre el corpus de 155 notas y 106 plantillas y con el mismo clasificador, protocolo y semillas que la corrida canónica correspondiente. Se preinscribieron dos variantes: sustituir la representación TF-IDF por el \textit{embedding}, y concatenar ambas.
 
 \begin{table}[ht]
 \centering
@@ -384,54 +378,53 @@ La hipótesis se evaluó con el modelo \texttt{paraphrase-multilingual-MiniLM-L1
 \textbf{Variante} & \textbf{Macro-F1} & \textbf{$\Delta$ pareado} & \textbf{IC 95\%} & \textbf{Semillas con $\Delta > 0$} \\
 \hline
 Base: TF-IDF combinado & 0,527 $\pm$ 0,049 & --- & --- & --- \\
-\textit{Embedding} en lugar de TF-IDF & 0,453 $\pm$ 0,044 & \textbf{$-$0,073} & [$-$0,107; $-$0,039] & \textbf{0 de 10} \\
+\textit{Embedding} en lugar de TF-IDF & 0,453 $\pm$ 0,044 & $-$0,073 & [$-$0,107; $-$0,039] & 0 de 10 \\
 \textit{Embedding} concatenado a TF-IDF & 0,536 $\pm$ 0,041 & +0,009 & [$-$0,010; +0,028] & 7 de 10 \\
 \hline
 \end{tabular}
 }
 \end{table}
 
-El resultado es negativo en las dos variantes, y por razones distintas. Sustituir TF-IDF por el \textit{embedding} \textbf{empeora el rendimiento de forma inequívoca}: el intervalo de confianza queda íntegramente por debajo del cero y ninguna de las diez semillas mejora. Concatenar ambas representaciones produce una mejora nominal que \textbf{no es distinguible del ruido}: el intervalo incluye el cero, y siete de diez semillas positivas no bastan para adoptarla. Se descarta por el criterio de adopción fijado antes de correr el experimento.
+El resultado es negativo en las dos variantes, y por razones distintas. Sustituir TF-IDF por el \textit{embedding} empeora el rendimiento de forma inequívoca: el intervalo de confianza queda íntegramente por debajo del cero y ninguna de las diez semillas mejora. Concatenar ambas representaciones produce una mejora nominal que no se distingue del ruido: el intervalo incluye el cero, y siete de diez semillas positivas no bastan para adoptarla. Se descarta por el criterio de adopción fijado antes de correr el experimento.
 
-La interpretación es coherente con el resto del capítulo. Lo que distingue a una familia de otra en estas notas no es el contenido semántico —todas comunican el mismo mensaje: los archivos están cifrados, hay que pagar, este es el contacto— sino los detalles literales: la redacción exacta de una frase, el formato de un identificador, la puntuación de un encabezado. Una representación que abstrae el significado descarta precisamente la señal que discrimina. \textbf{Es el tercer resultado negativo de método convergente}, junto con la búsqueda de hiperparámetros y la abstracción de marcadores, y los tres apuntan a la misma conclusión: el techo no lo pone la representación.
+La interpretación es coherente con el resto del capítulo. Lo que distingue a una familia de otra en estas notas son los detalles literales: la redacción exacta de una frase, el formato de un identificador, la puntuación de un encabezado. El contenido semántico no las separa: todas comunican el mismo mensaje, esto es, que los archivos están cifrados, que hay que pagar y que este es el contacto. Una representación que abstrae el significado descarta precisamente la señal que discrimina. Es el tercer resultado negativo de método convergente, junto con la búsqueda de hiperparámetros y la abstracción de marcadores, y los tres apuntan a la misma conclusión: el techo no lo pone la representación.
 
 \subsection{El mismo corpus bajo el protocolo de la literatura previa}
 \label{subsec:res_lemmou}
 
 Los resultados de este trabajo bajo P2 son considerablemente inferiores a los reportados por trabajos previos sobre notas de rescate. Esta sección muestra que la diferencia es atribuible al protocolo de evaluación y no al método, evaluando el mismo corpus bajo los tres esquemas.
 
-El trabajo de referencia de Lemmou \textit{et al.}~\cite{paper_5_note_files} identifica la familia mediante reglas y marcadores, complementados con una búsqueda por similitud sobre una representación reducida por descomposición en valores singulares. Es importante precisar dos cosas para no citarlo mal. Primero, esa búsqueda opera en \textbf{mundo cerrado y sin separación entre entrenamiento y prueba}: cada nota se compara contra un catálogo que la contiene. Segundo, la cifra de $F = 0{,}920$ que suele asociarse a ese trabajo corresponde a una \textbf{tarea binaria distinta} —distinguir el nombre de una nota de rescate del de un archivo benigno— y no a la clasificación de familia.
+El trabajo de referencia de Lemmou \textit{et al.}~\cite{paper_5_note_files} identifica la familia mediante reglas y marcadores, complementados con una búsqueda por similitud sobre una representación reducida por descomposición en valores singulares. Dos precisiones evitan citarlo mal. Esa búsqueda opera en mundo cerrado y sin separación entre entrenamiento y prueba: cada nota se compara contra un catálogo que la contiene. Y la cifra de $F = 0{,}920$ que suele asociarse a ese trabajo corresponde a una tarea binaria distinta, la de distinguir el nombre de una nota de rescate del de un archivo benigno, y no a la clasificación de familia.
 
 Se reprodujo su esquema de recuperación sobre el corpus de 149 notas: vecino más cercano por similitud de coseno, en mundo cerrado, con y sin la reducción por SVD.
 
 \begin{table}[ht]
 \centering
-\caption{El mismo corpus de 149 notas bajo tres protocolos de evaluación}
+\caption{El mismo corpus de 149 notas bajo tres protocolos de evaluación (combinado + LinearSVC, 50 semillas en P1 y P2; el protocolo L no usa semillas porque no hay partición)}
 \label{tab:tres_protocolos}
 \resizebox{\textwidth}{!}{
 \begin{tabular}{|l|p{6.2cm}|c|c|}
 \hline
 \textbf{Protocolo} & \textbf{Qué mide} & \textbf{Exactitud} & \textbf{Macro-F1} \\
 \hline
-L (esquema de la literatura previa) & recuperar del catálogo la nota más parecida, en mundo cerrado & 0,839 & \textbf{0,777} \\
+L (esquema de la literatura previa) & recuperar del catálogo la nota más parecida, en mundo cerrado & 0,839 & 0,777 \\
 P1 & reconocer una instancia nueva de una plantilla ya catalogada & 0,839 & 0,789 $\pm$ 0,024 \\
-P2 & reconocer una plantilla nunca vista & 0,579 & \textbf{0,459 $\pm$ 0,075} \\
+P2 & reconocer una plantilla nunca vista & 0,579 & 0,459 $\pm$ 0,075 \\
 \hline
 \end{tabular}
 }
 \end{table}
 
-La reducción por SVD no alteró el resultado del protocolo L: las cifras con y sin ella son idénticas hasta el cuarto decimal, lo que indica que en un corpus de este tamaño la reducción de dimensionalidad no aporta información sino que solo cambia la geometría del espacio.
+La reducción por SVD no alteró el resultado del protocolo L: las cifras con y sin ella son idénticas hasta el cuarto decimal, lo que indica que en un corpus de este tamaño la reducción de dimensionalidad no aporta información y solo cambia la geometría del espacio.
 
-La descomposición del protocolo L explica la totalidad de la diferencia. De las 149 notas, \textbf{73 (el 49,0\%) tienen como vecina más cercana una nota de su propia plantilla}, es decir un texto casi idéntico. El acierto se reparte así:
+La descomposición del protocolo L explica la totalidad de la diferencia. De las 149 notas, 73 (el 49,0\%) tienen como vecina más cercana una nota de su propia plantilla, es decir un texto casi idéntico. El acierto se reparte así:
 
 \begin{itemize}
-  \item cuando la vecina más cercana pertenece a \textbf{la misma plantilla}: acierto de \textbf{0,959};
-  \item cuando pertenece a \textbf{otra plantilla}: acierto de \textbf{0,724}.
+  \item cuando la vecina más cercana pertenece a la misma plantilla: acierto de 0,959;
+  \item cuando pertenece a otra plantilla: acierto de 0,724.
 \end{itemize}
 
-\textbf{Prácticamente la mitad del rendimiento del protocolo L proviene de reconocer copias.} P2 es, precisamente, la evaluación restringida al segundo caso, ampliada además a la exigencia de generalizar y no solo de recuperar. La conclusión que este trabajo aporta sobre la literatura previa no es que aquellos métodos estuvieran mal, sino que \textbf{la cifra publicada responde a una pregunta distinta}: cuán bien se recupera una nota de un catálogo que la contiene, y no cuán bien se identifica una variante nueva. Ambas preguntas son legítimas y corresponden a escenarios de uso distintos —la primera, a un servicio de identificación con catálogo actualizado; la segunda, al análisis de una campaña no catalogada— pero sus cifras no son comparables entre sí.
-
+Prácticamente la mitad del rendimiento del protocolo L proviene de reconocer copias. P2 es, precisamente, la evaluación restringida al segundo caso, ampliada además a la exigencia de generalizar y no solo de recuperar. Lo que este trabajo aporta sobre la literatura previa no es un reparo a aquellos métodos: la cifra publicada responde a una pregunta distinta, la de cuán bien se recupera una nota de un catálogo que la contiene, y no la de cuán bien se identifica una variante nueva. Ambas preguntas son legítimas y corresponden a escenarios de uso distintos, un servicio de identificación con catálogo actualizado en un caso y el análisis de una campaña no catalogada en el otro, pero sus cifras no son comparables entre sí.
 
 \subsection{Evolución del corpus de notas y su efecto sobre las cifras}
 \label{subsec:res_evolucion_corpus}
@@ -440,11 +433,11 @@ Las cifras del Experimento~3 presentadas hasta aquí corresponden a un corpus de
 
 \subsubsection*{La recolección dirigida: de 146 a 155 notas}
 
-El primer cambio fue deliberado. La curva de aprendizaje (Sección~\ref{subsec:res_curva}) estableció que la unidad que mueve el rendimiento es el \textit{texto distinto} y no la nota, de modo que la ampliación del corpus se planificó por plantillas faltantes por familia y no por volumen. La recolección resultante llevó el corpus a \textbf{155 notas y 106 plantillas}, cada nota candidata se verificó contra el corpus con el mismo criterio de casi-duplicado empleado en la evaluación (Sección~\ref{subsec:neardups}), y solo se incorporó la que aportaba una plantilla nueva.
+El primer cambio fue deliberado. La curva de aprendizaje (Sección~\ref{subsec:res_curva}) estableció que la unidad que mueve el rendimiento es el texto distinto y no la nota, de modo que la ampliación del corpus se planificó por plantillas faltantes por familia y no por volumen. La recolección resultante llevó el corpus a 155 notas y 106 plantillas; cada nota candidata se verificó contra el corpus con el mismo criterio de casi-duplicado empleado en la evaluación (Sección~\ref{subsec:neardups}), y solo se incorporó la que aportaba una plantilla nueva.
 
 \subsubsection*{La depuración de integridad: de 155 a 149 notas}
 
-El segundo cambio fue correctivo. Una auditoría de procedencia sobre las 155 notas detectó material que no debía estar en el corpus, y su retiro lo redujo a \textbf{149 notas y 99 plantillas}. Los seis casos se resumen en la Tabla~\ref{tab:depuracion} y responden a tres problemas distintos.
+El segundo cambio fue correctivo. Una auditoría de procedencia sobre las 155 notas detectó material que no debía estar en el corpus, y su retiro lo redujo a 149 notas y 99 plantillas. Los seis casos se resumen en la Tabla~\ref{tab:depuracion} y responden a tres problemas distintos.
 
 \begin{table}[ht]
 \centering
@@ -486,28 +479,21 @@ La Tabla~\ref{tab:tres_bases} presenta las cifras canónicas sobre las tres base
 \textbf{Base} & \textbf{Notas} & \textbf{Plantillas} & \textbf{Macro-F1 P1} & \textbf{Macro-F1 P2} \\
 \hline
 Corpus inicial & 146 & 95 & 0,754 $\pm$ 0,033 & 0,435 $\pm$ 0,057 \\
-Tras la recolección dirigida & 155 & 106 & \textbf{0,812 $\pm$ 0,031} & \textbf{0,527 $\pm$ 0,049} \\
+Tras la recolección dirigida & 155 & 106 & 0,812 $\pm$ 0,031 & 0,527 $\pm$ 0,049 \\
 Tras la depuración de integridad & 149 & 99 & 0,799 $\pm$ 0,026 & 0,468 $\pm$ 0,100 \\
 \hline
 \end{tabular}
 \end{table}
 
-La lectura correcta de esta tabla no es que el trabajo empeoró. La recolección dirigida elevó ambos protocolos, lo que confirma la predicción de la curva de aprendizaje. La depuración posterior bajó las cifras porque retiró material que las sostenía indebidamente: dos notas mal etiquetadas que el clasificador aprendía como pertenecientes a una familia equivocada, tres textos sintéticos y un duplicado encubierto. \textbf{Un corpus con etiquetas incorrectas produce cifras más altas y menos válidas}, exactamente igual que el corpus con duplicados de la Sección~\ref{subsec:res_escalera}. Las cifras finales son menores y son las que corresponde reportar.
+Esta tabla no dice que el trabajo haya empeorado. La recolección dirigida elevó ambos protocolos, lo que confirma la predicción de la curva de aprendizaje. La depuración posterior bajó las cifras porque retiró material que las sostenía indebidamente: dos notas mal etiquetadas que el clasificador aprendía como pertenecientes a una familia equivocada, tres textos sintéticos y un duplicado encubierto. Un corpus con etiquetas incorrectas produce cifras más altas y menos válidas, exactamente igual que el corpus con duplicados de la Sección~\ref{subsec:res_escalera}. Las cifras finales son menores y son las que corresponde reportar.
 
 \subsubsection*{Un F1 estable puede ocultar una corrección grande}
 
-El caso de HELLOKITTY ilustra por qué el efecto de una depuración no debe evaluarse únicamente con la métrica agregada. Retirar sus dos notas de linaje Dharma apenas movió su F1, pero la matriz de confusión muestra un cambio sustancial: las notas de otras familias clasificadas erróneamente como HELLOKITTY pasaron de \textbf{314 a 47}, y en particular las \textbf{146 confusiones desde DHARMA y las 20 desde PHOBOS desaparecieron por completo}. La razón es que el F1 combina precisión y exhaustividad, y la corrección mejoró solo la primera: el modelo dejó de atribuir a HELLOKITTY notas que no le pertenecían, pero siguió sin reconocer las propias, que son pocas y poco cohesionadas entre sí. La conclusión metodológica es que \textbf{la validez de una corrección de etiquetas se verifica en la matriz de confusión, no en el F1 agregado}.
+El caso de HELLOKITTY ilustra por qué el efecto de una depuración no debe evaluarse únicamente con la métrica agregada. Retirar sus dos notas de linaje Dharma apenas movió su F1, pero la matriz de confusión muestra un cambio sustancial: las notas de otras familias clasificadas erróneamente como HELLOKITTY pasaron de 314 a 47, y las 146 confusiones desde DHARMA y las 20 desde PHOBOS desaparecieron por completo. La razón es que el F1 combina precisión y exhaustividad, y la corrección mejoró solo la precisión: el modelo dejó de atribuir a HELLOKITTY notas que no le pertenecían, pero siguió sin reconocer las propias, que son pocas y poco cohesionadas entre sí. La conclusión metodológica es que la validez de una corrección de etiquetas se verifica en la matriz de confusión y no en el F1 agregado.
 
 \subsubsection*{La dispersión y el número de semillas}
 
-Un último efecto merece declararse porque afecta a toda comparación posterior. Sobre el corpus de 149 notas, la estimación del macro-F1 de P2 con diez semillas es 0,468 $\pm$ 0,100, y con cincuenta semillas es \textbf{0,459 $\pm$ 0,075}. El desvío no es una propiedad estable con pocas repeticiones: con dos pliegues y treinta clases existen particiones en las que familias enteras quedan en un solo pliegue, lo que desplaza tanto la media como su dispersión. En consecuencia, \textbf{las diferencias pequeñas entre configuraciones se contrastan en este trabajo con cincuenta semillas}, y toda cifra se reporta indicando sobre cuántas repeticiones fue estimada.
-
-% =====================================================================
-% ESTA SUBSECCIÓN PERTENECE AL CAPÍTULO 3 (METODOLOGÍA), no al 4.
-% Se deja en este archivo para no tocar `metodologia.tex`, que también
-% puede estar siendo editado. Al incorporarla, va después de la
-% subsección sobre el corpus de notas (\label{subsec:corpus_notas}).
-% =====================================================================
+Queda un efecto por declarar, porque afecta a toda comparación posterior. Sobre el corpus de 149 notas, la estimación del macro-F1 de P2 con diez semillas es 0,468 $\pm$ 0,100, y con cincuenta semillas es 0,459 $\pm$ 0,075. El desvío no es una propiedad estable con pocas repeticiones: con dos pliegues y treinta clases existen particiones en las que familias enteras quedan en un solo pliegue, lo que desplaza tanto la media como su dispersión. Por eso las diferencias pequeñas entre configuraciones se contrastan en este trabajo con cincuenta semillas, y toda cifra se reporta indicando sobre cuántas repeticiones fue estimada.
 
 % =====================================================================
 % SECCIONES AGREGADAS EL 2026-09-26 — LA CASCADA COMO SISTEMA, BAJO P2bal
@@ -519,17 +505,17 @@ Un último efecto merece declararse porque afecta a toda comparación posterior.
 \subsection{El reparto de la partición: de P2 a P2bal}
 \label{subsec:res_p2bal}
 
-Las cifras presentadas hasta aquí para el protocolo P2 corresponden a una partición generada con \texttt{StratifiedGroupKFold} sobre dos pliegues. Una revisión del procedimiento detectó que ese repartidor introduce un artefacto que no proviene del método sino de cómo se construye la partición, y que deprime la métrica de forma sistemática. Esta sección documenta el problema, la corrección y su efecto.
+Las cifras presentadas hasta aquí para el protocolo P2 corresponden a una partición generada con \texttt{StratifiedGroupKFold} sobre dos pliegues. Una revisión del procedimiento detectó que ese repartidor introduce un artefacto que depende de cómo se construye la partición y no del método, y que deprime la métrica de forma sistemática. Esta sección documenta el problema, la corrección y su efecto.
 
 \subsubsection*{El problema: familias sin material de entrenamiento}
 
-\texttt{StratifiedGroupKFold} optimiza un objetivo global de balance de clases y \textbf{no garantiza que cada familia tenga al menos una plantilla en el pliegue de entrenamiento}. En la práctica deja, en promedio, \textbf{3,86 familias por pliegue sin ningún ejemplo con que aprender}. Esas familias obtienen un F1 forzosamente nulo: no porque el método falle sobre ellas, sino porque no se les dio nada con que entrenar. Esos ceros entran al promedio macro y lo hunden.
+\texttt{StratifiedGroupKFold} optimiza un objetivo global de balance de clases y no garantiza que cada familia tenga al menos una plantilla en el pliegue de entrenamiento. En la práctica deja, en promedio, 3,86 familias por pliegue sin ningún ejemplo con que aprender. Esas familias obtienen un F1 forzosamente nulo, y no porque el método falle sobre ellas: no se les dio nada con que entrenar. Esos ceros entran al promedio macro y lo hunden.
 
-El efecto es distinto del que documenta la Sección~\ref{subsec:res_ceros}. Allí el cero es estructural y honesto —una familia con una sola plantilla nunca puede estar en entrenamiento y prueba a la vez, y ningún protocolo lo remedia—; aquí el cero es un sorteo: la misma familia, con material suficiente, aparece o no en entrenamiento según la semilla.
+El efecto es distinto del que documenta la Sección~\ref{subsec:res_ceros}. Allí el cero es estructural y honesto, porque una familia con una sola plantilla nunca puede estar en entrenamiento y prueba a la vez y ningún protocolo lo remedia. Aquí el cero es un sorteo: la misma familia, con material suficiente, aparece o no en entrenamiento según la semilla.
 
 \subsubsection*{La corrección: P2bal}
 
-El protocolo P2bal reparte las plantillas \textit{dentro} de cada familia, de modo que toda familia con dos o más plantillas ponga al menos una en cada pliegue. Conserva el número de pliegues, el tamaño del entrenamiento y —lo que importa— \textbf{la misma garantía que P2: el corte es por plantilla, de modo que la plantilla evaluada nunca aparece en entrenamiento}. Lo único que cambia es que el reparto deja de sortear ceros estructurales.
+El protocolo P2bal reparte las plantillas dentro de cada familia, de modo que toda familia con dos o más plantillas ponga al menos una en cada pliegue. Conserva el número de pliegues, el tamaño del entrenamiento y, lo que importa, la misma garantía que P2: el corte es por plantilla, de modo que la plantilla evaluada nunca aparece en entrenamiento. Lo único que cambia es que el reparto deja de sortear ceros estructurales.
 
 Tres controles verifican que la comparación es limpia, y los tres se reportan en la Tabla~\ref{tab:p2bal_controles}: que ninguna plantilla aparezca de los dos lados, que el material de entrenamiento no aumente y que el número de familias sin entrenamiento efectivamente baje.
 
@@ -543,7 +529,7 @@ Tres controles verifican que la comparación es limpia, y los tres se reportan e
 \hline
 Plantillas presentes en entrenamiento y prueba a la vez & 0 & 0 \\
 Plantillas de entrenamiento por pliegue & 49,5 & 49,5 \\
-Familias sin plantilla de entrenamiento por pliegue & 3,86 & \textbf{1,00} \\
+Familias sin plantilla de entrenamiento por pliegue & 3,86 & 1,00 \\
 \hline
 \end{tabular}
 \end{table}
@@ -564,20 +550,19 @@ El entrenamiento es idéntico en tamaño, de modo que la diferencia no puede atr
 P2 & texto solo & 0,4593 & [0,4379; 0,4806] & 0,4921 & 0,5785 \\
 P2 & cascada & 0,5191 & [0,4967; 0,5416] & 0,5562 & 0,6601 \\
 P2bal & texto solo & 0,6551 & [0,6454; 0,6648] & 0,7019 & 0,7191 \\
-P2bal & \textbf{cascada} & \textbf{0,7417} & [0,7328; 0,7505] & \textbf{0,7946} & \textbf{0,8123} \\
+P2bal & cascada & 0,7417 & [0,7328; 0,7505] & 0,7946 & 0,8123 \\
 \hline
 \end{tabular}
 }
 \end{table}
 
-La diferencia pareada por semilla es de \textbf{+0,1959} [+0,1744; +0,2173] para el texto solo y de \textbf{+0,2225} [+0,1991; +0,2460] para la cascada, positiva en las cincuenta semillas de ambos casos. El desvío entre semillas cae además de 0,0752 a 0,0342: al quitar la lotería de los ceros estructurales, la varianza se reduce a menos de la mitad.
+La diferencia pareada por semilla es de +0,1959 [+0,1744; +0,2173] para el texto solo y de +0,2225 [+0,1991; +0,2460] para la cascada, positiva en las cincuenta semillas de ambos casos. El desvío entre semillas cae además de 0,0752 a 0,0342: al quitar la lotería de los ceros estructurales, la varianza se reduce a menos de la mitad.
 
 \subsubsection*{Cómo debe leerse este cambio}
 
-Conviene ser explícito, porque un salto de 0,52 a 0,74 invita a la lectura equivocada. \textbf{El sistema no cambió.} La cascada y el corpus quedaron fijados antes de esta medición; lo que se corrigió fue el reparto de la partición, que asignaba F1 nulo a familias a las que no se les había dado material de entrenamiento. Es una \textbf{corrección de la medición, no una mejora del método}, y las cifras anteriores de este capítulo no son erróneas: responden a una partición peor construida, y se conservan porque la comparación entre ambas es en sí misma un resultado metodológico.
+Un salto de 0,52 a 0,74 invita a la lectura equivocada, así que importa ser explícito. El sistema no cambió. La cascada y el corpus quedaron fijados antes de esta medición; lo que se corrigió fue el reparto de la partición, que asignaba F1 nulo a familias a las que no se les había dado material de entrenamiento. Es una corrección de la medición y no una mejora del método, y las cifras anteriores de este capítulo no son erróneas: responden a una partición peor construida, y se conservan porque la comparación entre ambas es en sí misma un resultado metodológico.
 
-Todas las cifras que siguen en este capítulo se reportan sobre P2bal y así se declara en cada tabla. Se mantiene además, en todos los casos, la precisión sobre qué significa «plantilla no vista»: \textbf{no vista según el criterio de casi-duplicado por coseno de caracteres de 0,90} descrito en la Sección~\ref{subsec:neardups}. Ese criterio tiene una limitación que la Sección~\ref{subsec:res_parecido} cuantifica.
-
+Todas las cifras que siguen en este capítulo se reportan sobre P2bal y así se declara en cada tabla. Se mantiene además, en todos los casos, la precisión sobre qué significa «plantilla no vista»: no vista según el criterio de casi-duplicado por coseno de caracteres de 0,90 descrito en la Sección~\ref{subsec:neardups}. Ese criterio tiene una limitación que la Sección~\ref{subsec:res_parecido} cuantifica.
 
 \subsection{La cascada como sistema: desarme por capas}
 \label{subsec:res_cascada_sistema}
@@ -585,7 +570,7 @@ Todas las cifras que siguen en este capítulo se reportan sobre P2bal y así se 
 El sistema que este trabajo propone para el frente de notas es la cascada descrita en la Sección~\ref{subsec:res_cascadas}, y el clasificador de texto por sí solo debe entenderse como uno de sus componentes y no como una alternativa. Ante una nota, el sistema decide en tres pasos, en el orden en que lo haría un analista:
 
 \begin{enumerate}
-  \item \textbf{Los indicadores propios de la nota} —direcciones de correo, direcciones de pago, URL, formato del identificador de víctima—, contrastados contra un diccionario construido \textit{solo} con el pliegue de entrenamiento y del que se descartan los valores que allí aparecen en más de una familia.
+  \item \textbf{Los indicadores propios de la nota} (direcciones de correo, direcciones de pago, URL, formato del identificador de víctima), contrastados contra un diccionario construido solo con el pliegue de entrenamiento y del que se descartan los valores que allí aparecen en más de una familia.
   \item \textbf{El nombre genuino del archivo}, cuando está verificado contra la fuente.
   \item \textbf{El texto}, mediante TF-IDF y un clasificador lineal de márgenes máximos.
 \end{enumerate}
@@ -604,21 +589,21 @@ La Tabla~\ref{tab:capas} desarma el resultado agregado. Es la información que p
 \hline
 \textbf{Capa que resuelve} & \textbf{Notas que resuelve} & \textbf{Acierto sobre ellas} \\
 \hline
-Reglas exactas (marcadores y nombre) & 80,3 de 149 \quad (0,5389) & \textbf{0,9928} \\
+Reglas exactas (marcadores y nombre) & 80,3 de 149 \quad (0,5389) & 0,9928 \\
 Clasificador de texto & 68,7 de 149 \quad (0,4611) & 0,6025 \\
 \hline
-\textbf{Sistema completo} & \textbf{149} & \textbf{0,8123} \\
+\textbf{Sistema completo} & 149 & 0,8123 \\
 \hline
 \end{tabular}
 \end{table}
 
-El contraste entre las dos filas describe el sistema entero: \textbf{las reglas son casi infalibles pero alcanzan a algo más de la mitad de las notas; el texto alcanza a todas pero acierta seis de cada diez}. La cascada existe para que cada capa opere donde es competente. Su aporte agregado sobre el texto solo es de \textbf{+0,0866} de macro-F1 bajo P2bal.
+El contraste entre las dos filas describe el sistema entero: las reglas son casi infalibles pero alcanzan a algo más de la mitad de las notas, mientras que el texto alcanza a todas pero acierta seis de cada diez. La cascada existe para que cada capa opere donde es competente. Su aporte agregado sobre el texto solo es de +0,0866 de macro-F1 bajo P2bal.
 
-Cabe notar que la cobertura de la capa de reglas es mayor bajo P2bal (0,5389) que bajo P2 (0,4546), pese a que el tamaño del entrenamiento es idéntico. La razón no es el volumen sino la \textbf{cobertura de familias}: al garantizar material de entrenamiento a toda familia con dos o más plantillas, P2bal produce un diccionario que abarca más familias, y la regla encuentra coincidencia con más frecuencia.
+La cobertura de la capa de reglas es mayor bajo P2bal (0,5389) que bajo P2 (0,4546), pese a que el tamaño del entrenamiento es idéntico. Lo que la explica es la cobertura de familias y no el volumen: al garantizar material de entrenamiento a toda familia con dos o más plantillas, P2bal produce un diccionario que abarca más familias, y la regla encuentra coincidencia con más frecuencia.
 
 \subsubsection*{El orden de las capas no es una convención: está medido}
 
-Que las reglas tengan prioridad sobre el texto podría parecer una decisión de diseño arbitraria. Se la sometió a prueba mediante una variante en la que \textbf{la regla cede ante el texto cuando el margen de este supera un umbral}: con umbral infinito la regla nunca cede y se recupera la cascada; con umbral nulo cede siempre y queda el texto solo. Ambos extremos se emplearon como controles y reprodujeron exactamente las cifras esperadas.
+Que las reglas tengan prioridad sobre el texto podría parecer una decisión de diseño arbitraria. Se la sometió a prueba mediante una variante en la que la regla cede ante el texto cuando el margen de este supera un umbral: con umbral infinito la regla nunca cede y se recupera la cascada; con umbral nulo cede siempre y queda el texto solo. Ambos extremos se emplearon como controles y reprodujeron exactamente las cifras esperadas.
 
 \begin{table}[ht]
 \centering
@@ -633,14 +618,14 @@ Que las reglas tengan prioridad sobre el texto podría parecer una decisión de 
 0,50 & 50,0 & 0,7297 & $-$0,0120 \\
 0,75 & 39,7 & 0,7354 & $-$0,0062 \\
 1,00 & 29,4 & 0,7432 & +0,0015 \\
-$\infty$ (cascada adoptada) & 0,0 & \textbf{0,7417} & --- \\
+$\infty$ (cascada adoptada) & 0,0 & 0,7417 & --- \\
 \hline
 \end{tabular}
 \end{table}
 
-El resultado es inequívoco en su forma general: \textbf{ceder antes empeora de manera sistemática y monótona}, y solo en una ventana estrecha alrededor del umbral 1,00 se obtiene una diferencia positiva de \textbf{+0,0015}, cuyo intervalo excluye el cero pero cuya magnitud es despreciable frente a la cifra que modifica. La variante \textbf{no se adopta}: el umbral quedaría elegido sobre el mismo conjunto con el que se mide, la ganancia no altera ninguna conclusión y el costo en complejidad del método no se justifica. Lo que el barrido sí establece es que \textbf{la prioridad de las reglas sobre el texto es la configuración medida como mejor}, y no una elección de conveniencia.
+La forma general del resultado es inequívoca: ceder antes empeora de manera sistemática y monótona, y solo en una ventana estrecha alrededor del umbral 1,00 se obtiene una diferencia positiva de +0,0015, cuyo intervalo excluye el cero pero cuya magnitud es despreciable frente a la cifra que modifica. La variante no se adopta: el umbral quedaría elegido sobre el mismo conjunto con el que se mide, la ganancia no altera ninguna conclusión y el costo en complejidad del método no se justifica. Lo que el barrido sí establece es que la prioridad de las reglas sobre el texto es la configuración medida como mejor, y no una elección de conveniencia.
 
-Debe registrarse, en sentido contrario, un efecto local: sobre las notas más fáciles la capa de reglas \textbf{resta}. La Sección~\ref{subsec:res_parecido} lo cuantifica. Es la consecuencia aritmética de que la regla acierte 0,9928 y no exactamente 1: cuando el texto ya iba a acertar, el error residual de la regla se impone sobre una decisión correcta.
+En sentido contrario queda por registrar un efecto local: sobre las notas más fáciles la capa de reglas resta. La Sección~\ref{subsec:res_parecido} lo cuantifica. Es la consecuencia aritmética de que la regla acierte 0,9928 y no exactamente 1: cuando el texto ya iba a acertar, el error residual de la regla se impone sobre una decisión correcta.
 
 
 \subsection{El sistema en despliegue: abstención y lista de candidatas}
@@ -650,7 +635,7 @@ Un identificador de familia desplegado no se usa como un clasificador cerrado qu
 
 \subsubsection*{Abstención}
 
-Con el mismo mecanismo de la Sección~\ref{subsec:res_cascadas} —umbral sobre el margen de la capa de texto, sin afectar a las notas que resuelve la regla— se obtiene la curva de la Tabla~\ref{tab:abstencion_p2bal}.
+Con el mismo mecanismo de la Sección~\ref{subsec:res_cascadas}, un umbral sobre el margen de la capa de texto que no afecta a las notas resueltas por la regla, se obtiene la curva de la Tabla~\ref{tab:abstencion_p2bal}.
 
 \begin{table}[ht]
 \centering
@@ -662,13 +647,13 @@ Con el mismo mecanismo de la Sección~\ref{subsec:res_cascadas} —umbral sobre 
 \hline
 0,00 (sin abstención) & 1,0000 & 0,8123 & 0,0 \\
 0,20 & 0,8509 & 0,9003 & 22,2 \\
-\textbf{0,50} & \textbf{0,7718} & \textbf{0,9324} & \textbf{34,0} \\
+0,50 & 0,7718 & 0,9324 & 34,0 \\
 1,00 & 0,6658 & 0,9864 & 49,8 \\
 \hline
 \end{tabular}
 \end{table}
 
-En el punto de operación de umbral 0,50 el sistema \textbf{responde sobre el 77,18\% de las notas y acierta el 93,24\% de las veces que responde}, a cambio de abstenerse en 34 de 149. Bajo el reparto anterior la misma frase era 0,6459 y 0,9000: con P2bal el sistema \textbf{responde más y acierta más a la vez}. Valen aquí las mismas advertencias de la Sección~\ref{subsec:res_cascadas}: el macro-F1 global no mejora por abstenerse, y el macro-F1 calculado sobre las respondidas no es comparable con el del sistema completo porque se computa sobre un subconjunto que el propio modelo selecciona.
+En el punto de operación de umbral 0,50 el sistema responde sobre el 77,18\% de las notas y acierta el 93,24\% de las veces que responde, a cambio de abstenerse en 34 de 149. Bajo el reparto anterior la misma frase era 0,6459 y 0,9000: con P2bal el sistema responde más y acierta más a la vez. Valen aquí las mismas advertencias de la Sección~\ref{subsec:res_cascadas}: el macro-F1 global no mejora por abstenerse, y el macro-F1 calculado sobre las respondidas no es comparable con el del sistema completo porque se computa sobre un subconjunto que el propio modelo selecciona.
 
 \subsubsection*{Lista de candidatas}
 
@@ -683,14 +668,14 @@ La segunda forma de uso consiste en devolver una lista ordenada en lugar de una 
 \textbf{Sistema} & \textbf{$k=1$} & \textbf{$k=2$} & \textbf{$k=3$} & \textbf{$k=5$} \\
 \hline
 Texto solo & 0,7191 & 0,8192 & 0,8446 & 0,8787 \\
-\textbf{Cascada} & \textbf{0,8123} & 0,8493 & \textbf{0,8663} & 0,8899 \\
+Cascada & 0,8123 & 0,8493 & 0,8663 & 0,8899 \\
 \hline
 \end{tabular}
 \end{table}
 
-La familia correcta es la primera propuesta en el \textbf{81,2\%} de las notas y figura \textbf{entre las tres primeras en el 86,6\%}. La ganancia de pasar de una a tres candidatas es modesta en el agregado (+0,054), y menor que la del texto solo (+0,126); esto último es el reverso del acierto de la capa de reglas: \textbf{cuando la regla se equivoca, desplaza la familia correcta lejos del tope de la lista}, mientras que los errores del clasificador de texto suelen dejarla cerca.
+La familia correcta es la primera propuesta en el 81,2\% de las notas y figura entre las tres primeras en el 86,6\%. La ganancia de pasar de una a tres candidatas es modesta en el agregado (+0,054), y menor que la del texto solo (+0,126); esto último es el reverso del acierto de la capa de reglas: cuando la regla se equivoca, desplaza la familia correcta lejos del tope de la lista, mientras que los errores del clasificador de texto suelen dejarla cerca.
 
-El valor de la lista, sin embargo, no está en el agregado sino en las familias difíciles, que son precisamente aquellas para las que una herramienta de apoyo resulta más necesaria.
+El valor de la lista no está, sin embargo, en el agregado: está en las familias difíciles, que son precisamente aquellas para las que una herramienta de apoyo resulta más necesaria.
 
 \begin{table}[ht]
 \centering
@@ -700,7 +685,7 @@ El valor de la lista, sin embargo, no está en el agregado sino en las familias 
 \hline
 \textbf{Familia} & \textbf{$k=1$} & \textbf{$k=3$} & \textbf{Ganancia} \\
 \hline
-JIGSAW & 0,4200 & \textbf{0,7850} & +0,3650 \\
+JIGSAW & 0,4200 & 0,7850 & +0,3650 \\
 HELLOKITTY & 0,2267 & 0,4400 & +0,2133 \\
 RYUK & 0,2867 & 0,4867 & +0,2000 \\
 WANNACRY & 0,7700 & 0,9600 & +0,1900 \\
@@ -708,17 +693,17 @@ WANNACRY & 0,7700 & 0,9600 & +0,1900 \\
 \end{tabular}
 \end{table}
 
-Debe señalarse también el límite: considerar diez candidatas de treinta solo eleva la cifra a 0,9286. \textbf{Para cerca del 7\% de las notas la familia correcta no aparece en ninguna posición útil de la lista}, y 2,7 de esos puntos corresponden a las cuatro notas de las familias de plantilla única, cuya clase no existe en el modelo entrenado.
+El límite hay que declararlo también: considerar diez candidatas de treinta solo eleva la cifra a 0,9286. Para cerca del 7\% de las notas la familia correcta no aparece en ninguna posición útil de la lista, y 2,7 de esos puntos corresponden a las cuatro notas de las familias de plantilla única, cuya clase no existe en el modelo entrenado.
 
 
 \subsection{Cuánto depende el sistema del parecido con lo ya visto}
 \label{subsec:res_parecido}
 
-La objeción más seria que puede formularse a cualquier cifra de esta sección es si el sistema reconoce familias o simplemente reconoce notas parecidas a las que se le mostraron. El protocolo la aborda cortando por plantilla, pero ese corte emplea un criterio —coseno de caracteres de 0,90— que \textbf{no detecta la contención}: una nota puede pertenecer a otra plantilla según ese criterio y, aun así, estar contenida casi por completo dentro de una nota de entrenamiento. Esta sección mide exactamente eso.
+La objeción más seria que puede formularse a cualquier cifra de esta sección es si el sistema reconoce familias o simplemente reconoce notas parecidas a las que se le mostraron. El protocolo la aborda cortando por plantilla, pero ese corte emplea un criterio (coseno de caracteres de 0,90) que no detecta la contención: una nota puede pertenecer a otra plantilla según ese criterio y, aun así, estar contenida casi por completo dentro de una nota de entrenamiento. Esta sección mide exactamente eso.
 
 \subsubsection*{Diseño}
 
-Para cada nota de prueba se calcula la \textbf{contención} máxima respecto de las notas de su propia familia presentes en el entrenamiento \textit{de ese pliegue}, definida como la fracción de sus secuencias de tres palabras consecutivas que aparecen en alguna de ellas. La medida es asimétrica de manera deliberada: una nota breve incluida dentro de otra más extensa obtiene un valor próximo a uno. Se reporta también el coseno de caracteres máximo contra ese mismo conjunto.
+Para cada nota de prueba se calcula la \textbf{contención} máxima respecto de las notas de su propia familia presentes en el entrenamiento de ese pliegue, definida como la fracción de sus secuencias de tres palabras consecutivas que aparecen en alguna de ellas. La medida es asimétrica de manera deliberada: una nota breve incluida dentro de otra más extensa obtiene un valor próximo a uno. Se reporta también el coseno de caracteres máximo contra ese mismo conjunto.
 
 \begin{table}[ht]
 \centering
@@ -729,8 +714,8 @@ Para cada nota de prueba se calcula la \textbf{contención} máxima respecto de 
 \hline
 \textbf{Situación de la nota} & \textbf{Notas} & \textbf{Texto solo} & \textbf{Cascada} & \textbf{Coseno medio} \\
 \hline
-Con una nota de su familia contenida $\geq$ 0,5 & 54,0 \, (36,2\%) & 0,9993 & \textbf{0,9891} & 0,8143 \\
-Sin ninguna nota parecida (contención $<$ 0,5) & 91,0 \, (61,1\%) & 0,5839 & \textbf{0,7434} & 0,5184 \\
+Con una nota de su familia contenida $\geq$ 0,5 & 54,0 \, (36,2\%) & 0,9993 & 0,9891 & 0,8143 \\
+Sin ninguna nota parecida (contención $<$ 0,5) & 91,0 \, (61,1\%) & 0,5839 & 0,7434 & 0,5184 \\
 Sin ninguna plantilla de su familia en entrenamiento & 4,0 \, (2,7\%) & 0,0000 & 0,0000 & --- \\
 \hline
 \end{tabular}
@@ -739,27 +724,27 @@ Sin ninguna plantilla de su familia en entrenamiento & 4,0 \, (2,7\%) & 0,0000 &
 
 \subsubsection*{Lectura}
 
-Las tres filas reconstruyen la exactitud global del sistema, lo que confirma que se trata del mismo resultado observado por dentro y no de una medición distinta. De ellas se siguen tres afirmaciones, y conviene enunciar las tres:
+Las tres filas reconstruyen la exactitud global del sistema, lo que confirma que se trata del mismo resultado observado por dentro y no de una medición distinta. De ellas se siguen tres afirmaciones, y las tres deben enunciarse:
 
 \begin{itemize}
-  \item En el \textbf{36,2\%} del corpus existe un parecido literal fuerte con material visto, y allí el sistema acierta 0,9891. \textbf{Ese acierto debe atribuirse al parecido y no al método.}
-  \item En el \textbf{61,1\%} restante no hay ninguna nota parecida, y allí la cascada acierta \textbf{0,7434} [0,7294; 0,7574] frente a 0,5839 del texto solo. \textbf{Esa es la cifra que mide el método}, y es donde la cascada aporta más (+0,1595).
-  \item Las cuatro notas cuya familia carece de material de entrenamiento obtienen \textbf{cero exacto}, lo que opera como control: un valor superior a cero habría indicado una fuga en la partición.
+  \item En el 36,2\% del corpus existe un parecido literal fuerte con material visto, y allí el sistema acierta 0,9891. Ese acierto debe atribuirse al parecido y no al método.
+  \item En el 61,1\% restante no hay ninguna nota parecida, y allí la cascada acierta 0,7434 [0,7294; 0,7574] frente a 0,5839 del texto solo. Esa es la cifra que mide el método, y es donde la cascada aporta más (+0,1595).
+  \item Las cuatro notas cuya familia carece de material de entrenamiento obtienen cero exacto, lo que opera como control: un valor superior a cero habría indicado una fuga en la partición.
 \end{itemize}
 
-El dato que obliga a matizar el protocolo es el coseno medio de la primera fila: \textbf{0,8143}, por debajo del umbral de 0,90. Esas notas \textbf{son plantillas distintas según el criterio declarado} y, sin embargo, están contenidas en material visto. La partición no está mal construida; el criterio de casi-duplicado, que opera sobre coseno, no captura la contención. Se declara como limitación de todas las cifras de este capítulo, y se señala su consecuencia más concreta en la Sección~\ref{subsec:res_linaje}.
+El dato que obliga a matizar el protocolo es el coseno medio de la primera fila, 0,8143, por debajo del umbral de 0,90. Esas notas son plantillas distintas según el criterio declarado y, sin embargo, están contenidas en material visto. La partición no está mal construida; el criterio de casi-duplicado, que opera sobre coseno, no captura la contención. Se declara como limitación de todas las cifras de este capítulo, y su consecuencia más concreta se señala en la Sección~\ref{subsec:res_linaje}.
 
-Un efecto secundario merece registro. En el tramo de notas fáciles la cascada acierta \textbf{menos} que el texto solo (0,9891 frente a 0,9993). Es la contrapartida del acierto de 0,9928 de la capa de reglas: sobre las notas que el texto ya resolvía, el error residual de la regla se impone sobre una decisión correcta. El balance global sigue siendo favorable a la cascada por un margen amplio —+0,1595 en el tramo difícil, que abarca el 61\% del corpus— pero el efecto existe y se reporta.
+Queda por registrar un efecto secundario. En el tramo de notas fáciles la cascada acierta menos que el texto solo (0,9891 frente a 0,9993). Es la contrapartida del acierto de 0,9928 de la capa de reglas: sobre las notas que el texto ya resolvía, el error residual de la regla se impone sobre una decisión correcta. El balance global sigue siendo favorable a la cascada por un margen amplio, +0,1595 en el tramo difícil, que abarca el 61\% del corpus, pero el efecto existe y se reporta.
 
 
 \subsection{Qué predice el rendimiento por familia, y qué no}
 \label{subsec:res_predictores}
 
-El rendimiento varía enormemente entre familias, desde valores próximos a uno hasta valores próximos a cero. Se evaluaron dos explicaciones candidatas de esa dispersión, ambas propuestas durante la revisión del trabajo. Las dos son \textbf{análisis posteriores a los resultados y no hipótesis registradas de antemano}, y así deben leerse.
+El rendimiento varía enormemente entre familias, desde valores próximos a uno hasta valores próximos a cero. Se evaluaron dos explicaciones candidatas de esa dispersión, ambas propuestas durante la revisión del trabajo. Las dos son análisis posteriores a los resultados y no hipótesis registradas de antemano, y así deben leerse.
 
 \subsubsection*{La cohesión interna de la familia sí lo predice}
 
-La primera hipótesis sostiene que si las notas de una misma familia no comparten ningún patrón, el clasificador no puede rendir bien sobre ella. Midiendo el patrón interno como la contención media definida en la Sección~\ref{subsec:res_parecido}, la relación resulta \textbf{fuerte y altamente significativa}: sobre las 28 familias evaluables, el coeficiente de correlación de Pearson con el acierto del texto solo es de \textbf{$r = +0{,}834$} ($p < 0{,}00001$; Spearman $\rho = +0{,}857$).
+La primera hipótesis sostiene que si las notas de una misma familia no comparten ningún patrón, el clasificador no puede rendir bien sobre ella. Midiendo el patrón interno como la contención media definida en la Sección~\ref{subsec:res_parecido}, la relación resulta fuerte y altamente significativa: sobre las 28 familias evaluables, el coeficiente de correlación de Pearson con el acierto del texto solo es de $r = +0{,}834$ ($p < 0{,}00001$; Spearman $\rho = +0{,}857$).
 
 \begin{table}[ht]
 \centering
@@ -769,35 +754,35 @@ La primera hipótesis sostiene que si las notas de una misma familia no comparte
 \hline
 \textbf{Patrón interno} & \textbf{Familias} & \textbf{Texto solo} & \textbf{Cascada} & \textbf{Aporte de las reglas} \\
 \hline
-Bajo ($<$ 0,10) & 6 & 0,4063 & 0,5702 & \textbf{+0,1639} \\
-Intermedio & 4 & 0,5213 & 0,6934 & \textbf{+0,1720} \\
+Bajo ($<$ 0,10) & 6 & 0,4063 & 0,5702 & +0,1639 \\
+Intermedio & 4 & 0,5213 & 0,6934 & +0,1720 \\
 Alto ($\geq$ 0,40) & 18 & 0,9209 & 0,9555 & +0,0346 \\
 \hline
 \end{tabular}
 \end{table}
 
-El resultado más informativo no es la correlación sino su \textbf{descenso al pasar del texto solo a la cascada, de $+0{,}834$ a $+0{,}715$}. Ese descenso es el efecto que la arquitectura persigue: las capas de reglas \textbf{debilitan la dependencia del patrón textual}. Donde no hay patrón aportan +0,1639; donde ya lo hay, +0,0346. CHIMERA lo ilustra: con un patrón interno de 0,0186 —sus notas no se parecen entre sí— alcanza un acierto de 1,000, resuelto íntegramente por marcadores.
+Más informativo que la correlación misma es su descenso al pasar del texto solo a la cascada, de $+0{,}834$ a $+0{,}715$. Ese descenso es el efecto que la arquitectura persigue: las capas de reglas debilitan la dependencia del patrón textual. Donde no hay patrón aportan +0,1639; donde ya lo hay, +0,0346. CHIMERA lo ilustra: con un patrón interno de 0,0186, es decir con notas que no se parecen entre sí, alcanza un acierto de 1,000, resuelto íntegramente por marcadores.
 
-En sentido inverso, las familias en que la hipótesis se cumple sin atenuantes son aquellas que carecen a la vez de patrón textual y de marcadores reutilizables: HELLOKITTY (patrón 0,0043, acierto 0,2267), RYUK (0,0572 y 0,2867) y JIGSAW (0,0157 y 0,4200). \textbf{Son precisamente las familias que quedan por debajo de 0,50 de F1}, y constituyen el límite honesto de lo que este corpus permite.
+En sentido inverso, las familias en que la hipótesis se cumple sin atenuantes son aquellas que carecen a la vez de patrón textual y de marcadores reutilizables: HELLOKITTY (patrón 0,0043, acierto 0,2267), RYUK (0,0572 y 0,2867) y JIGSAW (0,0157 y 0,4200). Son precisamente las familias que quedan por debajo de 0,50 de F1, y constituyen el límite honesto de lo que este corpus permite.
 
 \subsubsection*{El año de aparición no lo predice}
 
-La segunda hipótesis, de que las familias más antiguas rendirían distinto por estar mejor documentadas, \textbf{no se sostiene}. Sobre las mismas 28 familias, la correlación entre el año de aparición y el acierto de la cascada es de $r = +0{,}091$ ($p = 0{,}645$), y descontando el número de plantillas mediante correlación parcial queda en $r = +0{,}060$ ($p = 0{,}763$). Tampoco el número de plantillas por sí solo resulta significativo ($r = -0{,}113$, $p = 0{,}566$).
+La segunda hipótesis, de que las familias más antiguas rendirían distinto por estar mejor documentadas, no se sostiene. Sobre las mismas 28 familias, la correlación entre el año de aparición y el acierto de la cascada es de $r = +0{,}091$ ($p = 0{,}645$), y descontando el número de plantillas mediante correlación parcial queda en $r = +0{,}060$ ($p = 0{,}763$). Tampoco el número de plantillas por sí solo resulta significativo ($r = -0{,}113$, $p = 0{,}566$).
 
-El contraste entre ambas hipótesis es el resultado de esta sección: \textbf{lo que determina si una familia se clasifica bien no es cuándo apareció, sino si sus notas se parecen entre sí}. Familias de todas las épocas aparecen en los dos extremos de la tabla: CHIMERA es de 2015 y BLACKBASTA de 2022, y ambas presentan un texto poco distintivo que la cascada rescata; TESLACRYPT (2015) y BLACKCAT (2021) se clasifican bien las dos.
+El contraste entre ambas hipótesis es el resultado de esta sección: lo que determina si una familia se clasifica bien es si sus notas se parecen entre sí, y no cuándo apareció. Familias de todas las épocas aparecen en los dos extremos de la tabla: CHIMERA es de 2015 y BLACKBASTA de 2022, y ambas presentan un texto poco distintivo que la cascada rescata; TESLACRYPT (2015) y BLACKCAT (2021) se clasifican bien las dos.
 
 
 \subsection{Parentesco entre familias: moldes de nota compartidos}
 \label{subsec:res_linaje}
 
-La matriz de confusión del sistema revela que los errores no se distribuyen al azar entre familias, sino que se concentran en unos pocos pares. Esta sección los caracteriza, porque constituyen un límite estructural del frente de notas y no un defecto del clasificador.
+La matriz de confusión del sistema revela que los errores no se distribuyen al azar entre familias: se concentran en unos pocos pares. Esta sección los caracteriza, porque constituyen un límite estructural del frente de notas y no un defecto del clasificador.
 
 \subsubsection*{Detección por texto compartido, sin mirar predicciones}
 
 Se buscaron, sobre todo el corpus, las secuencias de ocho palabras consecutivas presentes en notas de más de una familia. El procedimiento distingue dos situaciones que no deben confundirse:
 
 \begin{itemize}
-  \item \textbf{Boilerplate del ecosistema}: frases presentes en muchas familias —una de ellas aparece en seis—, que forman el vocabulario común del fenómeno y no indican parentesco alguno.
+  \item \textbf{Boilerplate del ecosistema}: frases presentes en muchas familias, una de ellas hasta en seis, que forman el vocabulario común del fenómeno y no indican parentesco alguno.
   \item \textbf{Texto exclusivo de un par}: secuencias presentes en exactamente dos familias y en ninguna otra. Es la señal relevante.
 \end{itemize}
 
@@ -811,8 +796,8 @@ Se buscaron, sobre todo el corpus, las secuencias de ocho palabras consecutivas 
 \textbf{Par} & \textbf{Secuencias compartidas} & \textbf{Exclusivas del par} & \textbf{Confusiones (texto solo)} \\
 \hline
 BLACKBASTA -- CONTI & 239 & 239 \,(100\%) & 72 \\
-DHARMA -- PHOBOS & 193 & 148 \,(77\%) & \textbf{403} \\
-\textbf{CLOP -- RYUK} & 185 & \textbf{169 \,(91\%)} & \textbf{117} \\
+DHARMA -- PHOBOS & 193 & 148 \,(77\%) & 403 \\
+CLOP -- RYUK & 185 & 169 \,(91\%) & 117 \\
 LORENZ -- SODINOKIBI & 145 & 108 \,(74\%) & 35 \\
 BLACKCAT -- SODINOKIBI & 39 & 39 \,(100\%) & --- \\
 NOTPETYA -- WANNACRY & 22 & 18 \,(82\%) & 44 \\
@@ -824,15 +809,15 @@ CLOP -- DHARMA & 16 & 0 \,(0\%) & --- \\
 }
 \end{table}
 
-Las dos últimas filas son el control: pares que comparten una cantidad apreciable de texto pero \textbf{ninguna secuencia exclusiva} no generan confusión. El resultado metodológico es que \textbf{el texto exclusivo compartido predice dónde se equivocará el clasificador sin examinar una sola predicción}.
+Las dos últimas filas son el control: pares que comparten una cantidad apreciable de texto pero ninguna secuencia exclusiva no generan confusión. El resultado metodológico es que el texto exclusivo compartido predice dónde se equivocará el clasificador sin examinar una sola predicción.
 
 \subsubsection*{Un par no documentado: CLOP y RYUK}
 
-Los dos primeros pares de la tabla eran conocidos: sus notas quedan agrupadas como casi duplicados por el criterio de coseno y el trabajo ya los documentaba. El tercero no lo estaba, y el motivo es instructivo: \textbf{el coseno entre las notas implicadas es de 0,8018, por debajo del umbral de 0,90}, de modo que el agrupamiento las trata como plantillas independientes. La contención, en cambio, es de \textbf{0,811}: la nota de RYUK está contenida en un 81\% dentro de la de CLOP, con un \textbf{prefijo idéntico de 423 caracteres}.
+Los dos primeros pares de la tabla eran conocidos: sus notas quedan agrupadas como casi duplicados por el criterio de coseno y el trabajo ya los documentaba. El tercero no lo estaba, y el motivo es instructivo: el coseno entre las notas implicadas es de 0,8018, por debajo del umbral de 0,90, de modo que el agrupamiento las trata como plantillas independientes. La contención, en cambio, es de 0,811: la nota de RYUK está contenida en un 81\% dentro de la de CLOP, con un prefijo idéntico de 423 caracteres sobre el texto normalizado que recibe el clasificador, es decir en minúsculas y con los espacios colapsados.
 
-Se verificó que no se trata de un error de etiquetado. Ambas notas provienen del \textbf{mismo repositorio fuente}, que las clasifica en familias distintas, y cada una conserva sus propios marcadores: la nota de RYUK termina con sus direcciones de contacto, su monedero y la firma explícita de la familia. \textbf{Las etiquetas son correctas; lo que comparten es el molde de la nota.}
+Se verificó que no se trata de un error de etiquetado. Ambas notas provienen del mismo repositorio fuente, que las clasifica en familias distintas, y cada una conserva sus propios marcadores: la nota de RYUK termina con sus direcciones de contacto, su monedero y la firma explícita de la familia. Las etiquetas son correctas; lo que comparten es el molde de la nota.
 
-Esto explica el bajo rendimiento de RYUK, la segunda familia más difícil del corpus. Sus notas \textbf{no se parecen entre sí} —los cosenos internos oscilan entre 0,15 y 0,24 fuera de un único grupo— \textbf{y sí se parecen a las de CLOP}.
+Esto explica el bajo rendimiento de RYUK, la segunda familia más difícil del corpus: sus notas no se parecen entre sí, con cosenos internos que oscilan entre 0,15 y 0,24 fuera de un único grupo, y sí se parecen a las de CLOP.
 
 \subsubsection*{Qué resuelve la cascada y qué no}
 
@@ -845,19 +830,19 @@ Esto explica el bajo rendimiento de RYUK, la segunda familia más difícil del c
 \textbf{Sistema} & \textbf{Errores} & \textbf{Dentro de un par} & \textbf{Fracción} \\
 \hline
 Texto solo & 2093 & 486 & 0,2322 \\
-\textbf{Cascada} & \textbf{1398} & \textbf{186} & \textbf{0,1330} \\
+Cascada & 1398 & 186 & 0,1330 \\
 \hline
 \end{tabular}
 \end{table}
 
-La capa de marcadores reduce la confusión de linaje a menos de la mitad, lo que confirma el mecanismo previsto: \textbf{los marcadores son privados de cada familia aun cuando el texto sea compartido}. El comportamiento por par, sin embargo, es dispar y la diferencia es explicativa:
+La capa de marcadores reduce la confusión de linaje a menos de la mitad, lo que confirma el mecanismo previsto: los marcadores son privados de cada familia aun cuando el texto sea compartido. El comportamiento por par, sin embargo, es dispar, y la diferencia resulta explicativa:
 
 \begin{itemize}
   \item En DHARMA--PHOBOS los errores caen de 403 a 139 (un 65\% menos) y en BLACKBASTA--CONTI prácticamente se anulan.
-  \item En \textbf{CLOP--RYUK la cascada no ayuda}: los errores pasan de 117 a 116. Las notas de RYUK que comparten molde pertenecen todas a un mismo grupo, de modo que cuando ese grupo se evalúa, sus marcadores salen con él y la regla se queda sin claves. Su fracción resuelta por reglas es de 0,20, la más baja entre las familias confundidas.
+  \item En CLOP--RYUK la cascada no ayuda: los errores pasan de 117 a 116. Las notas de RYUK que comparten molde pertenecen todas a un mismo grupo, de modo que cuando ese grupo se evalúa, sus marcadores salen con él y la regla se queda sin claves. Su fracción resuelta por reglas es de 0,20, la más baja entre las familias confundidas.
 \end{itemize}
 
-La conclusión es que \textbf{el mecanismo de marcadores resuelve el parentesco cuando la familia reutiliza infraestructura entre campañas, y no puede hacer nada cuando no la reutiliza}. Para esos casos el límite no es del clasificador ni del protocolo: dos familias distintas emiten notas casi idénticas y sin señal propia que las separe.
+La conclusión es que el mecanismo de marcadores resuelve el parentesco cuando la familia reutiliza infraestructura entre campañas, y no puede hacer nada cuando no la reutiliza. Para esos casos el límite no es del clasificador ni del protocolo: dos familias distintas emiten notas casi idénticas y sin señal propia que las separe.
 
 
 % =====================================================================
@@ -869,9 +854,9 @@ La conclusión es que \textbf{el mecanismo de marcadores resuelve el parentesco 
 \subsection{Incertidumbre: cuánto se movería la cifra con otro corpus}
 \label{subsec:res_ic_plantilla}
 
-Los intervalos reportados hasta aquí se calculan entre semillas, y miden cuánto se mueve el resultado al cambiar la partición. No miden la otra fuente de incertidumbre, que es el corpus: se dispone de 149 notas y podrían haber sido otras. Estimarlo por remuestreo de \textit{notas} sería incorrecto, porque las notas de una misma plantilla son casi copias y no constituyen observaciones independientes; remuestrearlas por separado simula un tamaño de muestra que no existe y \textbf{estrecha artificialmente el intervalo}. La unidad independiente es la plantilla.
+Los intervalos reportados hasta aquí se calculan entre semillas, y miden cuánto se mueve el resultado al cambiar la partición. No miden la otra fuente de incertidumbre, que es el corpus: se dispone de 149 notas y podrían haber sido otras. Estimarlo por remuestreo de notas sería incorrecto, porque las notas de una misma plantilla son casi copias y no constituyen observaciones independientes; remuestrearlas por separado simula un tamaño de muestra que no existe y estrecha artificialmente el intervalo. La unidad independiente es la plantilla.
 
-El remuestreo se hace además \textbf{estratificado por familia}, y la razón es de diseño: las 30 familias no son una muestra aleatoria sino un conjunto fijado por NapierOne, de modo que la pregunta pertinente no es «¿y si el corpus tuviera otras familias?» sino \textbf{«¿y si se hubieran conseguido otras plantillas de estas mismas familias?»}. Remuestrear las plantillas sin estratificar responde a la primera pregunta, que el diseño de este trabajo no se formula, e introduce además un sesgo: toda remuestra pierde en promedio 2,15 familias de 30, a las que el macro-F1 asigna cero.
+El remuestreo se hace además estratificado por familia, y la razón es de diseño: las 30 familias no son una muestra aleatoria, sino un conjunto fijado por NapierOne, de modo que la pregunta pertinente es «¿y si se hubieran conseguido otras plantillas de estas mismas familias?» y no «¿y si el corpus tuviera otras familias?». Remuestrear las plantillas sin estratificar responde a la segunda pregunta, que el diseño de este trabajo no se formula, e introduce además un sesgo: toda remuestra pierde en promedio 2,15 familias de 30, a las que el macro-F1 asigna cero.
 
 \begin{table}[ht]
 \centering
@@ -883,13 +868,13 @@ El remuestreo se hace además \textbf{estratificado por familia}, y la razón es
 \textbf{Sistema} & \textbf{Estimación} & \textbf{IC entre semillas} & \textbf{IC por remuestreo de plantillas} \\
 \hline
 Texto solo & 0,6551 & [0,6454; 0,6648] & [0,5654; 0,7446] \\
-\textbf{Cascada} & \textbf{0,7417} & [0,7328; 0,7505] & \textbf{[0,6585; 0,8187]} \\
+Cascada & 0,7417 & [0,7328; 0,7505] & [0,6585; 0,8187] \\
 \hline
 \end{tabular}
 }
 \end{table}
 
-El intervalo honesto es del orden de \textbf{diez veces más ancho} que el que se obtiene entre semillas. Aun así, \textbf{el intervalo completo de la cascada permanece por encima de 0,50}, con un margen de 0,159; el del clasificador de texto también, con un margen de 0,065. La afirmación de que el sistema supera de forma sostenida el umbral de referencia se mantiene bajo la estimación más exigente disponible.
+El intervalo honesto es del orden de diez veces más ancho que el que se obtiene entre semillas. Aun así, el intervalo completo de la cascada permanece por encima de 0,50, con un margen de 0,159; el del clasificador de texto también, con un margen de 0,065. La afirmación de que el sistema supera de forma sostenida el umbral de referencia se mantiene bajo la estimación más exigente disponible.
 
 El cálculo se realizó con dos implementaciones independientes, desarrolladas por separado y sobre predicciones recalculadas desde cero, que coinciden hasta el cuarto decimal.
 
@@ -901,9 +886,9 @@ Todas las cifras anteriores corresponden a un escenario de \textbf{mundo cerrado
 
 \subsubsection*{Diseño}
 
-Se retira una familia completa del entrenamiento y se evalúa el sistema sobre sus notas; el procedimiento se repite con las treinta. El modelo carece de esa clase, de modo que \textbf{no puede acertar}: la pregunta no es cuánto acierta sino \textbf{si se abstiene o si asigna la nota a otra familia con confianza}.
+Se retira una familia completa del entrenamiento y se evalúa el sistema sobre sus notas; el procedimiento se repite con las treinta. El modelo carece de esa clase, de modo que no puede acertar: la pregunta no es cuánto acierta: es si se abstiene o si asigna la nota a otra familia con confianza.
 
-El diseño es simétrico de manera deliberada. Por cada familia retirada se retiene además una plantilla de cada una de las veintinueve restantes, y \textbf{el mismo modelo} evalúa los dos conjuntos: las notas de la familia ausente y las plantillas retenidas de las presentes. Sin esa simetría, el conjunto de familias conocidas provendría de un modelo entrenado con más material y la diferencia de abstención sería un artefacto del tamaño de entrenamiento.
+El diseño es simétrico de manera deliberada. Por cada familia retirada se retiene además una plantilla de cada una de las veintinueve restantes, y el mismo modelo evalúa los dos conjuntos: las notas de la familia ausente y las plantillas retenidas de las presentes. Sin esa simetría, el conjunto de familias conocidas provendría de un modelo entrenado con más material y la diferencia de abstención sería un artefacto del tamaño de entrenamiento.
 
 \begin{table}[ht]
 \centering
@@ -916,7 +901,7 @@ El diseño es simétrico de manera deliberada. Por cada familia retirada se reti
 \hline
 0,10 & 0,4215 & 0,0856 & +0,336 & 0,8734 \\
 0,30 & 0,6745 & 0,1538 & +0,521 & 0,9011 \\
-\textbf{0,50} & \textbf{0,7909} & \textbf{0,1884} & \textbf{+0,603} & \textbf{0,9156} \\
+0,50 & 0,7909 & 0,1884 & +0,603 & 0,9156 \\
 0,75 & 0,8409 & 0,2348 & +0,606 & 0,9403 \\
 1,00 & 0,8755 & 0,3063 & +0,569 & 0,9910 \\
 \hline
@@ -924,15 +909,15 @@ El diseño es simétrico de manera deliberada. Por cada familia retirada se reti
 }
 \end{table}
 
-En el punto de operación de umbral 0,50, \textbf{el sistema se abstiene ante el 79,1\% de las notas de una familia que nunca vio, al costo de abstenerse también ante el 18,8\% de las notas de familias conocidas}, sobre las cuales acierta 0,9156 cuando responde. Ambas cifras deben reportarse juntas: una tasa de rechazo elevada se obtiene trivialmente subiendo el umbral hasta no responder nunca.
+En el punto de operación de umbral 0,50, el sistema se abstiene ante el 79,1\% de las notas de una familia que nunca vio, al costo de abstenerse también ante el 18,8\% de las notas de familias conocidas, sobre las cuales acierta 0,9156 cuando responde. Ambas cifras deben reportarse juntas: una tasa de rechazo elevada se obtiene trivialmente subiendo el umbral hasta no responder nunca.
 
-Dos controles respaldan la medición. El acierto sobre las familias desconocidas es \textbf{exactamente nulo}, como corresponde a una clase ausente del modelo; un valor superior habría indicado una fuga. Y la capa de reglas exactas, que responde sin pasar por el umbral, \textbf{apenas se activa ante lo desconocido}: 0,0956 de cobertura, frente a 0,5138 ante familias conocidas. Los marcadores de una campaña nueva no figuran en un diccionario construido con el entrenamiento, que es precisamente lo que se esperaba.
+Dos controles respaldan la medición. El acierto sobre las familias desconocidas es exactamente nulo, como corresponde a una clase ausente del modelo; un valor superior habría indicado una fuga. Y la capa de reglas exactas, que responde sin pasar por el umbral, apenas se activa ante lo desconocido: 0,0956 de cobertura, frente a 0,5138 ante familias conocidas. Los marcadores de una campaña nueva no figuran en un diccionario construido con el entrenamiento, que es precisamente lo que se esperaba.
 
 \subsubsection*{Dónde falla el mecanismo, y por qué era previsible}
 
-El rechazo no se distribuye de manera uniforme. Las familias que \textbf{tienen un pariente de linaje presente en el catálogo} —los pares caracterizados en la Sección~\ref{subsec:res_linaje}— se rechazan mucho menos: \textbf{0,5097 frente a 0,8421}. Ante una campaña nueva emparentada con una conocida, el clasificador no duda: \textbf{le atribuye la familia del pariente}.
+El rechazo no se distribuye de manera uniforme. Las familias que tienen un pariente de linaje presente en el catálogo, los pares caracterizados en la Sección~\ref{subsec:res_linaje}, se rechazan mucho menos: 0,5097 frente a 0,8421. Ante una campaña nueva emparentada con una conocida, el clasificador no duda y le atribuye la familia del pariente.
 
-Es el mismo mecanismo que explica la concentración de errores en mundo cerrado, manifestándose ahora en un escenario distinto. La limitación de mundo cerrado que este trabajo declara no desaparece con la abstención: \textbf{se reduce donde la campaña nueva es genuinamente nueva, y persiste donde reutiliza el molde de una familia ya catalogada}.
+Es el mismo mecanismo que explica la concentración de errores en mundo cerrado, manifestándose ahora en un escenario distinto. La limitación de mundo cerrado que este trabajo declara no desaparece con la abstención: se reduce donde la campaña nueva es genuinamente nueva, y persiste donde reutiliza el molde de una familia ya catalogada.
 
 
 \subsection{Cuánto del error es confusión entre familias emparentadas}
@@ -940,7 +925,7 @@ Es el mismo mecanismo que explica la concentración de errores en mundo cerrado,
 
 La Sección~\ref{subsec:res_linaje} estableció que los errores se concentran en pares de familias que comparten el molde de la nota. Esta sección cuantifica qué proporción del error total representan.
 
-La medida natural es el acierto tratando cada par como una sola clase. \textbf{Esa métrica, sin embargo, crece siempre por construcción}: fusionar dos clases cualesquiera eleva el acierto sin que el sistema haya mejorado en nada. Por sí sola no informa. La pregunta pertinente no es si aumenta, sino \textbf{si aumenta más que al fusionar pares arbitrarios}, y para responderla se emplea un control: se fusionan tres pares elegidos al azar entre familias sin parentesco, promediando sobre doscientos sorteos.
+La medida natural es el acierto tratando cada par como una sola clase. Esa métrica, sin embargo, crece siempre por construcción: fusionar dos clases cualesquiera eleva el acierto sin que el sistema haya mejorado en nada. Por sí sola no informa. La pregunta pertinente es si aumenta más que al fusionar pares arbitrarios, y para responderla se emplea un control: se fusionan tres pares elegidos al azar entre familias sin parentesco, promediando sobre doscientos sorteos.
 
 \begin{table}[ht]
 \centering
@@ -951,15 +936,15 @@ La medida natural es el acierto tratando cada par como una sola clase. \textbf{E
 \textbf{Sistema} & \textbf{Clases} & \textbf{Exactitud} & \textbf{Fusión aleatoria} & \textbf{Ventaja} \\
 \hline
 Sin fusión & 30 & 0,8123 & --- & --- \\
-\textbf{Cascada} & 27 & \textbf{0,8585} & 0,8132 & \textbf{+0,0453} \\
+Cascada & 27 & 0,8585 & 0,8132 & +0,0453 \\
 Texto solo & 27 & 0,8056 & 0,7206 & +0,0850 \\
 \hline
 \end{tabular}
 \end{table}
 
-\textbf{La fusión aleatoria prácticamente no altera el resultado}: 0,8123 pasa a 0,8132, apenas nueve milésimas. El efecto trivial que obligaba a introducir el control resulta despreciable, y en consecuencia la ganancia obtenida al fusionar los pares emparentados —de 0,0462— es \textbf{casi íntegramente ventaja real}. Los errores se concentran genuinamente en esos pares.
+La fusión aleatoria prácticamente no altera el resultado: 0,8123 pasa a 0,8132, apenas nueve milésimas. El efecto trivial que obligaba a introducir el control resulta despreciable, y por eso la ganancia obtenida al fusionar los pares emparentados, de 0,0462, es casi íntegramente ventaja real. Los errores se concentran genuinamente en esos pares.
 
-En términos interpretables: de los 18,8 puntos porcentuales de error del sistema, \textbf{cerca de 4,6 corresponden a confundir dos familias que comparten el molde de la nota}, esto es, aproximadamente \textbf{una cuarta parte del error total}.
+En términos interpretables: de los 18,8 puntos porcentuales de error del sistema, cerca de 4,6 corresponden a confundir dos familias que comparten el molde de la nota, esto es, aproximadamente una cuarta parte del error total.
 
 La ganancia es además menor para la cascada que para el clasificador de texto (+0,0462 frente a +0,0866), lo que resulta coherente con lo establecido en la Sección~\ref{subsec:res_linaje}: la capa de marcadores ya resuelve por sí sola buena parte de la confusión de linaje.
 
@@ -967,7 +952,7 @@ La ganancia es además menor para la cascada que para el clasificador de texto (
 \subsection{Vías de mejora exploradas y descartadas}
 \label{subsec:res_vias_descartadas}
 
-Establecido que una cuarta parte del error proviene del parentesco entre familias, se evaluaron cinco vías para reducirlo. \textbf{Ninguna produjo mejora}, y el valor de reportarlas reside en que \textbf{fracasan por razones distintas}, cada una de las cuales delimita dónde se encuentra el límite del frente de notas. Todas se evaluaron con predicción registrada antes de ejecutarse y con una prueba de entrada que exige reproducir la cifra de referencia.
+Establecido que una cuarta parte del error proviene del parentesco entre familias, se evaluaron cinco vías para reducirlo. Ninguna produjo mejora, y el valor de reportarlas reside en que fracasan por razones distintas, cada una de las cuales delimita dónde se encuentra el límite del frente de notas. Todas se evaluaron con predicción registrada antes de ejecutarse y con una prueba de entrada que exige reproducir la cifra de referencia.
 
 \begin{table}[ht]
 \centering
@@ -988,16 +973,16 @@ Forma del nombre del archivo & sin aporte & La señal está contaminada por conv
 }
 \end{table}
 
-Dos resultados merecen destacarse por su valor explicativo.
+Dos de esos resultados se detallan aparte por su valor explicativo.
 
-\textbf{Sobre la indistinguibilidad de CLOP y RYUK.} Un clasificador binario entrenado exclusivamente con las notas de ese par, sin interferencia alguna de las restantes veintiocho familias, alcanza un acierto de \textbf{0,5878} frente al 0,5000 que obtendría decidiendo al azar. Se trata de la evidencia más directa de que \textbf{la información necesaria para separarlas no está presente en el texto}: no es que el clasificador multiclase se confunda por sobrecarga, sino que la señal no existe. Esas confusiones representan el 11,3\% del error total del sistema.
+\textbf{Sobre la indistinguibilidad de CLOP y RYUK.} Un clasificador binario entrenado exclusivamente con las notas de ese par, sin interferencia alguna de las restantes veintiocho familias, alcanza un acierto de 0,5878 frente al 0,5000 que obtendría decidiendo al azar. Es la evidencia más directa de que la información necesaria para separarlas no está presente en el texto: el clasificador multiclase no se confunde por sobrecarga, sino que la señal no existe. Esas confusiones representan el 11,6\% del error total del sistema: los 393 casos que el binario decide, con su acierto de 0,5878, aportan 162 errores sobre los 1398 del sistema completo.
 
-\textbf{Sobre la extensión de cifrado.} Aun disponiendo de la respuesta correcta en las doce notas que conservan la extensión, el macro-F1 solo alcanzaría 0,7454, esto es, \textbf{+0,0038 en el mejor caso concebible}. Y la sustitución del diccionario aprendido por el catálogo de referencia MISP ---735 extensiones registradas, 673 de ellas asociadas a una única familia--- \textbf{no resuelve ninguna nota}, porque las extensiones que las notas mencionan son en su mayoría \textbf{cadenas generadas aleatoriamente por víctima}, no registrables en catálogo alguno. Este hallazgo delimita también el alcance de las herramientas de producción que se apoyan en la extensión, entre ellas ID Ransomware.
+\textbf{Sobre la extensión de cifrado.} Aun disponiendo de la respuesta correcta en las doce notas que conservan la extensión, el macro-F1 solo alcanzaría 0,7454, esto es, +0,0038 en el mejor caso concebible. Y la sustitución del diccionario aprendido por el catálogo de referencia MISP, con 735 extensiones registradas y 673 de ellas asociadas a una única familia, no resuelve ninguna nota, porque las extensiones que las notas mencionan son en su mayoría cadenas generadas aleatoriamente por víctima, no registrables en catálogo alguno. Este hallazgo delimita también el alcance de las herramientas de producción que se apoyan en la extensión, entre ellas ID Ransomware.
 
-Sumadas a los resultados negativos previos ---búsqueda de hiperparámetros, abstracción de marcadores, representación semántica multilingüe, metadatos y estilometría--- se acumulan \textbf{nueve evaluaciones convergentes} que atacan aspectos distintos del método: hiperparámetro, representación, estructura de clases, señales nuevas, señales exactas y agregación de decisiones. \textbf{El límite del frente de notas no reside en el método.}
+Sumadas a los resultados negativos previos, a saber, la búsqueda de hiperparámetros, la abstracción de marcadores, la representación semántica multilingüe, los metadatos y la estilometría, se acumulan nueve evaluaciones convergentes que atacan aspectos distintos del método: hiperparámetro, representación, estructura de clases, señales nuevas, señales exactas y agregación de decisiones. El límite del frente de notas no reside en el método.
 
 \subsubsection*{Un defecto de implementación, y lo que revela}
 
-La única mejora medible identificada no proviene del método sino de la implementación. El filtro que descarta los marcadores compartidos entre familias operaba sobre el valor literal de cada dirección, y en consecuencia \textbf{el mismo sitio ingresaba al diccionario fragmentado en varias claves}: la dirección del navegador Tor aparece bajo siete formas distintas, con y sin prefijo, con y sin barra final. Una variante poco frecuente puede quedar asociada a una única familia del pliegue, superar el filtro y provocar que la regla responda con certeza injustificada.
+La única mejora medible identificada proviene de la implementación y no del método. El filtro que descarta los marcadores compartidos entre familias operaba sobre el valor literal de cada dirección, y en consecuencia el mismo sitio ingresaba al diccionario fragmentado en varias claves: la dirección del navegador Tor aparece bajo siete formas distintas, con y sin prefijo, con y sin barra final. Una variante poco frecuente puede quedar asociada a una única familia del pliegue, superar el filtro y provocar que la regla responda con certeza injustificada.
 
-Unificar esas variantes eleva el macro-F1 a \textbf{0,7492} ($\Delta$ +0,0076, intervalo [+0,0049; +0,0102], sin una sola semilla desfavorable en cincuenta) y el acierto de la capa de reglas a 0,9977. \textbf{La corrección no se incorpora a las cifras de este capítulo}, que se reportan con la implementación original; se documenta porque delimita el margen restante: \textbf{lo que queda por ganar está en el detalle de implementación, no en el método}.
+Unificar esas variantes eleva el macro-F1 a 0,7492 ($\Delta$ +0,0076, intervalo [+0,0049; +0,0102], sin una sola semilla desfavorable en cincuenta) y el acierto de la capa de reglas a 0,9977. La corrección no se incorpora a las cifras de este capítulo, que se reportan con la implementación original; se documenta porque delimita el margen restante: lo que queda por ganar está en el detalle de implementación y no en el método.

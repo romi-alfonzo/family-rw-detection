@@ -1,6 +1,6 @@
 \section{Diseño Experimental General}
 
-La metodología de este trabajo se estructura en tres experimentos complementarios, cada uno diseñado para evaluar un aspecto específico de la clasificación de familias de ransomware en escenarios post-ataque:
+La metodología de este trabajo se estructura en tres líneas experimentales complementarias, cada una dirigida a un aspecto distinto de la clasificación de familias de ransomware en escenarios post-ataque:
 
 \begin{enumerate}
     \item \textbf{Experimento 1 -- Detección Binaria:} Clasificación de archivos como cifrados o seguros, utilizando métricas estadísticas y múltiples algoritmos de aprendizaje automático.
@@ -8,9 +8,26 @@ La metodología de este trabajo se estructura en tres experimentos complementari
     \item \textbf{Experimento 3 -- Clasificación por Notas de Rescate:} Identificación de la familia mediante análisis NLP del contenido textual de las notas de rescate.
 \end{enumerate}
 
-Esta estructura permite una comparación directa entre la capacidad discriminativa de los archivos cifrados y las notas de rescate para la tarea de identificación de familias.
+Las dos líneas de clasificación de familia, los Experimentos 2 y 3, dieron lugar a sendas series de experimentos derivados, planteados para responder a las objeciones que fueron surgiendo al analizar los resultados del anterior; el Capítulo~4 los presenta en ese orden. La estructura permite comparar de forma directa la capacidad discriminativa de los archivos cifrados y la de las notas de rescate para la tarea de identificación de familias.
 
 \section{Preparación de Datos}
+
+\subsection{Familia y campaña: una distinción necesaria}
+\label{subsec:met_campana}
+
+A lo largo de este trabajo se distingue entre \textbf{familia} y \textbf{campaña}, y la distinción condiciona la interpretación de buena parte de los resultados del Capítulo~4.
+
+Una \textbf{familia} es el programa: el linaje de código al que pertenecen todas las variantes de un mismo ransomware. CONTI, LOCKBIT o CERBER son familias, y dos muestras distintas de CONTI comparten su código.
+
+Una \textbf{campaña} es un despliegue concreto de ese programa: una compilación de la muestra con una configuración determinada (un par de claves, una dirección de contacto, una extensión, un texto de nota) dirigida a una víctima o a un conjunto de víctimas en una ventana de tiempo. Una misma familia produce muchas campañas a lo largo de su vida operativa.
+
+Lo que separa ambos conceptos, a efectos de este trabajo, es qué elementos del artefacto cambian entre campañas de una misma familia y cuáles permanecen. Cambian la extensión añadida (DHARMA, por ejemplo, la compone con la dirección del atacante y un identificador de la víctima), las direcciones de contacto y de pago y, con frecuencia, el texto de la nota. En principio no deberían cambiar, salvo que aparezca una versión nueva del programa, las firmas binarias que el código escribe en el archivo, el formato del esquema de renombrado ni el modo de cifrado y el tamaño del añadido, que determinan el tamaño final del archivo; con una única campaña por familia, este trabajo no puede comprobarlo.
+
+La relevancia metodológica es la siguiente. El conjunto NapierOne representa cada familia mediante una única campaña, obtenida ejecutando una muestra concreta sobre un conjunto base de documentos. En consecuencia, familia y campaña están \textit{completamente confundidas} en los datos: no existe ningún caso en el que una varíe y la otra permanezca. Por construcción, ninguna medición realizada sobre este conjunto puede separar la capacidad de identificar una familia de la capacidad de identificar esa campaña particular, y esa imposibilidad no se resuelve con más semillas de muestreo ni con un protocolo de evaluación distinto: requiere un conjunto de datos con varias campañas por familia.
+
+De ahí que a lo largo del Capítulo~4 ciertos rasgos se califiquen de \textit{identificadores de campaña}. La extensión del archivo es el caso más claro: es constante dentro del conjunto porque hay una sola campaña por familia, mientras que en la práctica varía entre campañas y a veces entre víctimas. Reportar el rendimiento de un método basado en la extensión equivaldría a reportar la memorización de una tabla, y por ese motivo tales resultados se declaran como cotas superiores y no como capacidad del método.
+
+Una distinción análoga opera en el frente de notas de rescate, donde el equivalente de la campaña es la \textbf{plantilla}: un mismo texto reutilizado con distintos datos de contacto. El tratamiento que recibe se describe en la Sección~\ref{subsec:neardups}.
 
 \subsection{Datos de Archivos Encriptados}
 
@@ -80,7 +97,8 @@ Se empleó validación cruzada estratificada en todos los experimentos para gara
 
 \begin{itemize}
     \item \textbf{Experimentos 1 y 2:} 5-Fold cross-validation, dado el tamaño suficiente del dataset de archivos (1.600 muestras).
-    \item \textbf{Experimento 3:} 2-Fold cross-validation, límite impuesto por las familias con solo 2 notas (StratifiedKFold requiere al menos $k$ muestras por clase). Para compensar la variabilidad de una partición tan gruesa, la validación se \textbf{repite con 10 semillas aleatorias} distintas y se reporta media $\pm$ desvío estándar entre repeticiones. Se emplean dos protocolos de partición complementarios (Sección~\ref{subsec:protocolos_nlp}) que responden preguntas de investigación distintas.
+    \item \textbf{Experimentos 2b a 2h:} cada uno declara su diseño en el Capítulo~4 (Secciones~\ref{sec:exp2b} a~\ref{sec:exp2h}). Las cifras de cabecera del frente de archivos se obtienen sobre NapierOne-\textit{small} con 500 archivos por familia (15.000 en total), validación cruzada estratificada de 5 pliegues repetida con cinco semillas de muestreo (diez en el Experimento 2c) y ponderación de clases. Se contrastan además con una validación \textit{dejar-un-tipo-fuera}, que entrena sin un tipo de documento y evalúa sobre él (Sección~\ref{subsec:exp2e_tipos}).
+    \item \textbf{Experimento 3:} 2-Fold cross-validation, límite impuesto por las familias con solo 2 notas (StratifiedKFold requiere al menos $k$ muestras por clase). Para compensar la variabilidad de una partición tan gruesa, la validación se \textbf{repite con 10 semillas aleatorias} distintas y se reporta media $\pm$ desvío estándar entre repeticiones. Se emplean dos protocolos de partición complementarios (Sección~\ref{subsec:protocolos_nlp}) que responden preguntas de investigación distintas. Las cifras canónicas del frente de notas se estimaron después con cincuenta semillas, por la razón que documenta la Sección~\ref{subsec:res_evolucion_corpus}.
 \end{itemize}
 
 \subsection{Modelos Evaluados}
@@ -144,7 +162,7 @@ Estas pruebas preliminares permitieron ajustar la metodología antes de realizar
 
 \subsection{Diseño de la Fase 1 (clasificación binaria preliminar)}
 
-Se construyó un conjunto de 350 archivos: 300 cifrados (10 por cada una de las 30 familias) y 50 no cifrados obtenidos de NapierOne~\cite{paper_7_napierone}. Se emplearon dos características ---la entropía de Shannon del archivo completo y su tamaño en bytes--- normalizadas mediante escalado min-max:
+Se construyó un conjunto de 350 archivos: 300 cifrados (10 por cada una de las 30 familias) y 50 no cifrados obtenidos de NapierOne~\cite{paper_7_napierone}. Se emplearon dos características, la entropía de Shannon del archivo completo y su tamaño en bytes, normalizadas mediante escalado min-max:
 
 \begin{equation}
 X_{\text{norm}} = \frac{X - X_{\min}}{X_{\max} - X_{\min}}
@@ -204,16 +222,17 @@ La selección de modelos busca cubrir un espectro diverso de enfoques de clasifi
 \subsubsection{Análisis de variabilidad y casi-duplicados}
 \label{subsec:neardups}
 
-Las notas de rescate son esencialmente plantillas: una misma familia reutiliza el mismo texto cambiando únicamente datos de contacto o identificadores de víctima. Para cuantificar este fenómeno y evitar que contamine la evaluación, se calculó la similitud coseno entre todas las notas del corpus (representación TF-IDF de n-gramas de caracteres) y se agruparon como \textit{casi-duplicados} las notas con similitud superior a 0,90 (componentes conexas del grafo de similitud). Las 146 notas se reducen así a \textbf{95 grupos de contenido distinto}. Este agrupamiento es un paso de preparación de datos no supervisado: no utiliza las etiquetas de familia ni participa del entrenamiento.
+Las notas de rescate son esencialmente plantillas: una misma familia reutiliza el mismo texto cambiando únicamente datos de contacto o identificadores de víctima. Para cuantificar este fenómeno y evitar que contamine la evaluación, se calculó la similitud coseno entre todas las notas del corpus (representación TF-IDF de n-gramas de caracteres) y se agruparon como \textit{casi-duplicados} las notas con similitud superior a 0,90 (componentes conexas del grafo de similitud). Las 146 notas se reducen así a 95 grupos de contenido distinto. Este agrupamiento es un paso de preparación de datos no supervisado: no utiliza las etiquetas de familia ni participa del entrenamiento.
 
 \subsubsection{Estrategia de Validación: dos protocolos}
 \label{subsec:protocolos_nlp}
 
-Se emplea validación cruzada estratificada de 2 folds repetida con 10 semillas aleatorias, bajo dos protocolos de partición que responden preguntas de investigación distintas:
+Se emplea validación cruzada estratificada de 2 folds repetida con 10 semillas aleatorias, bajo dos protocolos de partición que responden preguntas de investigación distintas. Las diferencias pequeñas entre configuraciones se contrastan más adelante con cincuenta semillas, y el reparto de la partición recibe una corrección que la Sección~\ref{subsec:res_p2bal} documenta y cuantifica. Los dos protocolos son:
 
 \begin{itemize}
-\item \textbf{P1 --- plantilla conocida (StratifiedKFold):} las particiones se estratifican por familia sin restricción adicional, por lo que variantes casi idénticas de una nota pueden quedar repartidas entre entrenamiento y prueba. Mide la capacidad del sistema de identificar la familia de una \textbf{nueva instancia de una plantilla ya catalogada}: el escenario operativo de herramientas como ID Ransomware~\cite{idransomware}, que reconocen patrones conocidos.
-\item \textbf{P2 --- variante nunca vista (StratifiedGroupKFold):} los grupos de casi-duplicados de la Sección~\ref{subsec:neardups} nunca se reparten entre entrenamiento y prueba. El modelo se evalúa únicamente sobre contenidos que no vio, midiendo la capacidad de \textbf{generalizar a variantes nuevas} de una familia.
+\item \textbf{P1, plantilla conocida} (StratifiedKFold): las particiones se estratifican por familia sin restricción adicional, por lo que variantes casi idénticas de una nota pueden quedar repartidas entre entrenamiento y prueba. Mide la capacidad del sistema de identificar la familia de una nueva instancia de una plantilla ya catalogada: el escenario operativo de herramientas como ID Ransomware~\cite{idransomware}, que reconocen patrones conocidos.
+\item \textbf{P2, variante nunca vista} (StratifiedGroupKFold): los grupos de casi-duplicados de la Sección~\ref{subsec:neardups} nunca se reparten entre entrenamiento y prueba. El modelo se evalúa únicamente sobre contenidos que no vio, midiendo la capacidad de generalizar a variantes nuevas de una familia.
+\item \textbf{P2bal, el reparto equilibrado de P2}: conserva la misma garantía que P2 (el corte es por plantilla, de modo que la plantilla evaluada nunca aparece en entrenamiento) pero reparte las plantillas dentro de cada familia, para que toda familia con dos o más ponga al menos una en cada pliegue. Se adoptó al detectar que \texttt{StratifiedGroupKFold} optimiza un objetivo global de balance y deja familias enteras sin material de entrenamiento, con lo que su F1 resulta nulo por el reparto y no por el método. Es el protocolo bajo el que se reportan las cifras finales del frente de notas, estimadas con cincuenta semillas; su construcción, los controles que verifican que la comparación es limpia y la diferencia medida frente a P2 se documentan en la Sección~\ref{subsec:res_p2bal}.
 \end{itemize}
 
 En ambos protocolos, el pipeline completo (vectorización TF-IDF y clasificador) se ajusta exclusivamente con el fold de entrenamiento de cada partición. Se reportan las métricas de la Sección~3.4.3 (media $\pm$ desvío estándar entre las 10 semillas), el reporte por familia y la matriz de confusión. Las familias cuyo contenido forma un único grupo de casi-duplicados no pueden evaluarse bajo P2 (nunca aparecen simultáneamente en entrenamiento y prueba), lo cual se declara en el reporte por familia.
@@ -223,10 +242,10 @@ Los resultados del experimento se presentan en el Capítulo~4.
 \section{Evaluación de Herramientas Existentes}
 \label{sec:met_herramientas}
 
-Como línea base práctica, se evaluaron las dos herramientas públicas de identificación de ransomware más utilizadas: CryptoSheriff~\cite{cryptosheriff}, del proyecto No More Ransom, e ID Ransomware~\cite{idransomware}. El procedimiento fue el siguiente:
+Como línea base práctica, se evaluaron las dos herramientas públicas de identificación de ransomware más utilizadas: Crypto Sheriff~\cite{cryptosheriff}, del proyecto No More Ransom, e ID Ransomware~\cite{idransomware}. El procedimiento fue el siguiente:
 
 \begin{enumerate}
-\item \textbf{Con archivos cifrados:} se tomaron archivos cifrados del dataset NapierOne~\cite{paper_7_napierone} para cada una de las 30 familias y se subieron a ambas plataformas, registrando si la herramienta identificaba correctamente la familia. CryptoSheriff impone un límite de 1~MB por archivo, por lo que solo pudo probarse con archivos pequeños. Para ID Ransomware se registró además si la identificación se mantenía al renombrar el archivo, lo que permite distinguir si la detección se basa en el contenido (firmas de bytes en posiciones conocidas, \textit{magic bytes}) o en el patrón del nombre y la extensión.
+\item \textbf{Con archivos cifrados:} se tomaron archivos cifrados del dataset NapierOne~\cite{paper_7_napierone} para cada una de las 30 familias y se subieron a ambas plataformas, registrando si la herramienta identificaba correctamente la familia. Crypto Sheriff impone un límite de 1~MB por archivo, por lo que solo pudo probarse con archivos pequeños. Para ID Ransomware se registró además si la identificación se mantenía al renombrar el archivo, lo que permite distinguir si la detección se basa en el contenido (firmas de bytes en posiciones conocidas, \textit{magic bytes}) o en el patrón del nombre y la extensión.
 \item \textbf{Con notas de rescate:} se subieron a ID Ransomware 57 notas de 22 familias del corpus, registrando los aciertos por familia.
 \end{enumerate}
 

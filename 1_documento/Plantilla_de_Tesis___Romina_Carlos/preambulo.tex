@@ -2,6 +2,9 @@
 % --- usepackages ---
 % -------------------
 % \usepackage[utf8]{inputenc} % No necesario en LaTeX moderno (TeX Live 2018+)
+\usepackage{cmap} % Mapa Unicode para copiar/buscar texto en el PDF (va antes de fontenc)
+\usepackage[T1]{fontenc} % Codificación T1: letras acentuadas como un solo glifo
+\usepackage{lmodern} % Latin Modern: Computer Modern en Type 1 con glifos T1
 \usepackage{amsfonts}
 \usepackage{csquotes} % For "csquotes missing" warning and babel-biblatex compatibility
 \usepackage[
