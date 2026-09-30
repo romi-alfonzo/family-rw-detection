@@ -291,6 +291,25 @@ C(g, "difíciles bajo 0,75 con estructura, media de 5 semillas (4091)", "cantida
 C(g, "familias bajo 0,75 con solo bytes, media de 10 semillas (job 3648)", "cantidad", "6",
   lambda: float((csv(D["c2"] / "bytes_multisemilla_por_familia.csv").groupby("familia").f1.mean() < 0.75).sum()),
   "bytes_multisemilla_por_familia.csv", rec=True)
+C(g, "las otras 24 familias con solo bytes, media de 10 semillas (job 3648)", "F1 mínimo", "0,97",
+  lambda: float(csv(D["c2"] / "bytes_multisemilla_por_familia.csv").groupby("familia").f1.mean()
+                .drop(["NOTPETYA", "JIGSAW", "DARKSIDE", "CRYPTOLOCKER", "WASTEDLOCKER", "SUNCRYPT"]).min()),
+  "bytes_multisemilla_por_familia.csv", modo="min_ge", rec=True)
+
+
+def parte_de_las_seis():
+    """Fracción de la ganancia de macro-F1 del 2e (una semilla) que corresponde a las seis difíciles."""
+    a = csv(D["e2"] / "por_familia_1_bytes_canonico.csv").set_index("Unnamed: 0")["f1-score"]
+    b = csv(D["e2"] / "por_familia_2_bytes_mas_estructura.csv").set_index("Unnamed: 0")["f1-score"]
+    fams = [f for f in a.index if f in b.index and f.isupper()]
+    d = b[fams] - a[fams]
+    return float(d[["NOTPETYA", "JIGSAW", "DARKSIDE", "CRYPTOLOCKER", "WASTEDLOCKER", "SUNCRYPT"]].sum() / d.sum())
+
+
+C(g, "la ganancia del 2e se concentra «casi por completo» en las seis difíciles", "fracción, al menos",
+  "0,95", parte_de_las_seis, "por_familia_{1,2}_*.csv (4058)", modo="min_ge", rec=True)
+C(g, "tipos no vistos: la estructura mejora a los bytes (semilla 0)", "pliegues de 7", "6",
+  lambda: float(sum(pliegue_rec(t, 2) > pliegue_rec(t, 1) for t in TIPOS)), "tipos_por_familia.csv", rec=True)
 C(g, "DARKSIDE con estructura, media de 5 semillas (4091)", "F1", "0,7515",
   lambda: familia_cv(D["g2"], "2_bytes_estructura", "DARKSIDE"), "cv_por_familia_y_semilla.csv", rec=True)
 C(g, "sistema completo: la familia más baja, media de 5 semillas", "F1 mínimo", "0,99",
