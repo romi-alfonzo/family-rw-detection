@@ -598,6 +598,30 @@ for fam, (b, e, x) in fams.items():
       (lambda f=fam: familia_cv(D["g2"], "2_bytes_estructura", f)), "cv_por_familia_y_semilla.csv (4091)", rec=True)
     C(g, f"familia {fam}, 5 semillas: + extensión (2g)", "F1", x,
       (lambda f=fam: familia_cv(D["g2"], "5_bytes_estructura_extension", f)), "cv_por_familia_y_semilla.csv (4091)", rec=True)
+for ancla, que, cits in (("3_bytes_estructura_forma   − 2_bytes_estructura", "2f: forma del nombre sobre bytes + estructura",
+                          ("+0,0639", "+0,0634", "+0,0644")),
+                         ("4_todo_con_extension       − 3_bytes_estructura_forma", "2f: extensión literal sobre ese sistema",
+                          ("+0,0000", "-0,0001", "+0,0001"))):
+    for (m, pat), cit in zip((("Δ", r"(?<=\s)([+-][0-9.]+) \["), ("IC 95 %, extremo inferior", r"\[([+-][0-9.]+);"),
+                              ("IC 95 %, extremo superior", r"; ([+-][0-9.]+)\]")), cits):
+        C(g, que + ", pareado por semilla", m, cit, (lambda a=ancla, p=pat: log(D["f2"] / "log.txt", a, p, dentro=0)),
+          "log.txt (4083)")
+t2f_tipos = lambda: csv(D["f2"] / "tipos_por_pliegue.csv").set_index("tipo")
+C(g, "2f sin ponderación: los seis pliegues que no son jpg, la mejora más chica", "Δ macro-F1", "+0,06",
+  lambda: float(t2f_tipos().drop("jpg").delta.min()), "tipos_por_pliegue.csv (4083)", rec=True)
+C(g, "2f sin ponderación: los seis pliegues que no son jpg, la mejora más grande", "Δ macro-F1", "+0,17",
+  lambda: float(t2f_tipos().drop("jpg").delta.max()), "tipos_por_pliegue.csv (4083)", rec=True)
+C(g, "2f sin ponderación: delta medio sobre los siete pliegues", "Δ macro-F1", "+0,0054",
+  lambda: float(t2f_tipos().delta.mean()), "tipos_por_pliegue.csv (4083)", rec=True)
+for que, cit, pat in (("IC 95 %, extremo inferior", "-0,2386", r"\[([+-][0-9.]+);"), ("IC 95 %, extremo superior", "+0,2493", r"; ([+-][0-9.]+)\]")):
+    C(g, "2f sin ponderación: delta medio sobre los siete pliegues", que, cit,
+      (lambda p=pat: log(D["f2"] / "log.txt", "Δ (3)-(2) por pliegue", p, dentro=0)), "log.txt (4083)")
+C(g, "2f: las treinta familias con la forma del nombre (media de 5 semillas)", "F1 mínimo", "0,99",
+  lambda: float(familias_cv_todas(D["f2"], "3_bytes_estructura_forma").min()), "cv_por_familia_y_semilla.csv (4083)",
+  modo="min_ge", rec=True)
+C(g, "2f: las cuatro más bajas solo con el contenido son NOTPETYA, JIGSAW, CRYPTOLOCKER y DARKSIDE (1 = sí)", "sí/no", "1",
+  lambda: float(set(familias_cv_todas(D["f2"], "2_bytes_estructura").nsmallest(4).index)
+                == {"NOTPETYA", "JIGSAW", "CRYPTOLOCKER", "DARKSIDE"}), "cv_por_familia_y_semilla.csv (4083)", rec=True)
 cv2e = lambda col: ms(csv(D["e2"] / "exp2e_por_semilla.csv").query("columna == @col").f1_macro)[0]
 C(g, "pérdida de los bytes al pasar de CV a tipo no visto", "macro-F1", "0,050",
   lambda: cv2e("1_bytes_canonico") - promedio_tipos(1), "exp2e_por_semilla.csv + tipos_por_familia.csv", rec=True)
