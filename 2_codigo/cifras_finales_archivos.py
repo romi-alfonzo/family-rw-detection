@@ -446,6 +446,35 @@ t2d = {"0a_solo_forma_del_nombre": ("0,5830", "0,0024", "0,5771", "0,0033"),
 for col, (a, ad, f, fd) in t2d.items():
     M(g, f"{col}, 5 semillas", "exactitud", a, ad, (lambda c=col: sel_2d(c)), "exp2d_por_semilla.csv")
     M(g, f"{col}, 5 semillas", "macro-F1", f, fd, (lambda c=col: sel_2d(c, "f1_macro")), "exp2d_por_semilla.csv")
+def delta_2d(col):
+    return csv(D["d2"] / "exp2d_deltas.csv").query("columna == @col and metrica == 'f1_macro'").iloc[0]
+
+for col, que, (d_, lo, hi) in (("2_bytes_mas_forma_del_nombre", "forma del nombre", ("+0,0880", "+0,0866", "+0,0894")),
+                               ("3_bytes_mas_extension_literal", "extensión literal", ("+0,0581", "+0,0555", "+0,0608")),
+                               ("0b_solo_extension_literal", "solo extensión literal (control)", ("+0,0127", "+0,0083", "+0,0171"))):
+    for campo, cit in (("delta", d_), ("ic95_inf", lo), ("ic95_sup", hi)):
+        C(g, f"2d: {que} frente a solo bytes, pareado por semilla", campo, cit,
+          (lambda c=col, k=campo: float(delta_2d(c)[k])), "exp2d_deltas.csv (3937)")
+    C(g, f"2d: {que} frente a solo bytes: semillas a favor", "de 5", "5", (lambda c=col: float(delta_2d(c)["semillas_pos"])),
+      "exp2d_deltas.csv (3937)")
+
+
+def forma_menos_literal(k):
+    s = csv(D["d2"] / "exp2d_por_semilla.csv")
+    a = s[s.columna == "2_bytes_mas_forma_del_nombre"].sort_values("semilla").f1_macro.values
+    b = s[s.columna == "3_bytes_mas_extension_literal"].sort_values("semilla").f1_macro.values
+    return ic_t(a - b)[k] if k < 3 else float((a - b > 0).sum())
+
+
+for k, (que, cit) in enumerate((("Δ", "+0,0299"), ("IC 95 %, extremo inferior", "+0,0269"),
+                                ("IC 95 %, extremo superior", "+0,0329"), ("semillas a favor", "5"))):
+    C(g, "2d: forma del nombre frente a extensión literal, pareado por semilla", que, cit,
+      (lambda k_=k: forma_menos_literal(k_)), "exp2d_por_semilla.csv (3937) + intervalo t", rec=True)
+C(g, "2d: solo forma del nombre por debajo de solo bytes (treinta y tres centésimas)", "diferencia", "0,33",
+  lambda: -float(csv(D["d2"] / "exp2d_deltas.csv").query("columna == '0a_solo_forma_del_nombre' and metrica == 'f1_macro'").delta.iloc[0]),
+  "exp2d_deltas.csv (3937)")
+C(g, "2d: bytes + forma del nombre, errores sobre 15.000 (unos tres)", "errores", "3",
+  lambda: 15000 * (1 - sel_2d("2_bytes_mas_forma_del_nombre")[0]), "exp2d_por_semilla.csv", rec=True, tol_extra=0.5)
 C(g, "tabla de consulta que solo mira la extensión", "exactitud", "0,9724",
   lambda: log(D["d2"] / "log.txt", "TABLA DE CONSULTA", r"EXTENSI[OÓ]N: ([0-9.]+)|: ([0-9.]+)\s*$", grupo=0)
   if False else log(D["d2"] / "log.txt", "TABLA DE CONSULTA", r":\s*([0-9.]+)\s*$"), "log.txt (3937)")
