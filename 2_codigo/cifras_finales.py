@@ -54,6 +54,37 @@ CIFRAS = [
     ("A · cabecera", "familias sin train por pliegue, P2", "control", "3.86", "_log_p2bal_149.txt"),
     ("A · cabecera", "familias sin train por pliegue, P2bal", "control", "1.00", "_log_p2bal_149.txt"),
 
+    # ---------------- BASE A: los tres protocolos, 50 semillas ----------------
+    # Es la corrida de la que salen el 83,9 % y el 0,789 de la tabla comparativa.
+    ("A · protocolos", "P1 plantilla ya catalogada", "exactitud", "0.8389", "_log_lemmou_149.txt"),
+    ("A · protocolos", "P1 plantilla ya catalogada", "macro-F1", "0.7889", "_log_lemmou_149.txt"),
+    ("A · protocolos", "P1 plantilla ya catalogada", "exactitud balanceada", "0.8002", "_log_lemmou_149.txt"),
+    ("A · protocolos", "P2 plantilla nunca vista", "exactitud", "0.5785", "_log_lemmou_149.txt"),
+    ("A · protocolos", "P2 plantilla nunca vista", "macro-F1", "0.4593", "_log_lemmou_149.txt"),
+    ("A · protocolos", "L esquema de la literatura previa", "exactitud", "0.8389", "_log_lemmou_149.txt"),
+    ("A · protocolos", "L esquema de la literatura previa", "macro-F1", "0.7767", "_log_lemmou_149.txt"),
+    ("A · protocolos", "L, vecina de la MISMA plantilla", "acierto", "0.9589", "_log_lemmou_149.txt"),
+    ("A · protocolos", "L, vecina de OTRA plantilla", "acierto", "0.7237", "_log_lemmou_149.txt"),
+
+    # ---------------- BASE A: el mismo P1 y P2 estimados con 10 semillas ----------------
+    # Convive con el bloque anterior a proposito: son la misma configuracion con otro numero
+    # de semillas, y en la tesis aparecen las dos. Por eso cada tabla declara la suya.
+    ("A · 10 semillas", "P1 combinado + LinearSVC", "macro-F1", "0.799", "_log_clasificador_149.txt"),
+    ("A · 10 semillas", "P1 combinado + LinearSVC", "exactitud", "0.842", "_log_clasificador_149.txt"),
+    ("A · 10 semillas", "P2 combinado + LinearSVC", "macro-F1", "0.468", "_log_clasificador_149.txt"),
+    ("A · 10 semillas", "P2 combinado + LinearSVC", "exactitud", "0.580", "_log_clasificador_149.txt"),
+
+    # ---------------- BASE 146: el corpus inicial, que el capitulo conserva declarado ----------------
+    # NO se corrigen en la tesis: tienen otra base, no un error. El valor guardado es el de la
+    # corrida; entre parentesis, como lo cita el documento ya redondeado.
+    ("146 · corpus inicial", "P1 caracteres + LinearSVC (cita 0,818)", "exactitud", "0.8178", "resultados_canonicos/corrida_canonica_resumen.csv"),
+    ("146 · corpus inicial", "P1 caracteres + LinearSVC (cita 0,760)", "macro-F1", "0.7596", "resultados_canonicos/corrida_canonica_resumen.csv"),
+    ("146 · corpus inicial", "P1 caracteres + LinearSVC (cita 0,777)", "exactitud balanceada", "0.7765", "resultados_canonicos/corrida_canonica_resumen.csv"),
+    ("146 · corpus inicial", "P1 caracteres + LinearSVC (cita 0,798)", "weighted-F1", "0.7981", "resultados_canonicos/corrida_canonica_resumen.csv"),
+    ("146 · corpus inicial", "P2 combinado + LinearSVC (cita 0,551)", "exactitud", "0.5513", "resultados_canonicos/corrida_canonica_resumen.csv"),
+    ("146 · corpus inicial", "P2 combinado + LinearSVC (cita 0,435)", "macro-F1", "0.4353", "resultados_canonicos/corrida_canonica_resumen.csv"),
+    ("146 · corpus inicial", "P2 combinado + LinearSVC (cita 0,512)", "weighted-F1", "0.5120", "resultados_canonicos/corrida_canonica_resumen.csv"),
+
     # ---------------- BASE A: incertidumbre ----------------
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 %", "0.6585", "_log_revision_bootstrap.txt"),
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 % (alto)", "0.8187", "_log_revision_bootstrap.txt"),
