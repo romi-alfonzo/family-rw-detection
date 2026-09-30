@@ -487,14 +487,32 @@ C(g, "los doce desplazamientos más informativos, en el orden de la tesis (1 = s
 C(g, "con 128 bytes, fracción del macro-F1 máximo", "%", "87",
   lambda: float(100 * csv(D["c2_ven"] / "a_curva_ablacion.csv").query("subconjunto == 'todos'").set_index("ventana").f1_macro.pipe(
       lambda s: s["64+64"] / s.max())), "a_curva_ablacion.csv", rec=True)
-marcas_2b = lambda: csv(RES / "resultados_estructural" / "marcas_por_familia_umbral_90.csv")
-firma = lambda: marcas_2b().query("prefijo_len >= 4 or sufijo_len >= 4")
-C(g, "firmas binarias del 2b (prefijo o sufijo de 4 bytes o más)", "familias", "16", lambda: float(len(firma())),
-  "marcas_por_familia_umbral_90.csv (3638)", rec=True)
-C(g, "firmas binarias del 2b que son sufijos", "familias", "12", lambda: float((firma().sufijo_len >= 4).sum()),
-  "marcas_por_familia_umbral_90.csv (3638)", rec=True)
-C(g, "firmas binarias del 2b que son prefijos", "familias", "4", lambda: float((firma().prefijo_len >= 4).sum()),
-  "marcas_por_familia_umbral_90.csv (3638)", rec=True)
+def firmas_10s():
+    """Familias con firma binaria (prefijo o sufijo >= 4 bytes) en las DIEZ semillas del job 3651: el conjunto
+    de cada semilla, que debe ser el mismo en las diez."""
+    conj = []
+    for d in sorted(glob.glob(str(D["b2"] / "resultados_estructural_s*_job3651"))):
+        m = pd.read_csv(Path(d) / "marcas_por_familia_umbral_90.csv")
+        f = m.query("prefijo_len >= 4 or sufijo_len >= 4")
+        conj.append((frozenset(f.familia), frozenset(f[f.sufijo_len >= 4].familia), frozenset(f[f.prefijo_len >= 4].familia)))
+    assert len(conj) == 10 and len(set(conj)) == 1, "las firmas cambian entre semillas"
+    return conj[0]
+
+
+C(g, "firmas binarias del 2b, las diez semillas (prefijo o sufijo de 4 bytes o más)", "familias", "17",
+  lambda: float(len(firmas_10s()[0])), "marcas_por_familia_umbral_90.csv ×10 (3651)", rec=True)
+C(g, "firmas binarias del 2b que son sufijos", "familias", "13", lambda: float(len(firmas_10s()[1])),
+  "marcas_por_familia_umbral_90.csv ×10 (3651)", rec=True)
+C(g, "firmas binarias del 2b que son prefijos (CUBA, LORENZ, TESLACRYPT, WANNACRY)", "familias", "4",
+  lambda: float(len(firmas_10s()[2]) if firmas_10s()[2] == {"CUBA", "LORENZ", "TESLACRYPT", "WANNACRY"} else -1),
+  "marcas_por_familia_umbral_90.csv ×10 (3651)", rec=True)
+f1_10 = lambda: pf2c().f1.mean()
+C(g, "familias con firma: todas por encima de 0,97 con solo bytes", "F1 mínimo", "0,97",
+  lambda: float(f1_10()[sorted(firmas_10s()[0])].min()), "bytes_multisemilla_por_familia.csv", modo="min_ge", rec=True)
+C(g, "familias con firma: por encima de 0,99 con solo bytes", "familias", "14",
+  lambda: float((f1_10()[sorted(firmas_10s()[0])] > 0.99).sum()), "bytes_multisemilla_por_familia.csv", rec=True)
+C(g, "familias solo con extensión (marca, sin firma), diez semillas", "familias", "11",
+  lambda: float(28 - len(firmas_10s()[0])), "10 manifiestos (28 con marca) y firmas_10s", rec=True)
 
 
 def entropia_uniforme(n, reps, que):
