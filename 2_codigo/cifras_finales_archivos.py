@@ -524,6 +524,68 @@ C(g, "resto del tamaño módulo 16 sobre el segundo rasgo", "% por encima", "28"
 C(g, "rasgo más informativo", "es tam_mod16 (1 = sí)", "1",
   lambda: float(csv(D["e2r"] / "importancias_rasgos.csv").sort_values("importancia", ascending=False).rasgo.iloc[0] == "tam_mod16"),
   "importancias_rasgos.csv", rec=True)
+imp = lambda: csv(D["e2r"] / "importancias_rasgos.csv")
+C(g, "rasgos estructurales en total (suma de los grupos)", "rasgos", "44", lambda: float(len(imp())),
+  "importancias_rasgos.csv", rec=True)
+C(g, "el grupo con más importancia total es la entropía de cola (1 = sí)", "sí/no", "1",
+  lambda: float(imp().groupby("grupo").importancia.sum().idxmax() == "entropia_cola"), "importancias_rasgos.csv", rec=True)
+C(g, "los rasgos que no son de tamaño son en su mayoría de entropía (fracción)", "de 39, al menos la mitad", "0,5",
+  lambda: float(imp().grupo.isin(["entropia_cabecera", "entropia_cola", "entropia_medio"]).sum() / (len(imp()) - 5)),
+  "importancias_rasgos.csv", modo="min_ge", rec=True)
+C(g, "2e frente a 2c, pareado por semilla, macro-F1", "Δ", "+0,0246",
+  lambda: log(D["e2"] / "log.txt", "2_bytes_mas_estructura   f1_macro", r"f1_macro\s+([+-][0-9.]+)", dentro=0),
+  "log.txt (4058)")
+for que, cit, pat in (("IC 95 %, extremo inferior", "+0,0237", r"\[([+-][0-9.]+);"), ("IC 95 %, extremo superior", "+0,0254", r"; ([+-][0-9.]+)\]")):
+    C(g, "2e frente a 2c, pareado por semilla, macro-F1", que, cit,
+      (lambda p=pat: log(D["e2"] / "log.txt", "2_bytes_mas_estructura   f1_macro", p, dentro=0)), "log.txt (4058)")
+for que, cit, pat in (("Δ", "+0,0234", r"accuracy\s+([+-][0-9.]+)"), ("IC 95 %, extremo inferior", "+0,0228", r"\[([+-][0-9.]+);"),
+                      ("IC 95 %, extremo superior", "+0,0241", r"; ([+-][0-9.]+)\]")):
+    C(g, "2e frente a 2c, pareado por semilla, exactitud", que, cit,
+      (lambda p=pat: log(D["e2"] / "log.txt", "2_bytes_mas_estructura   accuracy", p, dentro=0)), "log.txt (4058)")
+delta_fam = lambda: csv(D["e2"] / "exp2e_por_familia_delta.csv").set_index("Unnamed: 0").delta
+SEIS = ["WASTEDLOCKER", "JIGSAW", "DARKSIDE", "NOTPETYA", "SUNCRYPT", "CRYPTOLOCKER"]
+C(g, "delta medio de las seis difíciles (una semilla)", "Δ F1", "+0,1186", lambda: float(delta_fam()[SEIS].mean()),
+  "exp2e_por_familia_delta.csv", rec=True)
+C(g, "delta medio de las otras veinticuatro (una semilla)", "Δ F1", "+0,0006", lambda: float(delta_fam().drop(SEIS).mean()),
+  "exp2e_por_familia_delta.csv", rec=True)
+C(g, "las 23 fuera de la tabla: la que más sube", "Δ F1", "+0,0050",
+  lambda: float(delta_fam().drop(SEIS + ["BADRABBIT"]).max()), "exp2e_por_familia_delta.csv", rec=True)
+C(g, "las 23 fuera de la tabla: la que más baja (HELLOKITTY)", "Δ F1", "-0,0061",
+  lambda: float(delta_fam()["HELLOKITTY"]) if delta_fam().drop(SEIS + ["BADRABBIT"]).idxmin() == "HELLOKITTY" else 9.0,
+  "exp2e_por_familia_delta.csv", rec=True)
+tf = lambda fam, col: float(csv(D["h2"] / "tipos_por_familia.csv").query(
+    "semilla == 0 and columna == @col and familia == @fam").f1.mean())
+for fam, (a, b_) in {"WASTEDLOCKER": ("0,3919", "0,6395"), "JIGSAW": ("0,3654", "0,5127"),
+                     "NOTPETYA": ("0,1142", "0,2965"), "DARKSIDE": ("0,5552", "0,5043")}.items():
+    C(g, f"tipos no vistos, {fam}: media de 7 pliegues, bytes", "F1", a, (lambda f=fam: tf(f, 1)), "tipos_por_familia.csv", rec=True)
+    C(g, f"tipos no vistos, {fam}: media de 7 pliegues, bytes + estructura", "F1", b_, (lambda f=fam: tf(f, 2)),
+      "tipos_por_familia.csv", rec=True)
+C(g, "NOTPETYA es la que peor generaliza a tipos no vistos con bytes (1 = sí)", "sí/no", "1",
+  lambda: float(csv(D["h2"] / "tipos_por_familia.csv").query("semilla == 0 and columna == 1").groupby("familia").f1.mean().idxmin() == "NOTPETYA"),
+  "tipos_por_familia.csv", rec=True)
+
+
+def castigo_sin_firma():
+    """Caída media de F1 (CV de 10 semillas → tipo no visto) sin firma binaria, dividida por la con firma."""
+    m = csv(RES / "resultados_estructural" / "marcas_por_familia_umbral_90.csv").set_index("familia")
+    firma = set(m[(m.prefijo_len > 0) | (m.sufijo_len > 0)].index)
+    t = csv(D["h2"] / "tipos_por_familia.csv").query("semilla == 0 and columna == 1").groupby("familia").f1.mean()
+    b = csv(D["c2"] / "bytes_multisemilla_por_familia.csv").groupby("familia").f1.mean()
+    caida = (b - t).dropna()
+    return float(caida[~caida.index.isin(firma)].mean() / caida[caida.index.isin(firma)].mean())
+
+
+C(g, "el tipo no visto castiga sobre todo a las familias sin firma", "cociente de caídas, al menos", "5",
+  castigo_sin_firma, "tipos_por_familia.csv + bytes_multisemilla_por_familia.csv + marcas del 2b", modo="min_ge", rec=True)
+C(g, "BLACKMATTER en la prueba del pliegue jpg", "% de la prueba (cerca del 20)", "20",
+  lambda: 100 * 493 / float(csv(D["h2"] / "tipos_por_pliegue.csv").query("semilla == 0 and tipo == 'jpg'").n.iloc[0]),
+  "tipos_por_pliegue.csv", rec=True, tol_extra=1.0)
+C(g, "BLACKMATTER en jpg con bytes + estructura (log 4096)", "F1", "0,285",
+  lambda: log(D["h2"] / "log.txt", "(2) b+estr      F1", r"F1 ([0-9.]+)", dentro=0), "log.txt (4096)")
+C(g, "bytes sobre rasgos estructurales", "veces más características", "23", lambda: 1024 / 44.0, "aritmética", tol_extra=0.3)
+C(g, "las dos que más mejoran con la estructura, media de 5 semillas, son WASTEDLOCKER y DARKSIDE (1 = sí)", "sí/no", "1",
+  lambda: float(set((familias_cv_todas(D["g2"], "2_bytes_estructura") - familias_cv_todas(D["f2"], "1_bytes")).nlargest(2).index)
+                == {"WASTEDLOCKER", "DARKSIDE"}), "cv_por_familia_y_semilla.csv (4083, 4091)", rec=True)
 C(g, "puesto del grupo de tamaño en las importancias", "puesto", "4",
   lambda: float(list(csv(D["e2r"] / "importancias_rasgos.csv").groupby("grupo").importancia.sum()
                      .sort_values(ascending=False).index).index("tamaño") + 1), "importancias_rasgos.csv", rec=True)
