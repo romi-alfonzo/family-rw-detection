@@ -43,11 +43,15 @@ ROJO = "#a83e3e"
 
 # Única cifra sin CSV local: baseline de 2 características (SLURM job 3547; ver §4.3.1).
 EXACTITUD_2FEAT_29FAM = 0.166
-# Exactitud en validación cruzada (media de 5 semillas) del Exp. 2e (job 4058) y del sistema
-# completo del Exp. 2g (job 4091), transcritas del log pegado por Romina y registradas en
-# ESTADO_TESIS.md. Si las carpetas de resultados están bajadas en 4_resultados/, se leen de ahí
-# y se verifica que coincidan.
+# Exactitud y macro-F1 en validación cruzada (media de 5 semillas) del Exp. 2e (job 4058) y del
+# sistema completo del Exp. 2g (job 4091), transcritas del log pegado por Romina y registradas en
+# ESTADO_TESIS.md. Si las carpetas de resultados están bajadas en 4_resultados/, se leen de ahí,
+# de la fila explícita, y se verifica que coincidan: si no coinciden, el script se detiene.
 EXACTITUD_2E, EXACTITUD_2G = 0.9357, 0.9998
+MACROF1_2E, MACROF1_2G = 0.9359, 0.9998
+# Frente de notas, cifra canónica (P2bal, 149 notas, 30 familias, 50 semillas), acordada con la
+# sesión de notas el 2026-09-29: se lee de la fila explícita; si falta, el script se detiene.
+P2BAL = RES / "resultados_protocolo_p2bal_149" / "p2bal_resumen.csv"
 
 
 # ---------------------------------------------------------------- lectura de fuentes
@@ -115,15 +119,17 @@ def leer_ablacion_2b_10semillas():
     return abl
 
 
-def leer_notas():
-    """Mejor macro-F1 por protocolo de la corrida canónica de notas."""
-    mejor = {"grupos": 0.0, "estratificado": 0.0}
-    with open(RES / "resultados_canonicos" / "corrida_canonica_resumen.csv",
-              encoding="utf-8") as fh:
-        for fila in csv.DictReader(fh):
-            p = fila["protocolo"]
-            mejor[p] = max(mejor[p], float(fila["f1_macro_mean"]))
-    return mejor["estratificado"], mejor["grupos"]  # P1, P2
+def leer_notas_p2bal():
+    """Macro-F1 sobre 30 familias del frente de notas bajo P2bal: texto solo y cascada.
+
+    Hasta el 2026-09-29 se leía el MÁXIMO de corrida_canonica_resumen.csv (base de 146 notas), que
+    podía levantar una vista que el texto no cita. Ahora se lee la fila explícita y, si falta, se
+    detiene: una figura generada con otra cifra es peor que una que no se genera."""
+    with open(P2BAL, encoding="utf-8-sig") as fh:   # el CSV trae BOM
+        filas = {(f["protocolo"], f["capa"]): float(f["f1_macro_30"]) for f in csv.DictReader(fh)}
+    faltan = [k for k in (("P2bal", "texto solo"), ("P2bal", "M.6 (cascada)")) if k not in filas]
+    assert not faltan, f"faltan filas en {P2BAL.name}: {faltan}"
+    return filas[("P2bal", "texto solo")], filas[("P2bal", "M.6 (cascada)")]
 
 
 def leer_referencia_19feat():
@@ -133,25 +139,28 @@ def leer_referencia_19feat():
 
 
 def leer_cv_2e_2g():
-    """Exactitud media del Exp. 2e (bytes + estructura) y del sistema completo del Exp. 2g."""
+    """Exactitud y macro-F1 medios del Exp. 2e (bytes + estructura) y del sistema completo del
+    Exp. 2g, de la fila explícita de cada resumen. Devuelve {(exp, métrica): valor}."""
     import pandas as pd
     valores = {}
-    for clave, carpeta, archivo, fila, fijo in (
-            ("2e", "resultados_exp2e_job4058", "exp2e_resumen.csv", None, EXACTITUD_2E),
+    for clave, carpeta, archivo, fila, fijos in (
+            ("2e", "resultados_exp2e_job4058", "exp2e_resumen.csv", "2_bytes_mas_estructura",
+             {"accuracy": EXACTITUD_2E, "f1_macro": MACROF1_2E}),
             ("2g", "resultados_exp2g_job4091", "cv_resumen.csv", "5_bytes_estructura_extension",
-             EXACTITUD_2G)):
+             {"accuracy": EXACTITUD_2G, "f1_macro": MACROF1_2G})):
         ruta = RES / carpeta / archivo
         if not ruta.exists():
-            print(f"  {clave}: {fijo} (transcrita del log; {carpeta} no está bajada)")
-            valores[clave] = fijo
+            print(f"  {clave}: {fijos} (transcritas del log; {carpeta} no está bajada)")
+            valores.update({(clave, m): v for m, v in fijos.items()})
             continue
         t = pd.read_csv(ruta, header=[0, 1], index_col=0)
-        acc = t[("accuracy", "mean")]
-        v = float(acc.loc[fila] if fila else acc.max())
-        assert abs(v - fijo) < 5e-5, f"{clave}: el CSV dice {v}, el log decía {fijo}"
-        print(f"  {clave}: {v} (leída de {carpeta}/{archivo})")
-        valores[clave] = v
-    return valores["2e"], valores["2g"]
+        assert fila in t.index, f"{clave}: falta la fila {fila} en {archivo}"
+        for m, fijo in fijos.items():
+            v = float(t.loc[fila, (m, "mean")])
+            assert abs(v - fijo) < 5e-5, f"{clave}/{m}: el CSV dice {v}, el log decía {fijo}"
+            valores[(clave, m)] = v
+        print(f"  {clave}: leídas de {carpeta}/{archivo}, coinciden con el log")
+    return valores
 
 
 # ---------------------------------------------------------------- Figura 1
@@ -252,44 +261,49 @@ def fig_por_familia(f1, con_firma, solo_ext, sin_marca):
 
 
 # ---------------------------------------------------------------- Figura 3
-def fig_simetria(p1, p2, abl, acc_2c):
-    """Señal fácil (campaña/plantilla) vs señal robusta (contenido), en los dos frentes."""
-    fig, ax = plt.subplots(figsize=(8.4, 4.3))
-    grupos = ["Notas de rescate\n(macro-F1)", "Archivos cifrados\n(exactitud)"]
-    facil = [p1, abl["solo_extension"]["exactitud"]]
-    robusta = [p2, acc_2c]
-    etiq_facil = ["P1: plantilla conocida", "Extensión del archivo"]
-    etiq_robusta = ["P2: variante nunca vista", "Bytes del contenido"]
+def fig_simetria(notas_texto, notas_cascada, arch_contenido, arch_completo):
+    """En cada frente, la señal del contenido sola y con la señal ligada a la campaña, macro-F1.
+
+    Rediseñada el 2026-09-29 con la sesión del frente de notas: la versión anterior contrastaba
+    tipo de señal en archivos (extensión contra bytes) y protocolo en notas (P1 contra P2, la misma
+    señal en las dos barras), bajo una misma leyenda, y mezclaba macro-F1 con exactitud."""
+    fig, ax = plt.subplots(figsize=(8.6, 4.8))
+    grupos = ["Notas de rescate", "Archivos cifrados"]
+    contenido = [notas_texto, arch_contenido]
+    con_campana = [notas_cascada, arch_completo]
+    etiq_contenido = ["Texto (TF-IDF + SVC)", "Contenido (bytes + estructura)"]
+    etiq_campana = ["Texto + reglas de campaña", "Contenido + extensión (sistema completo)"]
 
     x = np.arange(2)
     ancho = 0.34
-    b1 = ax.bar(x - ancho / 2, facil, ancho, color="#b0b0b0",
-                label="Señal ligada a la campaña/plantilla concreta", edgecolor="white")
-    b2 = ax.bar(x + ancho / 2, robusta, ancho, color=AZUL,
-                label="Señal del contenido", edgecolor="white")
+    b1 = ax.bar(x - ancho / 2, contenido, ancho, color=AZUL, label="Señal del contenido",
+                edgecolor="white")
+    b2 = ax.bar(x + ancho / 2, con_campana, ancho, color="#8a8a8a",
+                label="Contenido + señal ligada a la campaña", edgecolor="white")
 
-    for b, v, e in zip(b1, facil, etiq_facil):
-        ax.text(b.get_x() + b.get_width() / 2, v + 0.02, f"{v:.3f}".replace(".", ","),
-                ha="center", fontsize=9.5, fontweight="bold")
-        ax.text(b.get_x() + b.get_width() / 2, 0.03, e, ha="center", fontsize=7.6,
-                rotation=90, va="bottom", color="#333333")
-    for b, v, e in zip(b2, robusta, etiq_robusta):
-        ax.text(b.get_x() + b.get_width() / 2, v + 0.02, f"{v:.3f}".replace(".", ","),
-                ha="center", fontsize=9.5, fontweight="bold")
-        ax.text(b.get_x() + b.get_width() / 2, 0.03, e, ha="center", fontsize=7.6,
-                rotation=90, va="bottom", color="white")
+    for barras, vals, etiq, color in ((b1, contenido, etiq_contenido, "white"),
+                                      (b2, con_campana, etiq_campana, "white")):
+        for b, v, e in zip(barras, vals, etiq):
+            txt = (f"{v:.4f}" if v > 0.995 else f"{v:.3f}").replace(".", ",")
+            ax.text(b.get_x() + b.get_width() / 2, v + 0.02, txt,
+                    ha="center", fontsize=9.5, fontweight="bold")
+            ax.text(b.get_x() + b.get_width() / 2, 0.03, e, ha="center", fontsize=7.6,
+                    rotation=90, va="bottom", color=color)
 
     ax.set_xticks(x, grupos, fontsize=10)
-    ax.set_ylim(0, 1.05)
-    ax.set_ylabel("Rendimiento")
-    ax.set_title("En ambos artefactos, la señal ligada a la campaña concreta y la señal\n"
-                 "del contenido difieren: en las notas la penaliza, en los archivos la supera",
-                 fontsize=10, pad=12)
-    ax.legend(fontsize=8.6, loc="upper left")
+    ax.set_ylim(0, 1.12)
+    ax.set_yticks(np.arange(0, 1.01, 0.2))
+    ax.set_ylabel("Macro-F1")
+    ax.set_title("Aporte de la señal ligada a la campaña sobre la señal del contenido,\n"
+                 "en los dos frentes", fontsize=10, pad=12)
+    ax.legend(fontsize=8.6, loc="upper left", ncol=2, frameon=False)
+    fig.text(0.5, 0.012, "Archivos: validación cruzada, una campaña por familia (la ganancia es una "
+             "cota superior). Notas: P2bal, plantilla nunca vista.", ha="center", fontsize=7.8,
+             style="italic", color="#333333")
     ax.spines[["top", "right"]].set_visible(False)
     ax.grid(axis="y", alpha=0.25, lw=0.6)
     ax.set_axisbelow(True)
-    fig.tight_layout()
+    fig.tight_layout(rect=(0, 0.05, 1, 1))
     fig.savefig(IMG / "fig_simetria_frentes.png", dpi=220)
     print("  fig_simetria_frentes.png")
 
@@ -364,12 +378,12 @@ if __name__ == "__main__":
     f1 = leer_por_familia_2c()
     acc_2c, _ = leer_resumen_2c()
     con_firma, solo_ext, sin_marca, abl = leer_marcas_2b()
-    p1, p2 = leer_notas()
+    notas_texto, notas_cascada = leer_notas_p2bal()
     print(f"  fuentes: 2c acc={acc_2c} | 2b firmas={len(con_firma)} ext={len(solo_ext)} "
-          f"sin={len(sin_marca)} | notas P1={p1:.3f} P2={p2:.3f}")
-    acc_2e, acc_2g = leer_cv_2e_2g()
-    fig_progresion(acc_2c, abl, acc_2e, acc_2g)
+          f"sin={len(sin_marca)} | notas P2bal texto={notas_texto} cascada={notas_cascada}")
+    cv = leer_cv_2e_2g()
+    fig_progresion(acc_2c, abl, cv[("2e", "accuracy")], cv[("2g", "accuracy")])
     fig_por_familia(f1, con_firma, solo_ext, sin_marca)
-    fig_simetria(p1, p2, abl, acc_2c)
+    fig_simetria(notas_texto, notas_cascada, cv[("2e", "f1_macro")], cv[("2g", "f1_macro")])
     fig_ablacion_extendida()
     print("Listo.")
