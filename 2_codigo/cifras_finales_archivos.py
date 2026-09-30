@@ -288,6 +288,9 @@ C(g, "difíciles bajo 0,75 con estructura, media de 5 semillas (4091)", "cantida
   lambda: float((familias_cv_todas(D["g2"], "2_bytes_estructura")
                  .loc[["WASTEDLOCKER", "JIGSAW", "DARKSIDE", "NOTPETYA", "SUNCRYPT", "CRYPTOLOCKER"]]
                  < 0.75).sum()), "cv_por_familia_y_semilla.csv", rec=True)
+C(g, "familias bajo 0,75 con solo bytes, media de 10 semillas (job 3648)", "cantidad", "6",
+  lambda: float((csv(D["c2"] / "bytes_multisemilla_por_familia.csv").groupby("familia").f1.mean() < 0.75).sum()),
+  "bytes_multisemilla_por_familia.csv", rec=True)
 C(g, "DARKSIDE con estructura, media de 5 semillas (4091)", "F1", "0,7515",
   lambda: familia_cv(D["g2"], "2_bytes_estructura", "DARKSIDE"), "cv_por_familia_y_semilla.csv", rec=True)
 C(g, "sistema completo: la familia más baja, media de 5 semillas", "F1 mínimo", "0,99",
@@ -633,6 +636,109 @@ C(g, "pares repartidos entre entrenamiento y prueba, máximo por semilla (tesis:
 C(g, "efecto máximo sobre la exactitud (tesis: «del orden de una diezmilésima»)", "exactitud", "0,0001",
   lambda: float(csv(D["dup"] / "duplicados_en_cv.csv").efecto_max_exactitud.max()),
   "duplicados_en_cv.csv (réplica del muestreo)", modo="orden", rec=True)
+g = "2h · ponderación"
+C(g, "BLACKMATTER sin imágenes en el entrenamiento (pliegue jpg, semilla 0)", "muestras de entrenamiento", "7",
+  lambda: float(csv(D["h2"] / "tipos_por_familia.csv").query(
+      "semilla == 0 and tipo == 'jpg' and columna == 1 and familia == 'BLACKMATTER'").n_entrenamiento.iloc[0]),
+  "tipos_por_familia.csv", rec=True)
+C(g, "BLACKMATTER en la prueba del pliegue jpg", "imágenes", "493",
+  lambda: float(csv(D["h2"] / "tipos_por_familia.csv").query(
+      "semilla == 0 and tipo == 'jpg' and columna == 1 and familia == 'BLACKMATTER'").n_prueba.iloc[0]),
+  "tipos_por_familia.csv", rec=True)
+C(g, "BLACKMATTER en jpg con ponderación, solo bytes", "F1", "0,868",
+  lambda: float(csv(D["h2"] / "tipos_por_familia.csv").query(
+      "semilla == 0 and tipo == 'jpg' and columna == 1 and familia == 'BLACKMATTER'").f1.iloc[0]),
+  "tipos_por_familia.csv", rec=True)
+C(g, "BLACKMATTER en jpg sin ponderación (2e-c)", "F1", "0",
+  lambda: float(re.search(r"F1 (\d+),(\d+) en bytes",
+                          next(l for l in lineas(D["h2"] / "log.txt") if "BLACKMATTER en el pliegue jpg (sin ponderar" in l))
+                .expand(r"\1.\2")), "log.txt (4096)")
+
+
+def mueve_fuera_de_jpg():
+    """Mayor |Δ| entre la medición ponderada (2h, recalculada) y la sin ponderar, fuera de jpg."""
+    sinp = csv(RES / "resultados_exp2e_tipos_job4079" / "tipos_por_pliegue.csv").set_index("tipo_excluido")
+    difs = []
+    for t in TIPOS:
+        if t == "jpg":
+            continue
+        difs.append(abs(pliegue_rec(t, 1) - sinp.loc[t, "f1_1_solo_bytes"]))
+        difs.append(abs(pliegue_rec(t, 2) - sinp.loc[t, "f1_2_bytes_mas_estructura"]))
+    return max(difs)
+
+
+C(g, "fuera de jpg, la ponderación mueve el macro-F1 (bytes y bytes + estructura)", "|Δ| máximo, menor que",
+  "0,005", mueve_fuera_de_jpg, "tipos_por_familia.csv (2h) + tipos_por_pliegue.csv (4079)", modo="max_lt", rec=True)
+
+g = "2h · ablación y semillas"
+C(g, "solo extensión frente al sistema completo", "diferencia (doce centésimas)", "0,12",
+  lambda: cv_semillas(D["g2"], "cv_por_semilla.csv", "cv_por_familia_y_semilla.csv",
+                      "5_bytes_estructura_extension", "f1_rec")[0] - abl_2h(6, "f1_rec")[0],
+  "cv_ablacion_por_familia.csv + cv_por_familia_y_semilla.csv", rec=True)
+for ancla, cit, que in (("Δ (7)-(5) pareado", "-0,0002", "estructura + extensión frente al sistema"),
+                        ("Δ (8)-(5) pareado", "+0,0001", "bytes + extensión frente al sistema")):
+    C(g, que + ", pareado por semilla", "Δ macro-F1", cit,
+      (lambda a=ancla: log(D["h2"] / "log.txt", a, r"semilla: ([+-][0-9.]+)")), "log.txt (4096)")
+    C(g, que + ", pareado por semilla", "IC 95 %, extremo inferior", {"-0,0002": "-0,0003", "+0,0001": "-0,0000"}[cit],
+      (lambda a=ancla: log(D["h2"] / "log.txt", a, r"\[([+-][0-9.]+);")), "log.txt (4096)")
+    C(g, que + ", pareado por semilla", "IC 95 %, extremo superior", {"-0,0002": "-0,0000", "+0,0001": "+0,0001"}[cit],
+      (lambda a=ancla: log(D["h2"] / "log.txt", a, r"; ([+-][0-9.]+)\]")), "log.txt (4096)")
+for col, cit in ((8, "0,9995"), (7, "0,9929"), (5, "0,9800")):
+    C(g, f"pliegue pdf, semilla 0, columna {col}", "macro-F1 recalculado", cit, (lambda c=col: pliegue_rec("pdf", c)),
+      "tipos_por_familia.csv", rec=True)
+C(g, "los otros seis pliegues: diferencia entre las columnas 5, 7 y 8", "máximo",
+  "0,0005", lambda: max(max(pliegue_rec(t, c) for c in (5, 7, 8)) - min(pliegue_rec(t, c) for c in (5, 7, 8))
+                        for t in TIPOS if t != "pdf"), "tipos_por_familia.csv", modo="max_le", rec=True)
+sola = {"CHIMERA": "0,0000", "WANNACRY": "0,1333", "BADRABBIT": "0,4039", "CONTI": "0,5331", "NOTPETYA": "0,6543",
+        "TESLACRYPT": "0,6661", "MAZE": "0,9746", "CLOP": "0,9847"}
+por6 = lambda: csv(D["h2"] / "cv_ablacion_por_familia.csv").query("columna == 6").groupby("familia").f1.mean()
+for fam, cit in sola.items():
+    C(g, f"solo extensión, {fam} (media de 5 semillas)", "F1", cit, (lambda f=fam: float(por6()[f])),
+      "cv_ablacion_por_familia.csv", rec=True)
+C(g, "solo extensión: familias por encima de 0,99", "familias", "22", lambda: float((por6() > 0.99).sum()),
+  "cv_ablacion_por_familia.csv", rec=True)
+C(g, "solo extensión: las cinco que el contenido confunde, la más baja", "F1 mínimo", "0,9988",
+  lambda: float(por6()[["JIGSAW", "CRYPTOLOCKER", "DARKSIDE", "WASTEDLOCKER", "SUNCRYPT"]].min()),
+  "cv_ablacion_por_familia.csv", rec=True)
+
+
+def mismo_vector_de_extension():
+    """Los catorce rasgos de forma de la extensión, con la función del propio 2g, para las cuatro."""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from exp2g_nombre_robusto import forma_de_la_extension
+    ext = csv(D["h2"] / "censo_por_familia.csv").set_index("familia").loc[
+        ["CHIMERA", "WANNACRY", "CONTI", "TESLACRYPT"], "ext_mas_comun"].tolist()
+    assert ext == ["crypt", "wncry", "mrbny", "micro"], ext
+    v = np.asarray(forma_de_la_extension([f"0001-doc.doc.{e}" for e in ext]), dtype=float)
+    return float(v.shape[1] == 14 and all(np.array_equal(v[0], x) for x in v[1:]))
+
+
+C(g, "CHIMERA, WANNACRY, CONTI y TESLACRYPT: mismo vector de 14 rasgos (1 = sí)", "sí/no", "1",
+  mismo_vector_de_extension, "exp2g_nombre_robusto.forma_de_la_extension + censo_por_familia.csv", rec=True)
+C(g, "por semilla, bajo tipo no visto: semillas 1 a 4", "promedio de 7 pliegues (log)", "0,9989",
+  lambda: log(D["h2"] / "log.txt", "--- semilla 1 ---", r"promedio ([0-9.]+)", dentro=14), "log.txt (4096)")
+
+
+def pdf_es_el_minimo():
+    """En cada semilla, el pliegue más bajo es pdf: el valor de pdf del bloque es su «mínimo»."""
+    ls = lineas(D["h2"] / "log.txt")
+    for s in (1, 2, 3, 4):
+        i = next(k for k, l in enumerate(ls) if l.strip() == f"--- semilla {s} ---")
+        bloque = ls[i:i + 14]
+        pdf = next(float(re.search(r"\s([0-9.]+)/", l).group(1)) for l in bloque if l.strip().startswith("pdf"))
+        mini = next(float(re.search(r"mínimo ([0-9.]+)", l).group(1)) for l in bloque if "mínimo" in l)
+        if abs(pdf - mini) > 1e-9:
+            return 0.0
+    return float(min(TIPOS, key=lambda t: pliegue_rec(t, 5)) == "pdf")
+
+
+C(g, "el pliegue más bajo es pdf en las cinco semillas (1 = sí)", "sí/no", "1", pdf_es_el_minimo,
+  "log.txt (4096) + tipos_por_familia.csv", rec=True)
+C(g, "mínimo por pliegue en las cinco semillas: el más alto", "macro-F1", "0,996",
+  lambda: float(csv(D["h2"] / "tipos_semillas.csv").minimo.max()), "tipos_semillas.csv")
+C(g, "la semilla 0 es la más baja de las cinco (1 = sí)", "sí/no", "1",
+  lambda: float(np.argmin(cinco_semillas_tipos()) == 0), "tipos_por_familia.csv + tipos_semillas.csv", rec=True)
+
 g = "2h · preregistro"
 C(g, "predicciones registradas", "cantidad", "16",
   lambda: float(len(json.loads((D["h2"] / "manifiesto.json").read_text(encoding="utf-8"))["preregistro"])),
@@ -682,6 +788,8 @@ def verificar(c):
         ok = v >= cit - 1e-12
     elif c["modo"] == "max_le":
         ok = v <= cit + 1e-12
+    elif c["modo"] == "max_lt":
+        ok = v < cit
     elif c["modo"] == "orden":      # «del orden de»: dentro de un factor 3
         ok = cit / 3 <= v <= cit * 3
     else:
