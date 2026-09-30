@@ -81,24 +81,34 @@ def leer_resumen_2c():
 
 
 def leer_marcas_2b():
-    """Clasifica cada familia según su marca en el Exp. 2b corregido (umbral 0,90).
-    Firma binaria = prefijo o sufijo >= 4 bytes (min_marca del manifiesto)."""
-    man = json.loads((RES / "resultados_estructural" / "manifiesto.json")
-                     .read_text(encoding="utf-8"))
-    min_marca = man["min_marca"]
-    con_firma, solo_ext, sin_marca = set(), set(), set()
-    with open(RES / "resultados_estructural" / "marcas_por_familia_umbral_90.csv",
-              encoding="utf-8") as fh:
-        for fila in csv.DictReader(fh):
-            fam = fila["familia"]
-            tiene_firma = (int(fila["prefijo_len"]) >= min_marca
-                           or int(fila["sufijo_len"]) >= min_marca)
-            if tiene_firma:
-                con_firma.add(fam)
-            elif fila["marca_detectable"] == "True":
-                solo_ext.add(fam)
-            else:
-                sin_marca.add(fam)
+    """Clasifica cada familia según su marca en el Exp. 2b (umbral 0,90), con las DIEZ semillas del
+    job 3651, que es la base de las tablas del 2b. Firma binaria = prefijo o sufijo >= 4 bytes
+    (min_marca del manifiesto). Hasta el 2026-09-29 se leía la corrida única del job 3638, que da 16
+    firmas en lugar de 17: allí el sufijo de BLACKBASTA medía 2 bytes, y en las diez semillas, 4 o
+    más. Si una familia cambiara de clase entre semillas, se detiene en lugar de elegir."""
+    import glob
+    carpetas = sorted(glob.glob(str(RES / "resultados_estructural_10semillas" /
+                                    "resultados_estructural_s*_job3651")))
+    assert len(carpetas) == 10, f"se esperaban 10 semillas del job 3651, hay {len(carpetas)}"
+    clase_por_semilla = []
+    for c in carpetas:
+        min_marca = json.loads((Path(c) / "manifiesto.json").read_text(encoding="utf-8"))["min_marca"]
+        clase = {}
+        with open(Path(c) / "marcas_por_familia_umbral_90.csv", encoding="utf-8") as fh:
+            for fila in csv.DictReader(fh):
+                if int(fila["prefijo_len"]) >= min_marca or int(fila["sufijo_len"]) >= min_marca:
+                    clase[fila["familia"]] = "firma"
+                elif fila["marca_detectable"] == "True":
+                    clase[fila["familia"]] = "extension"
+                else:
+                    clase[fila["familia"]] = "sin_marca"
+        clase_por_semilla.append(clase)
+    varian = [f for f in clase_por_semilla[0] if len({c[f] for c in clase_por_semilla}) > 1]
+    assert not varian, f"familias que cambian de clase entre semillas: {varian}"
+    clase = clase_por_semilla[0]
+    con_firma = {f for f, k in clase.items() if k == "firma"}
+    solo_ext = {f for f, k in clase.items() if k == "extension"}
+    sin_marca = {f for f, k in clase.items() if k == "sin_marca"}
     return con_firma, solo_ext, sin_marca, leer_ablacion_2b_10semillas()
 
 
