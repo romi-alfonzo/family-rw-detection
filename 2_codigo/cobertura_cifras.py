@@ -62,14 +62,33 @@ def lineas_de_prosa(texto: str):
         yield i, linea
 
 
+def formas(valor: str) -> set[str]:
+    """Las escrituras equivalentes de un mismo numero, con coma decimal.
+
+    La tesis escribe la misma cantidad como fraccion o como porcentaje segun la frase
+    («cobertura 0,7718» y «responde sobre el 77,18 %»), y el verificador guarda la forma
+    del log. Sin esto, la version porcentual aparece como descubierta y es una falsa alarma.
+    """
+    s = {valor.replace(".", ",")}
+    try:
+        x = float(valor.replace(",", "."))
+    except ValueError:
+        return s
+    for y in (x * 100, x / 100):
+        # se generan las mismas escrituras que usa el documento, sin ceros de mas
+        for dec in range(5):
+            s.add(f"{y:.{dec}f}".replace(".", ","))
+    return s
+
+
 def cifras_cubiertas() -> set[str]:
-    """Las cifras de la lista de cifras_finales.py, normalizadas con coma decimal."""
+    """Las cifras de la lista de cifras_finales.py, con sus formas equivalentes."""
     t = VERIFICADOR.read_text(encoding="utf-8")
     ini = t.index("CIFRAS = [")
     fin = t.index("\n]", ini)
     cubiertas = set()
     for m in RE_CIFRA.finditer(t[ini:fin]):
-        cubiertas.add(m.group(0).replace(".", ","))
+        cubiertas |= formas(m.group(0))
     return cubiertas
 
 
