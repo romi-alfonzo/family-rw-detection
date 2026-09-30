@@ -370,17 +370,49 @@ C(g, "unanimidad: familias con marca, máximo de 10", "cantidad", "28", lambda: 
 
 # ---------------- 2c
 g = "2c · bytes"
-for ancla, nombre, ex, f1 in (("[posicional + RandomForest] búsqueda", "posicional + RF (búsqueda)", "0,897", "0,897"),
-                              ("[n-gramas de bytes + LogReg]", "n-gramas + Regresión Logística", "0,856", "0,858"),
-                              ("[n-gramas de bytes + LinearSVC]", "n-gramas + LinearSVC", "0,849", "0,846")):
-    C(g, nombre + " — 5.800 archivos, 29 familias (job 3557)", "exactitud", ex,
-      (lambda a=ancla: log(D["c2_busq"], a, r"=> exactitud ([0-9.]+)", dentro=8)), "slurm-bytes-3557.out")
-    C(g, nombre + " — 5.800 archivos, 29 familias (job 3557)", "macro-F1", f1,
-      (lambda a=ancla: log(D["c2_busq"], a, r"macro-F1 ([0-9.]+) \|", dentro=8)), "slurm-bytes-3557.out")
-C(g, "búsqueda: tamaño del conjunto (job 3557)", "archivos", "5800",
-  lambda: log(D["c2_busq"], "Total:", r"Total: (\d+) archivos"), "slurm-bytes-3557.out")
-C(g, "búsqueda: familias (job 3557)", "familias", "29",
-  lambda: log(D["c2_busq"], "Total:", r"\| (\d+) familias"), "slurm-bytes-3557.out")
+br = lambda: csv(RES / "resultados_bytes" / "bytes_resumen.csv")
+for conf, nombre, ex, f1, ex4, f14 in (("posicional + RandomForest", "posicional + RF (búsqueda)", "0,891", "0,892", "0,8913", "0,8920"),
+                                       ("n-gramas de bytes + LogReg", "n-gramas + Regresión Logística", "0,862", "0,865", "0,8623", None),
+                                       ("n-gramas de bytes + LinearSVC", "n-gramas + LinearSVC", "0,852", "0,849", "0,8515", None)):
+    fila = lambda c=conf: br().query("configuracion == @c and etapa == 'busqueda'").iloc[0]
+    for cit, m in ((ex, "accuracy"), (f1, "f1_macro"), (ex4, "accuracy"), (f14, "f1_macro")):
+        if cit:
+            C(g, nombre + " — búsqueda anidada, 6.000 archivos, 30 familias (job 3639)",
+              "exactitud" if m == "accuracy" else "macro-F1", cit, (lambda f=fila, m_=m: float(f()[m_])), "bytes_resumen.csv (3639)")
+    C(g, nombre + " — búsqueda anidada (job 3639)", "archivos", "6000", (lambda f=fila: float(f()["n_archivos"])),
+      "bytes_resumen.csv (3639)")
+final_2c = lambda: br().query("etapa == 'final'").iloc[0]
+for cit, m in (("0,9089", "accuracy"), ("0,9074", "f1_macro")):
+    C(g, "etapa final, una corrida, 15.000 archivos (job 3639)", m, cit, (lambda m_=m: float(final_2c()[m_])),
+      "bytes_resumen.csv (3639)")
+C(g, "distancia entre la etapa final y la búsqueda", "exactitud", "0,018",
+  lambda: float(final_2c()["accuracy"] - br().query("etapa == 'busqueda'").accuracy.max()), "bytes_resumen.csv (3639)", rec=True)
+HIPER_2C = "Hiperparámetros: {'model__n_estimators': 300, 'model__min_samples_leaf': 2, 'model__max_features': 0.3, 'model__max_depth': 20}"
+C(g, "hiperparámetros elegidos por la búsqueda de 30 familias (300, 20, 2, 0,3; 1 = sí)", "sí/no", "1",
+  lambda: float(any(HIPER_2C in l for l in lineas(RES / "_logs_slurm_2026-08-17" / "slurm-bytes-3639.out"))),
+  "slurm-bytes-3639.out")
+m2c = lambda: csv(D["c2"] / "bytes_multisemilla.csv")
+C(g, "diez semillas: la exactitud más baja", "exactitud", "0,9093", lambda: float(m2c().accuracy.min()), "bytes_multisemilla.csv")
+C(g, "diez semillas: la exactitud más alta", "exactitud", "0,9147", lambda: float(m2c().accuracy.max()), "bytes_multisemilla.csv")
+pf2c = lambda: csv(D["c2"] / "bytes_multisemilla_por_familia.csv").groupby("familia")
+C(g, "familias con F1 de 0,98 o más, solo bytes, media de 10 semillas", "familias", "23",
+  lambda: float((pf2c().f1.mean() >= 0.98).sum()), "bytes_multisemilla_por_familia.csv", rec=True)
+for fam, (f, sd) in {"SUNCRYPT": ("0,745", "0,016"), "WASTEDLOCKER": ("0,628", "0,013"), "CRYPTOLOCKER": ("0,605", "0,016"),
+                     "DARKSIDE": ("0,603", "0,011"), "JIGSAW": ("0,439", "0,014"), "NOTPETYA": ("0,394", "0,023")}.items():
+    C(g, f"solo bytes, {fam} (10 semillas)", "F1", f, (lambda x=fam: float(pf2c().f1.mean()[x])),
+      "bytes_multisemilla_por_familia.csv", rec=True)
+    C(g, f"solo bytes, {fam} (10 semillas)", "F1 (desvío)", sd, (lambda x=fam: float(pf2c().f1.std()[x])),
+      "bytes_multisemilla_por_familia.csv", rec=True)
+C(g, "DARKSIDE con solo bytes (10 semillas)", "precisión", "0,46", lambda: float(pf2c().precision.mean()["DARKSIDE"]),
+  "bytes_multisemilla_por_familia.csv", rec=True)
+C(g, "DARKSIDE con solo bytes (10 semillas)", "recall", "0,88", lambda: float(pf2c().recall.mean()["DARKSIDE"]),
+  "bytes_multisemilla_por_familia.csv", rec=True)
+C(g, "referencia de la validación por tipos: etapa final de 29 familias (job 3557)", "exactitud", "0,910",
+  lambda: log(RES / "_logs_slurm_2026-08-17" / "slurm-bytes-3557.out", "ETAPA FINAL", r"=> exactitud ([0-9.]+)", dentro=40),
+  "slurm-bytes-3557.out")
+C(g, "caída bajo tipo no visto, 29 familias", "exactitud", "0,031",
+  lambda: log(RES / "_logs_slurm_2026-08-17" / "slurm-bytes-3557.out", "ETAPA FINAL", r"=> exactitud ([0-9.]+)", dentro=40)
+  - float(csv(D["c2_an"] / "a_generalizacion_tipos.csv").accuracy.mean()), "slurm-bytes-3557.out + a_generalizacion_tipos.csv", rec=True)
 tabla_2c = {"doc": ("1991", "27", "0,889", "0,881"), "docx": ("1978", "27", "0,887", "0,877"),
             "xls": ("1948", "27", "0,889", "0,883"), "xlsx": ("1962", "27", "0,884", "0,872"),
             "pptx": ("1926", "27", "0,867", "0,864"), "pdf": ("1798", "25", "0,863", "0,836"),
