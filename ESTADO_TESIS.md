@@ -10292,6 +10292,71 @@ atribuyen la ausencia de BLACKMATTER al renombrado.
   curva, §4.6 tres veces, §4.7.5 dos veces; «Adoptar esta configuración como resultado del frente» →
   «Incorporar esta configuración al sistema del frente»).
 
+**✅ BLACKMATTER VERIFICADO (listado de la carpeta + `tipos_por_familia.csv` del 4079, pegado por
+Romina):** `BLACKMATTER-small` = **988 `NNNN-jpg-fromweb.jpg.HpWl7Oyll` + 12 con nombre sustituido
+(`00RQDgR.HpWl7Oyll`) + `BLACKMATTER.pdf`** (1.001 entradas; los «13 no canónicos» del censo del
+16-08 eran 12 muestras + el PDF de documentación). **En NapierOne-small BLACKMATTER es solo imágenes.**
+Su F1 en el pliegue jpg del 2e-c: **0,0 con bytes y 0,0 con bytes + estructura**. La hipótesis se
+confirmó: no la saca el renombrado sino la composición de su carpeta, y la rareza del 2e-c (exactitud
+0,6951 contra macro-F1 0,7987 en jpg) queda explicada.
+
+## ⚠ ERROR PROPIO DETECTADO AL VERIFICARLO: la validación por tipos del 2e-c/2f/2g se corrió SIN ponderar
+
+`analisis_bytes.py` (la validación por tipos **publicada** del 2c, 0,879 / 0,861) usa
+`class_weight="balanced"`, igual que **todas** las validaciones cruzadas del frente (2c, 2d, 2e, 2e-b,
+2f, 2g). `exp2e_validacion_tipos.py` —escrito por Claude— decía «sin class_weight, **como allí**», y
+era **falso**; el 2f y el 2g copiaron ese modelo en su parte de tipos. Consecuencias:
+- **En validación cruzada da exactamente igual:** con 400 archivos por familia en cada entrenamiento,
+  los pesos de `balanced` valen todos 1. Ninguna cifra de CV cambia.
+- **En la de tipos no:** al sacar un tipo las familias quedan desbalanceadas, y BLACKMATTER en jpg se
+  queda con ~6 archivos de entrenamiento. Sin ponderar, F1 0. Con ponderar (2c) ese pliegue daba 0,874
+  de exactitud, lo que indica que ahí sí se la reconocía.
+- **Lo que sigue en pie:** los deltas entre columnas dentro de cada corrida (le pasa igual a las dos
+  representaciones de contenido). **Lo que era falso:** «la razón es la base y no el método» (tesis
+  §4.7.5 e informes): la caída del pliegue jpg (0,874 → 0,6951) es de método.
+
+**Corregido ya** (tesis compila, 121 págs. con el frente de notas integrado por la otra sesión, 0
+errores): 12 en vez de 13 renombrados de BLACKMATTER (§4.5); la frase «para estas familias el nombre
+original ya no existe» (falsa para BLACKMATTER) → solo CERBER; la cobertura de pliegues del 2c
+(§4.5.5) con las causas reales (CERBER renombra, BLACKMATTER solo imágenes, NOTPETYA sin imágenes,
+pdf sin BADRABBIT/NOTPETYA por el sesgo); `subsec:exp2c_renombrado`; la leyenda de `tab:exp2e_tipos`
+con la causa; §4.7.5 «no solo de base: también de método» con BLACKMATTER; salvedad en las pérdidas
+(0,057 y 0,0036). Informes a Cappo: la misma frase corregida en los dos; página de estado a 121.
+Código: comentario falso de `exp2e_validacion_tipos.py` corregido sin tocar el modelo (el 4079 sigue
+siendo reproducible).
+
+**Incidente:** una compilación de la otra sesión corrió al mismo tiempo y se pisaron los `.aux` (la
+mía falló; se repitió cuando terminó la otra, bien). La otra sesión commiteó `resultados.tex`
+(`ecaa9d9`, integra el frente de notas) **con todos los cambios del frente de archivos de hoy
+adentro**: verificado marca por marca que no se perdió ninguno.
+
+# 📌 PREREGISTRO — Exp. 2h: cierre del frente de archivos en UNA sola corrida (2026-09-28)
+
+Pedido de Romina: «analizá bien ya todo lo que quieras, no podemos esperar 2 h todo el tiempo para
+cada duda». Se juntó todo lo que solo se resuelve con los datos del clúster. Script
+`2_codigo/exp2h_cierre_archivos.py` + `slurm/job_exp2h.sh`, **commit `f2591b0` antes de correr**
+(reemplaza a `validacion_tipos_ponderada.py`, `429207f`, que nunca se corrió). Probado de punta a
+punta con un conjunto sintético.
+
+| Parte | Qué resuelve |
+|---|---|
+| (A) Censo + duplicados SHA-256 | recuentos de la tesis hechos a mano en agosto (CERBER 981, «25 de 30 con una extensión», «compartidas por BADRABBIT, NOTPETYA y JIGSAW»); duplicados dentro y entre familias, nunca mirados |
+| (B) Tipos con ponderación, semilla 0 | el error de método; BLACKMATTER en jpg; macro-F1 sin las familias con < 50 de entrenamiento |
+| (C) Ablación en CV, 5 semillas | ¿cuánto da la extensión SOLA? (el control que el 2d tuvo y el 2g no) · ¿hacen falta los bytes? · ¿hace falta la estructura? |
+| (D) Tipos con 5 semillas para el sistema completo | el 0,9962 salía de una sola semilla |
+
+Puertas: censo 29.948 (aviso) · (B) n y familias por pliegue = 2e-c (aborta) · (C) semilla 0 = 2g
+(aborta C y D). Predicciones: A1 CERBER sin tipo legible · A2 extensión de documento solo en
+BADRABBIT/NOTPETYA/JIGSAW (JIGSAW 2) · A3 en claro CERBER 988, JIGSAW 2 · A4 0 duplicados entre
+familias · A5 duplicados dentro solo en CRYPTOLOCKER/NOTPETYA · P1 BLACKMATTER ≥ 0,50 en jpg con
+ponderación · P2 exactitud de bytes ≥ 0,865 · P3 Δ (2)−(1) > 0 en 7/7 · P4 (5) ≥ 0,99 en 7/7 · P5 (3)
+sigue colapsando en jpg · P6 la extensión sola no depende del tipo · A6 extensión sola < 0,95 · A7
+estructura + extensión ≥ 0,995 · A8 bytes + extensión ≥ 0,999 · M1 (5) ≥ 0,99 en las 5 semillas.
+
+**Cuando vuelva, se actualiza de una vez:** tablas de tipos del 2e-c y del 2g (con ponderación), la
+ablación como subsección del 2g, los recuentos del censo en §4.5/§4.6, la frase de JIGSAW del 2d y
+los dos informes.
+
 ## Llevado a la tesis y a los informes el mismo día
 
 **`resultados.tex`** (respaldo `resultados.tex.antes_2g`; CRLF preservado). Compila: **93 páginas,
@@ -10346,6 +10411,1133 @@ solo si no se dispone del nombre del archivo. Está así en los dos informes.
 familias que no renombran»; los nombres originales de JIGSAW eran los de sus archivos **sin cifrar**,
 apartados después. La figura de progresión (`generar_figuras_cap4.py`) sigue mostrando cuatro
 enfoques. El «residuo genuino» del §4.5.8.
+
+---
+
+# 🖼 FIGURAS DEL CAP. 4 REGENERADAS — y tres inconsistencias viejas que aparecieron (2026-09-28)
+
+Mientras corre el Exp. 2h. `2_codigo/generar_figuras_cap4.py`, commit `9455b32`. Imágenes y tesis
+sin commitear (documento). Respaldo de las figuras anteriores en el scratchpad de la sesión.
+Compila: 121 págs., 0 errores.
+
+**Progresión (`fig:progresion`):** llega al sistema completo — se agregan Exp. 2e (0,936) y Exp. 2g
+(0,9998, rayado: incluye la forma de la extensión). Cuatro decimales cerca del techo (redondeado a
+tres decía «1,000»). Leyenda y texto de la síntesis actualizados.
+
+**Tres inconsistencias previas a hoy, verificadas contra los CSV locales y corregidas:**
+1. **La barra del 2c decía 0,909** (corrida única, job 3639) al lado de un texto que dice
+   **0,912 ± 0,002** (diez semillas, job 3648). La figura pasa a leer el job 3648. Lo mismo en
+   `fig:simetria` (lado de archivos) y en `fig:f1_bytes` (F1 por familia, ahora media de 10 semillas).
+2. **La barra de firmas del 2b decía cobertura 54 % y exactitud 0,533** (corrida única, job 3638);
+   la tabla `tab:exp2b` dice **57,2 % y 0,563** (diez semillas, job 3651, criterio 0,90). La figura
+   pasa a leer las diez semillas del 3651 (verificado: medias 0,5634 y 0,5723).
+3. **Recuentos del 2b en el análisis por familia del 2c:** la figura decía 16 / 12 / 2 (con firma /
+   solo extensión / sin marca, criterio 0,90, 30 familias), la leyenda «quince… diez» y el texto
+   «quince… once». Venían de versiones distintas (15 = unanimidad; 11 = base de 29 familias; 10 = ?).
+   Con 30 familias y el F1 medio de diez semillas: **las 16 con firma superan todas 0,97 y 13
+   superan 0,99** (BADRABBIT 0,978, LORENZ 0,988, HELLOKITTY 0,990) — el «sin una sola excepción ≥
+   0,99» era falso con 16 —; **8 de las 12 con solo extensión superan 0,98**; «23 de 30 ≥ 0,98» se
+   confirma. Leyenda y los dos ítems del §4.5.3 corregidos.
+
+**No tocado (frente de notas):** `fig:simetria` sigue mostrando P1 0,760 / P2 0,435 para las notas,
+igual que el texto de la Discusión. Actualizarlo le toca a la sesión del frente de notas.
+
+---
+
+# 📋 REVISIÓN INDEPENDIENTE: la skill se crea YA, con estándar de paper internacional (2026-09-28)
+
+Supera al bloque «PENDIENTE PARA EL FINAL» en dos puntos, por decisión de Romina: (1) **la skill se
+crea ahora**, en un chat nuevo con Claude Fable 5.1 (la revisión completa se repite cuando la tesis
+cierre); (2) **el rol no es un jurado** sino «un científico que verifique los datos y que todo sea real
+y replicable, como un paper internacional»: revisor de conferencia/revista internacional de seguridad
+más comité de evaluación de artefactos (reproducir, no solo rastrear; reimplementar la cifra de
+cabecera si puede; todo lo de clúster en UNA corrida). `6_notas_trabajo/ENCARGO_REVISION_TESIS_COMPLETA.md`
+reescrito con eso, con la sección 0 de lo que está en movimiento (2h corriendo, conclusión sin escribir,
+otra sesión en el frente de notas) y la lista de chequeo ampliada con los siete errores reales del 28-09.
+
+---
+
+# ⏳ EXP. 2h TERMINADO — puertas y predicciones falladas (de lo pegado); falta el log completo (2026-09-29)
+
+Registrado de lo pegado por Romina (`grep PUERTA|FALLA|Traceback|Error` sobre el log). **Pedido el log
+completo** para el resto.
+
+**Las tres puertas pasan:** censo **29.948** muestras = diagnóstico 4082 ✔ · n y familias de los siete
+pliegues idénticos al 2e-c ✔ · la semilla 0 de validación cruzada reproduce al 2g ✔. La corrida es
+comparable con todo lo anterior.
+
+**Tres predicciones FALLAN:**
+- **A5** (duplicados dentro de familia solo en CRYPTOLOCKER/NOTPETYA): hay duplicados exactos (SHA-256)
+  en **seis** familias — BADRABBIT 3 grupos / 6 archivos · TESLACRYPT 3/6 · MEDUZALOCKER 3/6 ·
+  CRYPTOLOCKER 3/6 · RANSOMEXX 3/6 · NOTPETYA 1/2. **32 archivos, 0,11 % del conjunto.** A4 (0 entre
+  familias) no figura entre las fallas: a confirmar. Lectura PROVISIONAL, sin verificar: tres pares de
+  documentos idénticos en la base de NapierOne, repetidos al cifrar por las familias deterministas;
+  coincide con que el diagnóstico 4082 encontró estructura de prefijos idéntica en CRYPTOLOCKER,
+  BADRABBIT, MEDUZALOCKER y RANSOMEXX. TESLACRYPT sería nueva en ese grupo. Se verifica con
+  `censo_duplicados.csv` (nombres de los archivos).
+- **P3** (Δ (2)−(1) > 0 en los siete pliegues, con ponderación): falla, **mínimo −0,0264**. En algún
+  pliegue la estructura empeora a los bytes. Falta saber cuál.
+- **P4** ((5) ≥ 0,99 en los siete pliegues): falla, **mínimo 0,9800**. El 2g sin ponderar ya daba
+  0,9800 en pdf: **la predicción estaba mal calibrada** (se escribió sin mirar esa fila). No es un
+  colapso.
+
+El resto (A1–A4, P1, P2, P5, P6, A6–A8, M1) no aparece entre las fallas; **no se da por cumplido
+hasta ver el log** (un «no se llegó a medir» tampoco lo muestra el grep).
+
+---
+
+# ⏸ REVISIÓN INDEPENDIENTE EN ESPERA (2026-09-29)
+
+La skill `.claude/skills/revisar-tesis/` quedó creada por el chat revisor (Fable 5.1). **Romina: «no
+haremos aún la revisión hasta no cerrar todo».** Se corre recién con el Exp. 2h incorporado, la
+conclusión escrita y el frente de notas terminado. El encargo quedó actualizado con esa condición.
+
+---
+
+# ✅ EXP. 2h CERRADO — job 4096: censo, tipos con ponderación, ablación y semillas (2026-09-29)
+
+Job 4096, nodo c2, 22:05 → 00:16 (2 h 11 min). **Registrado de lo pegado (log completo).** Salidas en
+`/scratch/ralfonzo/tesis/resultados_exp2h_job4096`. **Reemplaza al bloque parcial «⏳ EXP. 2h TERMINADO».**
+
+## Puertas: las tres ✔
+Censo 29.948 = diagnóstico 4082 · n y familias por pliegue = 2e-c · la semilla 0 de CV reproduce al 2g
+((2) 0,9356 · (5) 0,9999 de macro-F1).
+
+## (A) Censo del conjunto vigente — 29.948 muestras, sin aprendizaje
+- **Composición:** 25 familias con 1.000 muestras, 143 por tipo (142 en xlsx); DARKSIDE 1.000, entre 142
+  y 144 por tipo. Excepciones: **BLACKMATTER** 988 jpg + 12 con nombre sustituido (solo imágenes) ·
+  **CERBER** 988, **todas** con nombre sustituido y las 988 con cabecera en claro · **NOTPETYA** 968 (1.000
+  − 32 en cuarentena), **sin jpg**: doc 149 · docx 167 · pdf 167 · pptx 167 · xls 152 · xlsx 166 ·
+  **JIGSAW** 992 (1.000 − 8 en cuarentena: pptx 136 y doc 142 → 7 pptx + 1 doc), 2 en claro (los PDF).
+- **Extensiones:** **25 de 30 familias con una sola** (igual que el 2d). Con más: BADRABBIT 7 y NOTPETYA 6
+  (no renombran: la del documento) · JIGSAW 2 (`.fun` + los 2 PDF en claro) · **MAZE 573** y **SUNCRYPT
+  1.000** (aleatorias). **1.606 distintas; compartidas por más de una familia, solo las 6 de documento**
+  (BADRABBIT y NOTPETYA; `.pdf` también JIGSAW). **Precisa al 2d:** el número de extensiones no lo explica
+  solo SUNCRYPT (también MAZE, 573); y JIGSAW figuraba entre «las que no renombran» solo por sus archivos
+  sin cifrar (la aritmética de la cuarentena lo confirma: sus 8 apartados son justo los doc/pptx que faltan).
+- **A1 ✔** CERBER sin tipo legible (0) · **A2 ✔** extensión de documento solo BADRABBIT 1.000, NOTPETYA
+  968, JIGSAW 2 · **A3 ✔** en claro CERBER 988, JIGSAW 2.
+- **Duplicados exactos (SHA-256): 16 grupos, 32 archivos (0,11 %), TODOS dentro de una familia.** **A4 ✔**
+  0 entre familias: no hay fuga entre clases. BADRABBIT, CRYPTOLOCKER, MEDUZALOCKER, RANSOMEXX y
+  TESLACRYPT, 3 pares cada una; NOTPETYA, 1 par. **A5 FALLA** (se predijo solo CRYPTOLOCKER/NOTPETYA).
+  Hipótesis SIN VERIFICAR: tres documentos de origen repetidos + cifrado determinista (CRYPTOLOCKER,
+  BADRABBIT, MEDUZALOCKER y RANSOMEXX ya tenían estructura de prefijos idéntica en el 4082; TESLACRYPT es
+  nueva). Se verifica con los nombres de `censo_duplicados.csv` (pedido). Efecto: ≤ 16 pares en 29.948;
+  despreciable, pero se declara.
+
+## (B) Dejar-un-tipo-fuera CON ponderación (semilla 0) — macro-F1 (exactitud a 2 decimales en el log)
+
+| Pliegue | (1) bytes | (2) b+estr | (3) +nombre | (5) +ext | (6) solo ext | (7) estr+ext | (8) bytes+ext |
+|---|---|---|---|---|---|---|---|
+| doc | 0,8887 | 0,9321 | 0,9947 | 0,9943 | 0,8555 | 0,9943 | 0,9943 |
+| docx | 0,8833 | 0,9071 | 1,0000 | 1,0000 | 0,8602 | 1,0000 | 1,0000 |
+| jpg | 0,8419 | **0,8155** | **0,4047** | 1,0000 | 0,9020 | 1,0000 | 1,0000 |
+| pdf | 0,7744 | 0,8137 | 0,9834 | **0,9800** | 0,8581 | 0,9929 | **0,9995** |
+| pptx | 0,8716 | 0,8935 | 1,0000 | 1,0000 | 0,8547 | 1,0000 | 1,0000 |
+| xls | 0,8830 | 0,9046 | 0,9995 | 0,9995 | 0,8536 | 0,9995 | 0,9995 |
+| xlsx | 0,8887 | 0,9031 | 1,0000 | 1,0000 | 0,8571 | 0,9995 | 1,0000 |
+| **Promedio F1** | 0,8617 | 0,8814 | 0,9118 | **0,9963** | 0,8630 | 0,9980 | 0,9990 |
+| Promedio exactitud | 0,8757 | 0,8786 | 0,9048 | 0,9960 | 0,8984 | 0,9979 | 0,9990 |
+| F1 sin las de < 50 de entrenamiento | 0,8621 | 0,8859 | 0,9141 | 0,9963 | 0,8625 | 0,9980 | 0,9990 |
+
+- **Δ (2)−(1) +0,0197 [−0,0014; +0,0408], 6/7 → P3 FALLA** (jpg −0,0264). Causa, medida: BLACKMATTER (493
+  de prueba, **7** de entrenamiento): con ponderación los bytes la reconocen (F1 **0,868**) y bytes +
+  estructura casi no (**0,285**). Sin las familias con < 50 de entrenamiento: Δ promedio **+0,0238** (CV:
+  +0,0246), y el pliegue jpg queda en ≈ +0,002 (calculado de los promedios; el exacto está en el CSV).
+- **Δ (5)−(2) +0,1149 [+0,0743; +0,1554], 7/7.**
+- **Ponderar o no solo cambia jpg:** bytes +0,0432 · b+estr +0,0103 · +nombre +0,1880 · +ext +0,0003; el
+  resto de los pliegues ±0,005.
+- **BLACKMATTER en jpg:** bytes 0,8680 · b+estr 0,2852 · +nombre 0,0000 · +ext, solo ext, estr+ext y
+  bytes+ext **1,0000**.
+- **P1 ✔** 0,868 · **P2 ✔** exactitud de bytes **0,8757** (publicado 0,879; lo que queda es de base,
+  pliegue pdf) · **P4 FALLA** (5) mínimo **0,9800** en pdf: umbral mal calibrado (el 2g ya daba 0,9800) ·
+  **P5 ✔** (3) sigue colapsando en jpg, 0,4047: no era la ponderación · **P6 ✔** solo extensión en tipos
+  0,8630 contra 0,8781 en CV (−0,015).
+- **Pérdida al pasar a tipo no visto** (CV → tipos, macro-F1): bytes −0,050 · b+estr −0,055; **sin las de
+  < 50 de entrenamiento, −0,049 y −0,050: iguales**. La conclusión del 2e-c se sostiene con el modelo correcto.
+- ⭐ **En pdf el sistema completo (5), 0,9800, queda por DEBAJO de bytes + extensión (8), 0,9995, y de
+  estructura + extensión (7), 0,9929.** En los otros seis pliegues, (5) = (8).
+
+## (C) Ablación del sistema en validación cruzada (5 semillas × 5 pliegues)
+
+| Columna | Exactitud | macro-F1 | Δ contra (5) | Δ contra (2) |
+|---|---|---|---|---|
+| (6) solo forma de la extensión (14) | 0,9025 ± 0,0011 | **0,8781 ± 0,0013** | −0,1218 [−0,1234; −0,1202] 0/5 | −0,0579 [−0,0599; −0,0559] 0/5 |
+| (7) estructura + extensión (58) | 0,9997 ± 0,0001 | **0,9997 ± 0,0001** | −0,0002 [−0,0003; −0,0000] 0/5 | +0,0637 [+0,0632; +0,0642] 5/5 |
+| (8) bytes + extensión (1.038) | 0,9999 ± 0,0001 | **0,9999 ± 0,0001** | +0,0001 [−0,0000; +0,0001] 3/5 | +0,0640 [+0,0635; +0,0645] 5/5 |
+
+**A6 ✔ A7 ✔ A8 ✔.** Lectura: **la extensión sola da 0,878**, menos que el contenido solo (0,936): no hace
+el trabajo del sistema. **Con la extensión, cualquiera de las dos capas de contenido alcanza**:
+estructura + extensión, con 58 rasgos, 0,9997; bytes + extensión, 0,9999. En el sistema completo la
+estructura no agrega nada sobre bytes + extensión (n.s.), y los bytes agregan +0,0002 sobre estructura +
+extensión.
+
+**F1 por familia con la extensión sola — las colisiones:** CHIMERA **0,0000** · WANNACRY 0,1333 · BADRABBIT
+0,4039 · CONTI 0,5331 · NOTPETYA 0,6543 · TESLACRYPT 0,6661 · MAZE 0,9746 · CLOP 0,9847; las otras 22 ≥ 0,998.
+CHIMERA `.crypt`, WANNACRY `.wncry`, CONTI `.mrbny` y TESLACRYPT `.micro` son cinco minúsculas distintas
+con un solo carácter hexadecimal: **los 14 rasgos dan el mismo vector para las cuatro** (verificado sobre
+la definición de `forma_de_la_extension`). BADRABBIT y NOTPETYA comparten las extensiones de documento.
+**La complementariedad, medida:** la extensión separa a las que el contenido confunde (JIGSAW `.fun`,
+CRYPTOLOCKER `.wizard`, DARKSIDE `.03587770`, WASTEDLOCKER `.garminwasted`, SUNCRYPT) y el contenido separa
+a las que tienen extensiones de la misma forma (las cuatro de cinco letras tienen firma o contenido fuerte).
+
+## (D) Sistema completo bajo tipo no visto, cinco semillas
+Por semilla: 0,9963 · 0,9989 · 0,9988 · 0,9988 · 0,9987 → **0,9983 ± 0,0011** (**M1 ✔**). El pliegue pdf es
+el más bajo en todas: 0,9800 · 0,9955 · 0,9919 · 0,9923 · 0,9917.
+
+## Veredicto: 13 de 16 cumplen; fallan A5, P3 y P4
+La lectura preregistrada decía «P3 y P4 cumplen → las cifras con ponderación reemplazan a las tablas» y
+«P4 falla → el sistema no es robusto a tipos no vistos con el modelo de la CV, y se declara». **Las dos
+fallan, y se reporta así.** Lo que muestran los datos: P3 falla por un solo caso degenerado (BLACKMATTER
+con 7 ejemplos de entrenamiento) y sin él se cumple; P4 falla por el pliegue pdf de la semilla 0 (0,980),
+que en las otras cuatro semillas está entre 0,992 y 0,996. **La afirmación honesta de robustez:** el sistema
+completo mantiene 0,98 o más en todos los pliegues y 0,9983 ± 0,0011 de promedio; no «≥ 0,99 en todos».
+
+## Qué cambia en la tesis
+- Tablas de tipos del 2e-c y del 2g → las ponderadas (mismo modelo que el 2c publicado y que la CV).
+- 0,9962 (una semilla, sin ponderar) → **0,9983 ± 0,0011** (cinco semillas); pérdida del sistema 0,0015.
+- Sección nueva del 2h: censo y duplicados, el cambio de modelo, la ablación y la complementariedad.
+- 2d: MAZE junto a SUNCRYPT; la precisión sobre JIGSAW. §4.5.8: CERBER sustituye el nombre en sus 988.
+- **Decisión para Romina:** el canónico sigue siendo (5), el sistema que apila todo, o pasa a (8) bytes +
+  extensión, que empata en CV (0,9999 contra 0,9998, n.s.) y es algo mejor en tipos (0,9990 contra 0,9963,
+  solo por el pliegue pdf, una semilla).
+
+**Pedido a Romina y recibido el mismo día** (CSV del job 4096, pegados):
+
+**Duplicados — hipótesis VERIFICADA.** Los 16 pares son siempre los **mismos tres pares de documentos de
+origen**: `0066-doc.doc` = `0067-doc.doc`, `0098-jpg-fromweb.jpg` = `0100-jpg-fromweb.jpg` y
+`0134-xls.xls` = `0136-xls.xls`. Aparecen en BADRABBIT, CRYPTOLOCKER, MEDUZALOCKER, RANSOMEXX y
+TESLACRYPT (los tres pares) y en NOTPETYA (solo el de doc). **La base de NapierOne tiene tres documentos
+repetidos, y esas seis familias producen el mismo archivo cifrado a partir del mismo documento: cifrado
+determinista, sin aleatorización por archivo.** Las otras 24 cifran distinto dos documentos iguales.
+Efecto en la validación: en dejar-un-tipo-fuera las dos copias caen en el mismo pliegue (mismo tipo), así
+que no hay fuga; en validación cruzada, a lo sumo un par o dos por semilla repartidos entre entrenamiento
+y prueba (≈ 0,0001). Despreciable, y declarado.
+
+**Exactitud por pliegue, con ponderación (4 decimales):** bytes / b+estr — doc 0,9005 / 0,9358 · docx
+0,8954 / 0,9138 · jpg 0,8538 / **0,7326** · pdf 0,8017 / 0,8336 · pptx 0,8862 / 0,9056 · xls 0,8936 /
+0,9184 · xlsx 0,8989 / 0,9103 → promedio 0,8757 / 0,8786; Δ exactitud +0,0029 [−0,0483; +0,0540], 6/7.
+**F1 sin las de < 50 de entrenamiento:** en jpg (1) 0,8450 y (2) 0,8473 → **Δ +0,0023**; en los demás
+pliegues igual al F1 con todas. **Δ macro-F1 sin BLACKMATTER-jpg: +0,0238 [+0,0108; +0,0368], 7/7.**
+Pérdida CV → tipos sin ese caso: bytes −0,0493, b+estr −0,0500 (con él: −0,0497 y −0,0545).
+Δ (3)−(2) por pliegue: +0,0304 [−0,1520; +0,2128], 6/7 (jpg −0,4108).
+
+**F1 medio sobre los pliegues de las seis difíciles** (bytes → b+estr → sistema completo), con ponderación:
+WASTEDLOCKER 0,3919 → 0,6395 → 1,0000 · JIGSAW 0,3654 → 0,5127 → 0,9989 · NOTPETYA 0,1142 → 0,2965 → 0,9759
+· SUNCRYPT 0,5844 → 0,6412 → 1,0000 · CRYPTOLOCKER 0,2654 → 0,2843 → 1,0000 · **DARKSIDE 0,5552 → 0,5043**
+→ 1,0000 (la estructura la baja 0,05 bajo tipo no visto; sin ponderar estaba plana, 0,5063 → 0,5015).
+
+**Exactitud del 2c publicado contra la ponderada del 2h, por pliegue:** doc +0,0115 · docx +0,0086 · jpg
+−0,0198 · pdf −0,0609 · pptx +0,0196 · xls +0,0045 · xlsx +0,0151. **Lo que queda está en pdf y jpg, cuya
+composición cambió:** el pliegue pdf incorpora a NOTPETYA y BADRABBIT, y el de jpg ya no tiene a CERBER.
+
+**Decisión (a)/(b):** Romina no respondió; se aplica **(a)** —sigue canónico el sistema completo (5), que
+es lo ya escrito y la recomendación— con la ablación al lado. **Pendiente de su confirmación.**
+
+---
+
+# 📝 EXP. 2h LLEVADO A LA TESIS Y A LOS INFORMES (2026-09-29)
+
+**`resultados.tex`** (respaldo `resultados.tex.antes_2h`; CRLF preservado). Compila: **125 páginas, 0
+errores, 0 referencias sin resolver**; la tabla nueva verificada a la vista.
+- **Sección nueva `sec:exp2h`** («Experimento 2h: Verificaciones de Cierre»), antes de la síntesis: motivación
+  y puertas · composición del conjunto y duplicados (tres documentos de origen repetidos; seis familias con
+  cifrado determinista) · la validación por tipos con el modelo de la CV · **qué aporta cada capa**
+  (`tab:exp2h_ablacion` y las colisiones de la extensión) · semillas (0,9983 ± 0,0011) · predicciones (13/16,
+  las tres falladas explicadas; afirmación de robustez rebajada a «0,98 o más en todos los pliegues»).
+- **`tab:exp2e_tipos` y `tab:exp2g_tipos` pasan a la medición ponderada** (job 4096), con una fila «sin
+  BLACKMATTER en jpg» en la del 2e-c. Texto del §4.7.5 reescrito: Δ +0,0197 [−0,0014; +0,0408] 6/7 con todas;
+  **+0,0238 [+0,0108; +0,0368] 7/7 sin el caso degenerado**; pérdidas 0,049 y 0,050; exactitud de bytes 0,8757
+  contra 0,879 (lo que falta está en pdf y jpg, cuya composición cambió); difíciles con los valores ponderados
+  (DARKSIDE baja de 0,5552 a 0,5043). §4.9: Δ +0,1149 [+0,0743; +0,1554] 7/7; sistema 0,9983 ± 0,0011 en cinco
+  semillas; pérdida 0,0015. §4.8: el colapso con ponderación (0,8155 → 0,4047) no depende de ella.
+- **Censo llevado al texto:** CERBER sustituye el nombre en **todas** sus 988 muestras (antes «981 de ~1.001»,
+  §4.5.8); MAZE junto a SUNCRYPT y la precisión sobre JIGSAW en el 2d (§4.6).
+- **Síntesis:** 0,9983 ± 0,0011 bajo tipo no visto y una frase con la ablación.
+- **Canónico: se aplicó (a)**, el sistema completo; bytes + extensión (0,9999 en CV, 0,9990 en tipos) queda
+  declarado en la ablación. **Pendiente de confirmación de Romina.**
+
+**Informes a Cappo** (respaldos `.antes_2h`): el `.md` con la sección nueva «6. Verificaciones de cierre»,
+hallazgos 7.4 (BLACKMATTER solo imágenes) y 7.5 (duplicados y cifrado determinista), tablas ponderadas,
+nueve predicciones falladas (la 5, la de exactitud de bytes, anotada: con el modelo correcto da 0,876 y entra en
+el rango). El `.tex`/`.pdf` breve: **2 páginas** (márgenes superior e inferior reducidos para que entrara).
+
+---
+
+# ✅ FRENTE DE ARCHIVOS: últimas tres frases corregidas — no hace falta correr nada más (2026-09-29)
+
+Romina: «corregí, ¿no necesitás que se corra más nada?». **No: el 2h cerró todo lo que necesitaba
+datos del clúster.** (Solo haría falta otra corrida si se eligiera la opción (b) como canónica —bytes +
+extensión—, para medirla con cinco semillas bajo tipo no visto; con (a), nada.)
+
+Corregido en `resultados.tex` (compila, 125 págs., 0 errores):
+- **§4.5.3, «residuo genuino»** → «el residuo de la indistinguibilidad … para una representación de bytes
+  en posiciones fijas. No es un residuo irreducible: con los rasgos estructurales solo tres quedan por
+  debajo de 0,75, y el sistema completo las lleva a todas por encima de 0,99 (`tab:exp2g_familias`)».
+  «Sin añadir estructura» → «sin añadir marcas» (el 2e mostró que sí tienen estructura de tamaño y entropía).
+- **Discusión, «seis familias de treinta»** → «seis con los bytes del contenido, tres al incorporar su
+  estructura».
+- **Implicaciones, punto 3:** «las seis familias que no dejan estructura en los archivos» → «las familias
+  que el contenido del archivo cifrado no resuelve».
+
+## ⚠ Para la sesión del FRENTE DE NOTAS (no tocado: es su frente y su encuadre)
+
+Estas partes de `resultados.tex` citan todavía las cifras de notas del Exp. 3 sobre la base de **146 notas**
+(P1 0,760 / P2 0,435), coherentes con esa sección pero no con el canónico actual del frente de notas
+(P2bal, 149 notas: texto 0,6551, cascada 0,7417; P1 sobre 149, 0,789):
+- Discusión, «Una misma lección…»: «alcanza un macro-F1 de 0,760, mientras que … desciende a 0,435».
+- Figura `fig:simetria`: el lado de notas (0,760 / 0,435); la genera `2_codigo/generar_figuras_cap4.py`
+  desde `resultados_canonicos/corrida_canonica_resumen.csv`. El lado de archivos ya está al día (0,912).
+- Implicaciones, punto 3: «81,8 %».
+- «Sobre la naturaleza de los resultados negativos»: «146 notas, 95 contenidos distintos»; «weighted-F1
+  (0,798) y macro-F1 (0,760) bajo P1 … (0,512 vs. 0,435)»; las limitaciones «146 notas, … 2 folds …».
+- Tabla comparativa: filas Exp. 3 P1 y P2 (81,8 % / 0,760 y 55,1 % / 0,435), y los puntos 3 y 4 de «Los
+  resultados demuestran».
+
+---
+
+# 🤝 LAS DOS SESIONES PRINCIPALES: protocolo acordado (2026-09-29)
+
+Romina fijó dos sesiones principales, la del **frente de archivos** («Traspaso de tesis: cambios y próximos
+pasos») y la del **frente de notas** («Cascada system notas handoff»), con el mismo modo de permisos para
+que se hablen directo. **Protocolo acordado por las dos:**
+1. Compilar `main.tex`: avisar «compilo» y «listo»; sin respuesta, revisar que no haya `pdflatex` corriendo.
+2. `resultados.tex`: cada una edita su frente. En las partes comunes (Discusión, tabla comparativa, «Los
+   resultados demuestran»), cada una cambia solo las cifras de su frente y avisa la frase exacta. Releer
+   antes de editar.
+3. ESTADO: bloques antes de «## 7. Reglas», sin reescribir los de la otra.
+4. Commits de documentos solo si Romina los pide, y avisar a la otra (arrastran lo suyo).
+5. La conclusión, al final: cada una redacta su frente y después se juntan.
+6. La revisión independiente espera a que cierren las dos.
+
+**Cifras de notas desactualizadas: el diagnóstico de la sesión de notas.** Las tablas del Exp. 3 declaran su
+base (146 notas) y **no se tocan**. Lo que sí es una contradicción son las cifras viejas SIN base en las
+partes que sintetizan el trabajo: la fila P2 de la tabla comparativa; **el punto 4 de «Los resultados
+demuestran» (P2 0,435 como conclusión, que el propio §4.11.14 muestra que era un artefacto de la partición:
+con P2bal da 0,7417)**; las limitaciones («146 notas», el corpus final es 149); y `fig:simetria`. Menores: el
+81,8 % del punto 3 y el argumento de weighted vs macro con cifras viejas. **Lo corrige la sesión de notas,
+después de que Romina decida** (el punto 4 hay que reescribirlo). La figura la regenera esta sesión, con P1
+0,789 y P2bal 0,7417, leídas de sus archivos de origen; se propuso además pasar el lado de archivos al
+contenido vigente (0,9357 de exactitud, Exp. 2e).
+
+**Estado de las dos:** las dos cerradas de medición, sin nada por correr. Notas: cascada bajo P2bal, macro-F1
+0,7417 [0,7328; 0,7505], exactitud 0,8123; decisiones pendientes de Romina: la cifra de cabecera sobre 30 o
+sobre 28 familias, y estas correcciones. Archivos: pendiente confirmar la opción (a) del canónico y el
+commit de documentos.
+
+---
+
+# 🖼 fig:simetria REDISEÑADA entre las dos sesiones — pendiente de aprobación de Romina (2026-09-29)
+
+**El problema** (lo encontró la sesión de notas al revisar el lado de notas): la figura contrastaba cosas
+distintas en cada lado bajo la misma leyenda. En archivos, **tipo de señal** (extensión contra bytes); en
+notas, **protocolo de evaluación** (P1 contra P2, con la misma señal en las dos barras). Además mezclaba
+métricas (macro-F1 en notas, exactitud en archivos), y `leer_notas()` tomaba el máximo del CSV en vez de la
+fila canónica (0,760 es caracteres|LinearSVC; la canónica combinado|LinearSVC da 0,7538 en ese CSV).
+
+**Diseño acordado**, en cada frente «contenido solo» contra «contenido + señal de campaña», macro-F1:
+
+| | Contenido | + señal de campaña |
+|---|---|---|
+| Archivos | «Contenido (bytes + estructura)» 0,9359 ± 0,0004 (Exp. 2e, job 4058) | «Contenido + extensión (sistema completo)» 0,9998 ± 0,0001 (Exp. 2g, job 4091) |
+| Notas | «Texto (TF-IDF + SVC)» 0,6551 (P2bal) | «Texto + reglas de campaña» 0,7417 (P2bal, cascada) |
+
+- Título: «Aporte de la señal ligada a la campaña sobre la señal del contenido, en los dos frentes» (describe,
+  no concluye).
+- Leyenda: «Archivos: validación cruzada, una campaña por familia (la ganancia es una cota superior).
+  Notas: P2bal, plantilla nunca vista.» **Las dos ganancias miden cosas distintas:** en archivos, cuánto
+  ayuda la extensión cuando es la que ya se vio; en notas, cuánto ayuda la señal de campaña cuando la
+  campaña concreta es nueva (la regla solo dispara si la clave reaparece en otra plantilla).
+- Fuentes: notas de `4_resultados/resultados_protocolo_p2bal_149/p2bal_resumen.csv` (protocolo=P2bal,
+  f1_macro_30); archivos transcritas con su job hasta que se bajen las carpetas del clúster.
+- Después de regenerar: cada sesión ajusta en la Discusión la frase de su frente, avisándose antes.
+
+---
+
+# 🔎 OBSERVACIONES DE «CARPETA RECORDADA» (la sesión del frente de archivos de agosto) — aplicadas (2026-09-29)
+
+Romina la sumó a la coordinación. Verificó contra `resultados.tex` y ESTADO antes de opinar y no tocó archivos.
+
+**Voto: (a), el sistema completo como canónico.** Por el criterio de adopción del propio proyecto: (b) da Δ
++0,0001 [−0,0000; +0,0001] (3/5), un IC que incluye el cero, que es el criterio con que se rechazaron los
+embeddings, los hiperparámetros y la abstracción de marcadores. Su ventaja bajo tipo no visto es una semilla
+y un pliegue, el mismo modo de falla que se acababa de corregir (0,9962 con una semilla → 0,9983 ± 0,0011
+con cinco). Cambiaría de opinión solo si (b) ganara 5/5 bajo tipo no visto con las mismas cinco semillas.
+Y la ablación (7) contra (8) es un resultado en sí: el sistema está sobredeterminado.
+
+**Corregido en `resultados.tex`** (compila, 126 págs., 0 errores; con «compilo»/«listo» a la sesión de notas):
+- **E1, firmas de «64 bytes» censuradas por la ventana.** El detector del 2b mira 64 bytes (`N_BYTES = 64`,
+  `deteccion_estructural.py`) y CERBER, LOCKBIT, RANSOMEXX y TESLACRYPT dan exactamente 64: es el tope de la
+  herramienta. §4.4.2 dice ahora «bloques constantes que ocupan la ventana entera: de al menos 64 bytes, el
+  máximo que mide el procedimiento»; las dos menciones de CERBER, «de al menos 64 bytes». **El largo exacto
+  queda como opcional** (A.5c: un job corto).
+- **R1, el cuarto decimal:** en el 2h, las diferencias en el cuarto decimal son del tamaño de los defectos de
+  integridad del conjunto y no se interpretan como diferencias entre representaciones.
+- **R2, el eje del 2h:** en la síntesis, el 0,9983 es «una prueba de otro eje: varía el documento de la
+  víctima, no la campaña».
+- **E2, mundo cerrado:** en el 2g, el sistema asigna siempre una de las 30 familias; no se evaluó la
+  abstención ni las familias desconocidas. Declarado como limitación del alcance.
+- **R3 y R4, verificados:** fuera del cap. 4 no hay cifras del frente (resumen, introducción y conclusión no
+  las citan todavía); ningún resumen mezcla el «≥ 0,99» de CV con el de tipos. **Cuando se escriban el
+  resumen y la conclusión, que el par 0,9998 / 0,936 viaje junto.**
+- **E3, `EXPERIMENTOS_PENDIENTES.md`:** A.8 cerrado (= Exp. 2e); A.9 y A.10 cerrados sin correr, por no
+  tener margen; A.5c con el texto corregido y la medición opcional; A.6 y A.7 no corridos, con la
+  limitación escrita.
+
+---
+
+# 🧮 LOS PDF DE JIGSAW Y LOS TOTALES DEL CENSO, reconciliados (2026-09-29)
+
+Señalado por «Carpeta recordada»: el §4.5.9 decía que los dos PDF de JIGSAW en claro «permanecen en el
+conjunto», y la tabla del censo decía «JIGSAW 8 en claro, apartados». **Verificado con el censo del 2h (job
+4096):** JIGSAW = 992 muestras (990 `.fun` + 2 `.pdf`), y **las 2 en claro son los PDF**. Los 8 apartados
+NO los incluyen (son 7 pptx y 1 doc: su pptx da 136 y su doc 142). **JIGSAW tuvo 10 archivos en claro: 8
+apartados y 2 que siguen.** El censo de integridad vio 8 porque el cargador de entonces descartaba todo
+`.pdf` (el sesgo corregido después). Las dos frases eran ciertas en su momento, pero no se explicaba.
+
+Corregido en `resultados.tex` (compila, 126 págs., 0 errores):
+- Censo de integridad: «los 29.676 archivos que cargaba entonces el procedimiento, todos salvo los `.pdf`,
+  por el sesgo que se describe en la subsección siguiente»; la leyenda de `tab:censo_integridad`, igual.
+- §4.5.9: los dos PDF de JIGSAW «se suman a los ocho apartados en el censo, que no podía verlos … y a
+  diferencia de aquellos permanecen en el conjunto».
+- Censo del 2h, **derivación explícita:** 29.676 + 310 (PDF de BADRABBIT y NOTPETYA) + 2 (PDF de JIGSAW)
+  − 40 (apartados) = **29.948**; NOTPETYA 833 → 1.000 → 968; JIGSAW 998 → 1.000 → 992.
+
+Confirmado además por «Carpeta recordada»: el 2e, el 2g y el 2h recorren las carpetas con `iterdir()` (no
+`rglob`), así que los subdirectorios de cuarentena quedan fuera.
+
+---
+
+# ✍️ INTERPRETACIONES NO MEDIDAS DEL FRENTE DE ARCHIVOS, corregidas (2026-09-29)
+
+Revisión acordada con la sesión de notas («Cascada»): buscar en las secciones anteriores al 2f y al 2g
+frases en que la **cifra** está bien pero lo que se **concluye** de ella nunca se midió. Protocolo
+«compilo»/«listo» respetado. `resultados.tex` compila: 127 págs., 0 errores, sin referencias
+indefinidas. Respaldo previo en el scratchpad de la sesión (`resultados.tex.antes_interpretaciones`).
+
+| Dónde | Antes | Ahora | Por qué |
+|---|---|---|---|
+| Leyenda de `fig:simetria` | «Comparación entre la señal ligada a la campaña… en los dos artefactos» | Leyenda aprobada por Cascada: macro-F1; notas bajo P2bal (149 notas, 30 familias); archivos en CV (15.000, 30 familias) con una campaña por familia → **su ganancia es una cota superior**; «Las dos ganancias no se miden con la misma dureza» | La figura pone lado a lado dos ganancias medidas con distinta dureza |
+| Exp. 2b (≈ l. 253) | las firmas «resultan más estables entre campañas que la extensión»; «para reconocer posteriormente lo que ya ha cifrado» | «**deberían** resultar más estables…, algo que con una campaña por familia no puede comprobarse»; «**presumiblemente** para reconocer después lo que ya cifró» | Con una campaña por familia la estabilidad entre campañas no se puede medir; el propósito del marcador es inferido |
+| Exp. 2e (≈ l. 730) | la mejora «no arrastra la limitación de campaña» | «no depende del esquema de renombrado…, **aunque comparte la limitación general de una campaña por familia**» (Sección `subsec:exp2c_limitacion`) | El contenido esquiva el renombrado del 2d, no la limitación de una campaña por familia |
+| Síntesis de archivos (≈ l. 1027) | tamaño y entropía «dependen del modo de cifrado y del tamaño del añadido, es decir, del código de la familia» | «según la **explicación mecánica propuesta** en el Experimento 2e, dependen…» | Medido: el tamaño es necesario y no suficiente (ablación del 2e, tamaño solo 0,3272 de macro-F1). No medido: el mecanismo; el propio 2e lo presenta como «Admite una explicación mecánica» |
+
+Revisadas y **sin cambio**: la frase del 2e «ambos los determina el código del programa» queda
+dentro de «Admite una explicación mecánica» (ya está planteada como explicación, no como hecho).
+La sesión de notas hizo la misma revisión en su frente y terminó con **una sola frase** (l. 1107): le
+propuso a Romina agregar al final de ese párrafo una remisión a §4.11.14, sin tocar lo escrito; espera
+su respuesta. La otra afirmación fuerte de notas (la expansión del corpus se mide en plantillas nuevas,
+no en cantidad de archivos) quedó **confirmada** después por la curva de aprendizaje: no se toca.
+
+---
+
+# 🔎 DOS CLASES DE ERROR, en la skill de revisión; y lo que falta para cerrar el frente de archivos (2026-09-29)
+
+**Frente de notas: cerrado**, según su sesión («Cascada», 29-09): sin mediciones pendientes, sin
+cifras inconsistentes y sin interpretaciones desmentidas, salvo la frase de la l. 1107 («la caída
+respecto de P1 … cuantifica exactamente cuánto del rendimiento aparente proviene de reconocer
+plantillas»), que espera el sí o el no de Romina a una remisión a §4.11.14. Verificado hoy:
+`python 2_codigo/cifras_finales.py` → **«VERIFICADAS: 67 de 67»**. Tesis: 127 págs., 0 errores
+(compilación de Cascada después de la mía, con la figura regenerada).
+
+**Distinción propuesta por Cascada para la revisión independiente:**
+- **Errores de cálculo** (la cifra no coincide con su archivo): los encuentran los scripts.
+- **Errores de explicación** (la cifra está bien; lo que se concluye no se midió): solo leyendo
+  y preguntando «¿esto que se concluye, está medido?». Las frases de la revisión de
+  interpretaciones de hoy eran todas de esta clase: `cifras_finales.py` daba 67 de 67 con la de
+  la l. 1107 escrita.
+- **Sin sobrecorregir:** separar la parte medida de la no medida (el tamaño, necesario y no
+  suficiente, SÍ está medido; el mecanismo, no).
+
+**Incorporado** (`.claude/` está en `.gitignore`: la skill es local, no hay commit):
+- `.claude/skills/revisar-tesis/scripts/inventario_cifras.py`: **paso 0b**, que escribe
+  `inventario_conclusiones.{csv,txt}` (oraciones de texto y leyendas con marcadores de conclusión:
+  *porque, por lo tanto, es decir, sostiene, más estable, no depende, siempre, ninguna…*).
+  **Probado:** sobre las versiones anteriores a la corrección marca **5 de 5** frases corregidas
+  (2b, 2e, síntesis, discusión de archivos y la 1107 de notas). Sobre la tesis actual: 2.909
+  cifras y **361 oraciones** (270 con marcadores de conclusión y 91 solo con «cada», el
+  cuantificador universal, casi siempre descriptivo; se agregó después, ver el bloque siguiente).
+- `references/lista_chequeo.md`: chequeo **19** «Conclusión medida, no solo cifra medida», con los
+  casos del 29-09, y la sección «Dos clases de error»; `references/revisores.md`: el párrafo en la
+  cabecera común de los cuatro revisores y el inventario de conclusiones en su material;
+  `SKILL.md`: paso 0b, 19 chequeos, salidas.
+- Datos viejos corregidos en la skill: el 2h ya no figura «en curso» (job 4096); jobs confirmados
+  de la ablación del 2e (4059) y de su validación por tipos (4079, superada por la ponderada del 2h).
+- `6_notas_trabajo/ENCARGO_REVISION_TESIS_COMPLETA.md`: §0 al 29-09 (2h incorporado, notas
+  cerrado, archivos con verificador pendiente), «Dos clases de error» en §3, fila en §4, 127 págs.,
+  y en §7 el estado real del `/scratch`: temporal según el reglamento, pero en la práctica no se
+  limpia (memoria del clúster, verificado el 17-08). No usarlo como argumento de urgencia: a Romina
+  le molesta.
+
+**Lo que falta para cerrar el frente de archivos al nivel del de notas:** sus cifras de 2e a 2h
+solo existen en el clúster; `generar_figuras_cap4.py` usa para el 2e y el 2g **cifras
+transcritas del log** porque las carpetas no están bajadas. Hay que bajar:
+
+| Carpeta | Log | Sostiene |
+|---|---|---|
+| `resultados_exp2e_job4058` | `slurm-exp2e-4058.out` | tab:exp2e, tab:exp2e_dificiles, 0,9359 |
+| `resultados_exp2e_rasgo_job4059` | `slurm-exp2eb-4059.out` | tab:exp2e_ablacion (0,3272) |
+| `resultados_exp2e_tipos_job4079` | `slurm-exp2ec-4079.out` | validación por tipos sin ponderación (superada) |
+| `resultados_diagnostico_dificiles_job4082` | `slurm-diag-4082.out` | tab:prefijos_tipo |
+| `resultados_exp2f_job4083` | `slurm-exp2f-4083.out` | tab:exp2f, colapso en jpg |
+| `resultados_exp2g_job4091` | `slurm-exp2g-4091.out` | 0,9998, tab:exp2g_familias |
+| `resultados_exp2h_job4096` | `slurm-exp2h-4096.out` | censo, tablas ponderadas, ablación, 0,9983 ± 0,0011 |
+
+Después: descomprimir en `4_resultados/`, regenerar las figuras (el script ya compara los CSV
+contra lo transcripto y aborta si no coinciden) y escribir el verificador de cifras del frente de
+archivos, equivalente a `cifras_finales.py`. **La revisión independiente sigue en espera**
+(decisión de Romina): además falta la conclusión, que se escribe al final.
+
+---
+
+# 📐 ¿«CADA MEDICIÓN SE PREREGISTRÓ»? No: alcance real del preregistro y de las puertas (2026-09-29)
+
+Cascada propuso declarar en metodología la **práctica** (en presente, no la bitácora): predicción
+registrada antes de correr y puerta de entrada contra la cifra de referencia; revisión de cada
+afirmación interpretativa; apéndice con los dos verificadores. La distinción método/bitácora es
+buena, pero **como universal sería falsa**. Verificado con `grep` sobre `2_codigo/*.py` (busca
+«preregistr», «predicción registrada», «PREDICCIONES», «PUERTA», «REF_…»; los casos dudosos,
+abiertos a mano):
+
+| Qué hay | Scripts |
+|---|---|
+| **Ni preregistro ni puerta** | 2b `deteccion_estructural.py`; 2c `clasificador_bytes.py` y `analisis_bytes.py` (su coincidencia era «sus predicciones»); `ablacion_ventana_extendida.py`; `diagnostico_dificiles.py` (4082); `gridsearch_estadisticas.py`; Exp. 1 y 2 (`family-rw-detection/`); **P1** `clasificador_notas_v2.py` (su coincidencia era «predicciones fuera-de-fold»; sus `sys.exit` validan la entrada); `revision_logo.py`, **por diseño**: es la revisión independiente de LOGO, posterior a los resultados, y así se presenta en su docstring (sus coincidencias eran «predicciones identicas») |
+| Control contra la referencia que **avisa o informa, no aborta** | 2d (`exp2d_nombre_extension.py`: «ATENCION — la columna (1) no reproduce la referencia del 2c»); 2e (`exp2e_estructura_bytes.py`: «Se compara e informa, no se aborta») |
+| **Preregistro sin puerta** | 2e-tipos `exp2e_validacion_tipos.py` (guarda `REF_2C` en el manifiesto, no aborta), 2f, 2g (bloque «PREREGISTRO — escrito y commiteado ANTES de correr (2026-09-28)» en los tres); en notas: `protocolo_logo.py` (su preregistro está en `ESTADO_TESIS.md`, bloque «PREREGISTRO — P2-LOGO (2026-09-09)», no en el docstring), `estilometria_notas.py`, `metadatos_notas.py` |
+| **Las dos cosas** | 2h (`exp2h_cierre_archivos.py`); en notas, `experimento_embeddings.py` (l. 228: «ABORTA: la base recomputada no reproduce la almacenada») y muchos desde el 22-08: `cascada_ioc_notas.py`, `curva_aprendizaje_notas.py`, `protocolo_p2bal.py`, `bootstrap_plantilla_p2bal.py`, las capas del 28-09… |
+
+**Corregido el mismo día con la verificación de Cascada, y comprobado en el código:** la búsqueda
+falló en los dos sentidos: falso positivo en `revision_logo.py` y falso negativo en
+`experimento_embeddings.py`, cuya puerta no se llama PUERTA. Recuento por expresiones regulares,
+con los casos nombrados abiertos a mano: el detalle de cada script, y si el preregistro se commiteó
+**antes** de correr (git log contra la fecha del job), es el chequeo 16 de la revisión
+independiente; **no está verificado uno por uno**.
+
+**«Se revisó cada afirmación interpretativa» tampoco es cierto hoy:** el 29-09 se revisaron
+secciones elegidas; el inventario de conclusiones (361 oraciones) no se recorrió entero. Sería
+cierto recién cuando la revisión independiente lo recorra.
+
+**Consecuencia:** si Romina quiere esas líneas en metodología, tienen que llevar su alcance
+(«las mediciones de cierre…», con fechas o experimentos) y escribirse **después** de la revisión
+independiente, que verifica justamente eso. Lo que sí es cierto hoy: el apéndice de
+reproducibilidad con el verificador de notas (67 de 67) y, cuando exista, el de archivos. Se
+agregó «cada» al inventario de conclusiones (+91 oraciones): sin él, «cada medición se
+preregistró» no se habría marcado. La prueba retrospectiva sigue en 5 de 5.
+
+---
+
+# ✒️ PEDIDO DE ROMINA: escribir la tesis entre las tres sesiones, «humanizado» (2026-09-29)
+
+**Pedido:** que las tres sesiones (archivos, «Cascada» de notas y «Carpeta recordada») escriban la
+tesis para pasársela a Cappo, en un tono «humanizado, no tan robótico, pero profesional».
+**100 páginas es el MÍNIMO, no un tope: «recortar no».** Ya se cumple: la numeración arábiga va
+del cap. 1 (p. 1) al apéndice (p. 107–108) y el PDF tiene 127 páginas con portada e índices
+(`main.toc`, 29-09).
+
+**Diagnóstico medido de «lo robótico»** (conteo en los `.tex`, 29-09):
+
+| Archivo | Palabras | `\textbf` | Rayas `---` |
+|---|---|---|---|
+| `introduccion.tex` | 932 | 0 | 0 |
+| `marco_teorico.tex` | 2.158 | 3 | 0 |
+| `metodologia.tex` | 3.183 | 45 | 8 |
+| `resultados.tex` | 23.069 | 396 | 196 |
+| `resultados_notas_ampliacion.tex` | 12.267 | 353 | 21 |
+| `conclusion.tex` | 330 | 5 | 0 |
+
+Más muletillas: «no es …, sino» ×7, «merece» ×5, «Dicho de otro modo» ×2, «La primera: / La
+segunda:», «Ahí reside», «Cabe destacar». Lo robótico está en el cap. 4, el que escribieron las
+dos sesiones principales.
+
+**Error encontrado en el apéndice A.2 «Reproducibilidad»** (commit `177d43f`, 06-08): dice «Todas
+las cifras reportadas en el Capítulo~4 se regeneran a partir de archivos de resultados
+versionados junto con el código del proyecto», y nombra solo `resultados_experimentos/` y
+`resultados_canonicos/`. **Falso hoy:** `git ls-files 4_resultados` da 2 archivos (los resultados no
+se commitean, por regla), el 2e–2h está solo en el clúster y las cifras de notas salen de P2bal y
+de la cascada, no de `resultados_canonicos/`. Es el lugar natural para los verificadores de los
+dos frentes. **Sin corregir: espera la reescritura.**
+
+**Propuesta a Romina (pendiente de su OK):**
+- Orden: cerrar lo pendiente → reescritura entre los tres → conclusión → revisión independiente
+  de lectura sobre el texto final → correcciones → Cappo. Lo que no depende de la redacción (bajar
+  los CSV, el verificador de archivos, la reproducción en el clúster) va en paralelo, ya.
+- Reparto: archivos §4.1–4.11, las partes de archivos de metodología y A.1; notas §4.12–4.13, §3.6
+  y la ampliación; «Carpeta recordada» lo común (cap. 1, cap. 2, §3.1, §3.7, §4.14–4.16, A.2).
+  Cada frente revisa sus párrafos de la Discusión.
+- Reglas: pase de forma, no de contenido (no se toca ningún número, métrica, base ni matiz);
+  negritas solo para términos que se definen; menos rayas; sin las muletillas de arriba; la voz
+  impersonal de ahora; inventario de cifras y de conclusiones antes y después; compilar de a uno.
+- Muestra de tono: un párrafo del 2e, enviada a Romina para que la apruebe.
+
+Avisado a Cascada y a «Carpeta recordada», con el pedido de **no tocar ningún `.tex` hasta que
+Romina confirme**. Hay además una sesión «Revisión científica de tesis» (la que armó la skill el
+28-09), inactiva: no se le escribe, por su independencia.
+
+---
+
+# ⚠️ MARCO TEÓRICO: cifras propias atribuidas a Filiz et al.; y línea de base de la reescritura (2026-09-29)
+
+**Señalado por «Carpeta recordada», verificado en la fuente por la sesión de archivos.**
+`marco_teorico.tex` l. 187, dentro del párrafo que abre «Filiz et al.~\cite{paper_2_on_efectiveness}
+evaluaron…»: «CryptoSheriff clasificó correctamente solo el 16,67\% de las familias, identificando
+parcialmente un 43\% adicional. ID Ransomware alcanzó el 66,67\% con archivos cifrados y el 72\%
+utilizando notas de rescate, evidenciando la superioridad del análisis textual sobre el análisis de
+archivos para la tarea de identificación de familias.»
+
+Verificado sobre `5_bibliografia/Leido/Preprint-OnTheEffectivenessOfRansomwareDecryptionTools.pdf`
+(28 págs., texto extraído con pypdf):
+- **El paper no menciona ID Ransomware** (0 apariciones; la única coincidencia de la búsqueda sin
+  mayúsculas era «rap*id ransomware*»).
+- De **Crypto Sheriff** dice (p. 25): de 61 archivos cifrados y notas, **43 % (26) correctos**, 49 %
+  (30) incorrectos y 8 % (5) parciales. El «43 % parcial» de la tesis lo invierte.
+- «casi la mitad no logran recuperar datos satisfactoriamente» **sí** está en el paper («nearly half
+  of the tools fail to recover compromised data satisfactorily»).
+- El 16,67 %, el 66,67 % y el 72 % son **pruebas propias** (`tab:herramientas` de `resultados.tex`:
+  CryptoSheriff 5/30, ID Ransomware 20/30 archivos y 41/57 notas de 22 familias = 71,93 %; fuente
+  `Pruebas.xlsx`), atribuidas por el párrafo al paper.
+- «evidenciando la superioridad del análisis textual» es una conclusión, contradice el cap. 4
+  (archivos 0,9998 de macro-F1, o 0,936 solo con contenido; notas 0,7417 en P2bal) y compara bases
+  distintas (30 familias de archivos contra 57 notas de 22 familias).
+
+Confirmado además de forma independiente por «Carpeta recordada» (misma lectura del PDF; aviso: el
+PDF escribe «Sheriﬀ» con la ligadura «ﬀ», así que buscar «Sheriff» da 0 si no se normaliza; y «casi
+la mitad» es sobre las 28 herramientas de DESCIFRADO, no sobre identificación). Su corrección
+propuesta: separar lo que dice Filiz (28 herramientas de 11 empresas contra 61 muestras; Crypto
+Sheriff 43 % correctas, 49 % incorrectas y 8 % parciales) de la evaluación propia, con su base y
+remitiendo a `tab:herramientas`, y sacar la frase de «superioridad».
+
+**Es contenido, no forma: lo decide Romina.** Mismo caso para el matiz de **Lemmou** en §2.6
+(«logró identificar correctamente el 99,45\% de los archivos analizados», l. 183): la cifra es
+181/182, pero falta «mundo cerrado, sin separación entrenamiento/prueba, LSA como búsqueda de
+casi-duplicados» (`CLAUDE.md`; pendiente desde agosto en `PENDIENTE_REDACCION.md`, sección B).
+
+**Mejoras a las reglas de la reescritura, propuestas por las otras dos sesiones:**
+- «Carpeta recordada»: una regla en positivo (variar el largo de las oraciones; no abrir dos párrafos
+  seguidos con la misma estructura); contar el **vocabulario de cautela** antes y después (si baja,
+  se perdió un matiz aunque las cifras sigan); **páginas por capítulo** antes y después; que la
+  **Discusión la edite una sola sesión** y las otras manden su texto por mensaje; el A.2 se redacta
+  al final, cuando el verificador de archivos exista y se pueda correr.
+- «Cascada»: contar negritas y rayas antes y después («si un pase de forma no baja esos números, no
+  hizo lo que dice»); `cifras_finales.py` también lee archivos que no están en git (quien clone el
+  repositorio no puede correrlo). Propone versionar los pocos logs y CSV que sostienen las cifras.
+  **Choca con `CLAUDE.md`** («Al repositorio va el código y el documento, nada más»): lo decide
+  Romina. Alternativa que respeta la regla: el A.2 dice la verdad y los resultados se entregan como
+  material suplementario con la tesis, no en GitHub. **Actualización: Cascada retiró la opción de
+  versionar después de auditar el contenido:** 0 de 54 logs `.txt` con indicadores, pero **16 de 316
+  CSV sí**, y son justo los del grafo de marcadores (B.3), que sostienen cifras del capítulo.
+  Verificado por la sesión de archivos (valores distintos por archivo): `b3_marcadores_por_plantilla.csv`
+  71–77 direcciones .onion, 60–65 correos y 4–6 direcciones BTC según la carpeta
+  (`resultados_grafo_marcadores{,_149,_150,_155}`); `b3_valores_excluidos.csv` 28–30 .onion;
+  `b3_aristas.csv` 20–21 .onion; `resultados_boilerplate_149/boilerplate_generico.csv` con texto de
+  notas. **Versionarlos habría publicado infraestructura de ransomware en GitHub.** Queda la (b), y
+  con un matiz: el material suplementario se entrega en forma privada (tutor, tribunal), no en un
+  repositorio público, y sin esos archivos o con los indicadores ocultos.
+
+**Herramienta y línea de base:** `.claude/skills/revisar-tesis/scripts/inventario_estilo.py` (palabras,
+negritas, rayas, muletillas y cautelas por archivo; páginas por capítulo; `--comparar` marca
+alarmas). **Línea de base ANTES de cualquier edición:** `6_notas_trabajo/_reescritura_2026-09-29/antes/`
+(`estilo.csv`, `paginas_por_capitulo.csv`, `inventario_cifras.csv` con 2.909 cifras,
+`inventario_conclusiones.csv` con 361 oraciones, `VERSION.txt` con commit y sha256). Comparada
+consigo misma: 0 alarmas. Páginas: cap. 1 3, cap. 2 8, cap. 3 11, cap. 4 79, cap. 5 2, referencias 3.
+`resultados.tex`: 23.069 palabras, 396 negritas, 196 rayas, 12 muletillas, 42 cautelas.
+
+---
+
+# ✅ DECISIONES DE ROMINA sobre la reescritura (2026-09-29)
+
+1. **Orden:** reescribir primero (las tres sesiones), después la conclusión, y al final la revisión
+   independiente sobre el texto que va a leer Cappo. Lo que no depende de la redacción (bajar los
+   CSV, el verificador de archivos, el clúster) arranca ya.
+2. **Tono:** el de la muestra del 2e, aprobado tal cual.
+3. **Marco teórico:** se corrigen los dos. Filiz et al. con lo que dice el paper y nuestras pruebas
+   como propias (5/30, 20/30, 41/57), sin la frase de «superioridad»; y a Lemmou se le agrega que su
+   99,45 % es en mundo cerrado, sin separar entrenamiento y prueba.
+4. **Resultados / A.2:** material suplementario privado para Cappo y el tribunal, fuera de GitHub y
+   sin los archivos con indicadores de las notas. El A.2 dice la verdad (los resultados no están en el
+   repositorio).
+
+Pendiente de Romina: la frase de la l. 1107 (se la plantea la sesión de notas) y la descarga del
+`.tar.gz` con los resultados de 2e a 2h.
+
+---
+
+# 📦 RESULTADOS DE 2e A 2h, BAJADOS DEL CLÚSTER (2026-09-29)
+
+Romina bajó `resultados_archivos_2e_2h.tar.gz` (2.848.921 bytes) a `4_resultados/`. Tiene los 14
+elementos pedidos. Descomprimido **sin pisar nada** (`tar -xzkf`) en `4_resultados/`:
+`resultados_exp2e_job4058`, `resultados_exp2e_rasgo_job4059`, `resultados_exp2e_tipos_job4079`,
+`resultados_diagnostico_dificiles_job4082`, `resultados_exp2f_job4083`, `resultados_exp2g_job4091` y
+`resultados_exp2h_job4096`. Los 7 logs de SLURM quedaron en `4_resultados/_logs_slurm_2026-09-29/`.
+
+**Primera verificación:** `generar_figuras_cap4.leer_cv_2e_2g()` lee los CSV y los compara con lo
+que estaba transcripto del log: coinciden. 2e: exactitud 0,9357, macro-F1 0,9359
+(`exp2e_resumen.csv`, fila `2_bytes_mas_estructura`); 2g: 0,9998 y 0,9998 (`cv_resumen.csv`, fila
+`5_bytes_estructura_extension`). Las cifras del 2e y del 2g dejan de estar «sin artefacto local».
+Sigue: el verificador de todas las cifras del frente de archivos, equivalente a `cifras_finales.py`.
+
+---
+
+# 🔬 REVISIÓN INDEPENDIENTE: skill lista, revisores frenados, script de clúster preregistrado (2026-09-29)
+
+Sesión «Revisión científica de tesis» (Fable 5.1). Estado al 29-09 a la noche:
+- **Skill creada** en `.claude/skills/revisar-tesis/`: `SKILL.md`, `scripts/inventario_cifras.py` (pasos 0 y 0b),
+  `references/lista_chequeo.md` (19 chequeos), `mapa_resultados.md`, `revisores.md` (plantillas A–D y verificador),
+  `formato_informe.md`. Las otras sesiones sumaron el 29-09 el chequeo 19 y el inventario de conclusiones; esta
+  sesión corrigió una fila del mapa que había quedado fuera de su tabla. `.claude/` sigue en `.gitignore`: la
+  skill es local, no se versiona salvo que Romina lo decida.
+- **Revisores frenados a pedido de Romina** (28-09, noche), antes de que escribieran nada: en
+  `6_notas_trabajo/_revision_2026-09-28/` quedan `VERSION_REVISADA.txt`, el inventario de esa versión (2.762
+  cifras, ya superada) y carpetas `salidas_*`/`scripts_*` vacías. **La revisión se corre cuando la tesis cierre**
+  (encargo §0, decisión de Romina): paso 0 sobre el texto final, `VERSION_REVISADA.txt` nueva, cuatro revisores
+  (`fable`) y verificadores (`opus`).
+- **Script de clúster preregistrado y commiteado ANTES de correr** (`d901238`, con push):
+  `2_codigo/revision_tesis_archivos.py` + `2_codigo/slurm/job_revision_tesis.sh`, copiados a
+  `PARA_SUBIR_AL_CLUSTER/` (LF, sin BOM). Reimplementa desde la DESCRIPCIÓN del cap. 4, sin importar código de
+  la tesis: bytes 512+512, 44 rasgos estructurales, 14 de forma de la extensión; mismo RF (300/20/2/0,3,
+  balanced) y misma regla de muestreo, para comparar semilla a semilla. En una corrida (2–3 h en c2): (A) censo
+  independiente del conjunto entero (recuentos, cabeceras en claro, extensiones, duplicados SHA-256); (B) CV con
+  5 semillas: (1) bytes [solo semilla 0], (2) bytes+estructura, (5) canónico, (8) bytes+extensión, (6) solo
+  extensión, con F1 por familia y deltas pareados; (C) tipos no vistos con ponderación: (5) en 5 semillas, (2) y
+  (8) en la semilla 0; (D) fuga: pares duplicados repartidos entre pliegues y tabla de consulta por extensión.
+  Predicciones C1–C5, R1–R5, T1–T2, F1 y L1 en el docstring; sus referencias se verificaron contra los CSV del 2g
+  (`cv_resumen.csv`) y del 2h (`cv_ablacion_por_semilla.csv`, `tipos_por_pliegue.csv`, `tipos_semillas.csv`,
+  `censo_duplicados.csv`), no contra este documento. Lectura acordada: R3 cumple → el 0,9998 queda «Results
+  Reproduced» por reimplementación independiente. Probado con `--sintetico` (74 s, de punta a punta).
+  **Pendiente: que Romina lo suba y lo lance** (comandos abajo). Su salida va a
+  `resultados_revision_archivos_job<id>/` (aborta si existe) y se baja a `4_resultados/`.
+- Los resultados 2e–2h y el diagnóstico 4082 ya están en `4_resultados/` (bajados el 29-09): dejan de ser «sin
+  artefacto local» para la revisión; el mapa de la skill ya lo contempla.
+- **«Libre» de la sesión de notas (29-09, noche):** pase de forma terminado en §4.12–4.13, la ampliación y §3.6;
+  127 págs., 0 errores. Según ella: la l. 1107 quedó resuelta con la remisión aprobada a `subsec:res_p2bal`;
+  `fig:simetria` ya estaba commiteada. **Pendientes de Romina que la revisión debe tener en cuenta al
+  relanzar:** `metodologia_corpus_notas.tex` sigue sin `\input` (el contenido no está en el PDF; verificado
+  con grep) y dos remisiones de contenido en la Discusión (l. ~1338 y ~1340).
+- Cruce con la sesión de notas («Cascada», 29-09): avisó que edita §4.12–4.13 y la ampliación; se le respondió
+  que la revisión no toca `.tex`, que espera su «libre» y que los dos pedidos de su mensaje (bloque «espera su
+  respuesta», párrafos para «Carpeta recordada») no eran de esta sesión.
+
+Comandos para lanzar la reproducción (subir antes los dos archivos de `PARA_SUBIR_AL_CLUSTER/` a
+`/scratch/ralfonzo/tesis/`; uno por bloque):
+
+```
+cd /scratch/ralfonzo/tesis && chmod +x job_revision_tesis.sh && DATOS=/scratch/ralfonzo/Napierone-small sbatch --nodelist=c2 --export=ALL,DATOS job_revision_tesis.sh
+cd /scratch/ralfonzo/tesis && squeue -u ralfonzo
+cd /scratch/ralfonzo/tesis && tail -n 40 slurm-revision-<job>.out
+```
+
+---
+
+# 🔁 DUPLICADOS EN LA VALIDACIÓN CRUZADA: la frase del 2h era falsa, ahora está medido (2026-09-29)
+
+La Sección del Exp. 2h dice: «en la validación cruzada a lo sumo uno o dos pares por semilla quedan
+repartidos entre entrenamiento y prueba, del orden de una diezmilésima de exactitud». **No salía de
+ninguna medición** (el log del 2h no la mide). Error de explicación propio, encontrado al diseñar el
+verificador de archivos.
+
+**Medido** con `2_codigo/duplicados_en_cv.py` (commit `a123f27`, predicción registrada antes de
+correr). Reproduce el muestreo exacto del cargador del 2g y del 2h (`default_rng(semilla)`, una
+permutación por familia en el orden de las carpetas) desde `censo_por_archivo.csv`, y los pliegues
+con `StratifiedKFold(5, shuffle=True, random_state=semilla)`. **Control de entrada:** para la semilla
+0, 196 de 196 recuentos de prueba y entrenamiento por familia y tipo coinciden con
+`tipos_por_familia.csv` del 2h, así que la réplica es exacta.
+
+| Semilla | Pares en la muestra | Pares repartidos | Efecto máximo sobre la exactitud | Familias |
+|---|---|---|---|---|
+| 0 | 3 | 1 | 0,00013 | CRYPTOLOCKER |
+| 1 | 4 | 4 | 0,00053 | BADRABBIT, MEDUZALOCKER |
+| 2 | 2 | 2 | 0,00027 | MEDUZALOCKER, RANSOMEXX |
+| 3 | 1 | 1 | 0,00013 | BADRABBIT |
+| 4 | 2 | 2 | 0,00027 | BADRABBIT, RANSOMEXX |
+
+- **Entre 1 y 4 pares repartidos por semilla (media 2,0)**, no «a lo sumo uno o dos». Efecto máximo
+  **0,00053** de exactitud (cada par repartido cambia a lo sumo 2 de 15.000 predicciones): unas cinco
+  diezmilésimas, no una. Es una cota: esas familias están cerca de 1,0 en el sistema completo.
+- **Predicción fallida:** se esperaban entre 2 y 5 (esperanza ≈ 3,2); fueron entre 1 y 4. Se declara.
+- «En la validación por tipos las dos copias caen en el mismo pliegue»: **cierto**, los 16 pares son
+  del mismo tipo.
+- Salida: `4_resultados/resultados_duplicados_en_cv/duplicados_en_cv.csv`.
+- **Corrección de la frase pendiente**: se hace en el pase de la sesión de archivos sobre §4.10.
+
+---
+
+## Pase de forma del frente de notas (2026-09-29) — HECHO
+
+Pase **único de estilo** sobre el frente de notas, aprobado por Romina («Sí, arrancá»), contra la
+muestra de tono de `6_notas_trabajo/_reescritura_2026-09-29/MUESTRA_TONO_APROBADA.md`. Alcance:
+§4.12 y §4.13 de `resultados.tex`, `resultados_notas_ampliacion.tex` y §3.6 de `metodologia.tex`.
+
+**Medición contra la línea de base** (`_reescritura_2026-09-29/antes/estilo.csv`, commit `8e62796`),
+con `inventario_estilo.py --comparar`:
+
+| Archivo | negritas | rayas | muletillas | **cautelas** | palabras |
+|---|---|---|---|---|---|
+| `resultados_notas_ampliacion.tex` | **−217** (353 → 136) | −4 | −9 (9 → 0) | **±0** | −87 |
+| `resultados.tex` (§4.12–4.13) | −16 | −10 | ±0 | **±0** | +34 |
+| `metodologia.tex` (§3.6) | −3 | −2 | ±0 | **±0** | +44 |
+
+**0 alarmas.** Lo que importa del control: las **cautelas no bajaron en ningún archivo**, que es la
+guarda contra perder un matiz («debería», «cota superior», «explicación propuesta») mientras las
+cifras siguen ahí.
+
+**Controles de contenido:**
+- **Ninguna cifra perdida.** El conjunto de números de los tres archivos es idéntico salvo: `+149`
+  (la remisión aprobada, ver abajo) y dos casos en que el extractor leía `-0,798` y `-735` porque
+  la raya `---` que los precedía se le pegaba como signo menos; al pasar a coma quedan `0,798` y
+  `735`, que es lo correcto.
+- Etiquetas, `
+ef` y `\cite` idénticos. Compila en **127 páginas, 0 errores, 0 referencias y
+  0 citas sin resolver** — el mismo número de páginas que antes del pase.
+- Las 17 rayas que quedan en el archivo de ampliación son celdas de tabla que significan «no
+  aplica» y separadores de comentario. **En prosa no queda ninguna.**
+- Las negritas que quedan son encabezados de tabla, términos que se definen en una lista
+  («Cohesión», «Margen», «contención», «marcadores exactos», «mundo cerrado») y dos títulos de
+  párrafo corrido en §4.12.23.
+- El inventario de conclusiones subió de 106 a 111 en el archivo de ampliación. Se revisaron una
+  por una: son **las mismas afirmaciones reformuladas**, no afirmaciones nuevas. Dos habían quedado
+  más firmes que el original y se devolvieron a su registro: «no las separa, **porque** todas
+  comunican…» → «no las separa**:** todas comunican…» (el original lo traía como inciso, no como
+  causa afirmada) y «**hay que** ver de dónde sale ese cero» → «**conviene** ver».
+
+**Remisión de la l. 1107, decidida por Romina (agregar, no corregir).** Al final del párrafo que
+reporta P2 (macro-F1 0,435 sobre 146 notas) se agregó: «Una revisión posterior del reparto de la
+partición muestra que parte de esta caída proviene del repartidor empleado y no del corpus; la
+Sección~
+ef{subsec:res_p2bal} la cuantifica y reporta la cifra corregida sobre el corpus de 149
+notas». No se tocó nada de lo ya escrito: el párrafo mantiene su base de 146 notas.
+
+**Trampa operativa que costó una compilación fallida y conviene no volver a pisar.** Al escribir
+LaTeX con un *heredoc* de bash (`cat > archivo <<'FIN'`), **los `\` de FIN DE LÍNEA se reducen a
+uno solo**. Los de mitad de línea sobreviven, y las barras simples (`\hline`, `	extbf`) también.
+Resultado: los 146 terminadores de fila de tabla quedaron rotos y `pdflatex` abortó con
+«Misplaced 
+oalign». **Cómo detectarlo en un segundo**: contar las líneas que terminan en una
+sola barra; en un `.tex` sano son cero. Reparado y verificado contra el respaldo: 146 terminadores,
+misma estructura de barras que el original.
+
+**Respaldos:** `resultados.tex.antes_reescritura` y `resultados_notas_ampliacion.tex.antes_reescritura`.
+
+**Las tres remisiones: APROBADAS Y APLICADAS (2026-09-29, «sí dale nomás»).** Quedaron puestas
+en `resultados.tex`, ancladas por texto y no por número de línea, porque tres sesiones movieron el
+archivo el mismo día. Compila en 128 páginas (una más que antes, por el texto agregado), 0 errores
+y 0 referencias sin resolver. El control de cifras sobre la Discusión pasó de 31 a 32: el +1 es el
+`p = 0{,}237` de la remisión (b).
+
+## Auditoría de cobertura del frente de notas (2026-09-29) — CERRADA
+
+**La pregunta que la motiva.** `cifras_finales.py` responde «las cifras de mi lista aparecen en su
+corrida». No dice nada de las que **no** están en la lista, y un «87 de 87» invita a creer que está
+todo cubierto. La herramienta nueva, `2_codigo/cobertura_cifras.py` (commits `80cfd95` y `f14bb2f`),
+mide lo otro: qué cifras del `.tex` nadie contrastó nunca. Separa además las que viven **solo en
+prosa**, sin aparecer en ninguna tabla, porque una celda salió de volcar un CSV y una oración la
+escribió alguien a mano.
+
+**Resultado sobre el frente de notas:** 84 cifras sin cubrir, de las cuales **56 solo en prosa**. De
+esas 56, **54 aparecen en alguna corrida guardada** y dos no aparecían en ninguna. Se recalcularon
+desde el corpus con las funciones canónicas (`2_codigo/verificar_clop_ryuk.py`):
+
+| Cifra citada | Resultado |
+|---|---|
+| coseno 0,8018 entre las notas de CLOP y RYUK | **confirmado exacto** |
+| contención 0,811 | **confirmada** (0,8115) |
+| prefijo idéntico de 423 caracteres | **correcto, pero solo sobre el texto normalizado** que recibe el clasificador; el literal da 35. Se declaró en el texto |
+| **11,3 % del error total por confusiones del par** | **ERROR. Lo correcto es 11,6 %** |
+
+**El error, y de dónde salía.** Los 393 casos que decide el binario del par, con su acierto de
+0,5878, aportan 162 errores sobre los 1398 del sistema (149 notas × 50 semillas, exactitud 0,8123):
+**11,6 %**. El 11,3 % no se reproduce con ninguna definición razonable. Corregido, y ahora la frase
+lleva el cálculo escrito para que se pueda rehacer.
+
+**Dos trampas del método, anotadas porque costaron tiempo.**
+1. La contención hay que medirla con los **3-shingles de `\w+` en minúsculas** que usa el proyecto
+   (`revision_logo.py`), no con `split()`. Con `split()` da 0,8067 y parece que la tesis se
+   equivocó en 0,811, cuando la equivocada era la medición.
+2. Una cifra **no se corrige porque la aritmética redondeada no cierre**. El «+0,0866» de la
+   ganancia del texto parecía deber ser 0,0865 al restar valores redondeados; el log lo da como
+   0,0866 desde los sin redondear. Ir a la corrida evitó «corregir» algo correcto.
+
+**El mismo método en el frente de archivos** encontró, en paralelo, seis errores reales: cuatro en
+el 2h (quince predicciones que decían dieciséis, doce cumplidas que decían trece, «uno o dos pares»
+que son entre 1 y 4, y una «diezmilésima» que es una cota de 0,00053) y cuatro en el 2c (una tabla
+de 29 familias junto al resultado de 30, precisión y recall de DARKSIDE 0,45/0,90 cuando son
+0,46/0,88, la entropía de cabecera de «las seis» dada como 7,59 cuando va de 7,34 a 7,59, y «trece
+de diecisiete firmas» que son doce de dieciséis).
+
+**Lo que esto deja como resultado de método:** ninguno de esos errores estaba en una celda de
+tabla. Todos estaban en oraciones que nadie había contrastado, mientras los dos verificadores
+daban 87 de 87 y 627 de 627. Un verificador responde por su lista; la pregunta útil es cuáles son
+las cifras que nadie puso en ella.
+
+## Coherencia de las cifras de P1 (2026-09-29) — CERRADO
+
+**Una corrección aprobada por Romina.** En el ítem de recomendaciones convivía un «81,8 %» con el
+«83,9 %» del ítem anterior, describiendo los dos el mismo escenario. El 81,8 % era la cifra vieja
+(146 notas, TF-IDF de caracteres). Pasa a 83,9 %. **El `0,818` NO se toca donde está declarado sobre
+146 notas**: sigue en la tabla del Exp. 3 y en la escalera, que es donde es correcto.
+
+**Lo que apareció al verificarlo, y es más importante que la corrección.** El 83,9 % estaba citado
+en la tesis y **nunca había sido verificado contra su corrida**: no figuraba en `cifras_finales.py`.
+Al buscarlo aparecieron dos estimaciones del mismo P1, las dos correctas y de corridas distintas:
+
+| Fuente | Semillas | P1 exactitud | P1 macro-F1 |
+|---|---|---|---|
+| `_log_lemmou_149.txt` | **50** | 0,8389 | 0,7889 ± 0,0239 |
+| `_log_clasificador_149.txt` | **10** | 0,842 | 0,799 ± 0,026 |
+
+Las dos están en el documento, y la tabla de los tres protocolos no declaraba su base, de modo que
+quedaban dos macro-F1 de P1 sobre el mismo corpus sin nada que los distinguiera. **Se declaró la
+base en tres lugares** (pie de la tabla comparativa, ítem 3 de la síntesis, pie de la tabla de los
+tres protocolos). Antes de hacerlo se verificó que las **dos** filas de notas de la tabla
+comparativa son de 50 semillas —P1 de `_log_lemmou_149.txt` y P2bal de `_log_p2bal_149.txt`—,
+porque declarar una sola habría sugerido que la otra no tiene respaldo (lo advirtió «Carpeta
+recordada» y tenía razón).
+
+**El agujero del verificador, cerrado.** `cifras_finales.py` cubría las cifras de cabecera de P2bal
+pero **ninguna** de P1, P2 ni L, que son justamente las que el jurado lee primero: la tabla
+comparativa, la síntesis y la Discusión. Se agregaron 20 cifras con su fuente, incluidas las dos
+estimaciones de 50 y 10 semillas y las de la base de 146 notas. **De 67 de 67 pasó a 87 de 87.**
+Commit `17248a7`.
+
+**Corrección a lo que este documento decía del heredoc.** La trampa es más amplia de lo que se
+registró más arriba: **el heredoc reduce cada `\\` a una sola barra en cualquier posición**, no solo
+al final de línea. Al escribir el parche de las remisiones, `"\\ref"` quedó `"\ref"` —un retorno de
+carro en una cadena de Python— y `"\\textit"` quedó `"\textit"` —un tabulador—. Lo salvó que el
+parche anclaba **por texto con `assert`** y falló antes de escribir; anclado por número de línea
+habría metido tabuladores en la tesis sin que nada se quejara. **Regla:** los scripts con barras
+invertidas se escriben con la herramienta de archivos, nunca con heredoc, y todo parche ancla por
+texto con `assert`, nunca por línea.
+
+**Tres remisiones redactadas y EN ESPERA de decisión de Romina (2026-09-29).** Son agregados del
+mismo tipo que el de la l. 1107: no corrigen ni reescriben nada. Quedan escritas acá para no
+perderlas; **no están aplicadas**.
+
+- **(a) Discusión, l. 1340.** El párrafo afirma que el rendimiento bajo P2 está «fuertemente
+  correlacionado con la diversidad de plantillas disponible». Texto propuesto para agregar al final:
+  «La caracterización posterior matiza este punto. Excluidas las dos familias de una sola plantilla,
+  la correlación entre el número de plantillas y el F1 por familia bajo P2 deja de ser significativa
+  ($p = 0{,}237$), mientras que la cohesión interna mantiene la suya
+  (Sección~
+ef{subsec:res_cohesion}). La prioridad de la profundidad se mantiene, con una cota: la
+  curva de aprendizaje sitúa en tres el último texto distinto por familia que aporta de forma
+  medible (Sección~
+ef{subsec:res_curva}).»
+- **(b) Discusión, l. 1338.** El párrafo atribuye el factor limitante a la composición del corpus.
+  Texto propuesto: «El alcance de ese desplazamiento admite una precisión posterior: una revisión
+  del reparto de la partición muestra que una parte de la caída atribuida entonces al corpus provenía
+  del repartidor empleado (Sección~
+ef{subsec:res_p2bal}). Corregido el reparto, el factor limitante
+  sigue estando fuera de la parametrización del modelo, pero se ubica en la distintividad de las
+  notas entre familias antes que en su cantidad (Sección~
+ef{subsec:res_predictores}).»
+- **(c) §4.13.4 «Estabilidad de la estimación».** Dice «diez semillas», correcto para esa etapa, pero
+  §4.12.8 establece pocas páginas antes que las diferencias pequeñas se contrastan con cincuenta.
+  Texto propuesto: «Las comparaciones posteriores entre configuraciones próximas se contrastan con
+  cincuenta semillas, por la razón que se documenta en la
+  Sección~
+ef{subsec:res_evolucion_corpus}.»
+
+**Lo que en §4.13.4 NO es un error y se deja como está:** el «144 documentos repartidos en 30
+clases». Son las 146 menos las dos notas que Windows Defender puso en cuarentena; está verificado
+más arriba en este mismo documento («Línea base verificada al correrlo: 144 notas → 95 textos») y es
+la base que declara la tabla de hiperparámetros a la que esa subsección remite («búsqueda anidada,
+144 notas, 10 semillas»). 144 y 146 dan las mismas 95 plantillas, porque las dos notas en cuarentena
+repetían un texto ya presente. Ubicación confirmada en `main.toc`: es §4.13.4 (pág. 92), dentro de
+«Ajustes al Protocolo Experimental», y no §4.14.
+
+**Pendiente asociado:** `metodologia_corpus_notas.tex` (los criterios de admisión del corpus, que
+pertenecen al cap. 3) **sigue sin incluirse en ningún archivo**, de modo que ese contenido hoy no
+está en el documento compilado. La etiqueta `subsec:corpus_notas` que el texto referencia sí existe
+(en `metodologia.tex:50`), así que no hay referencia rota, pero el texto de los criterios falta.
+Decisión de Romina.
+
+---
+
+# ✔️ VERIFICADOR DEL FRENTE DE ARCHIVOS: `cifras_finales_archivos.py` (2026-09-29)
+
+Equivalente de `cifras_finales.py` (notas). Diseño revisado por «Cascada» antes de correr: se sacó el
+control de presencia en el `.tex` (lo hace `inventario_cifras.py`); las búsquedas en logs llevan
+ancla; los agregados se RECALCULAN desde el nivel más bajo guardado (macro-F1 desde el F1 por
+familia, media y desvío con ddof=1 desde cada semilla, promedio de pliegues desde cada pliegue).
+La exactitud se lee «del script», porque no hay predicciones por archivo guardadas. Commit `31d0390`
+(y un control más: 6 familias bajo 0,75 con solo bytes, media de 10 semillas del 2c).
+
+**Resultado: 413 de 417 verificadas; 265 recalculadas desde un nivel más bajo; 4 fallas, todas
+errores reales del texto del Exp. 2h:**
+1. «Se registraron **dieciséis** predicciones» (l. 962): son **15** (manifiesto del 4096: A1–A8,
+   P1–P6, M1).
+2. «De las dieciséis predicciones registradas, **trece** se cumplieron y tres no» (l. 1005): son
+   **12** cumplidas y 3 fallidas (A5, P3, P4; esas tres están bien nombradas).
+3. «a lo sumo **uno o dos** pares por semilla quedan repartidos»: son **entre 1 y 4** (bloque 🔁).
+4. «del orden de **una diezmilésima** de exactitud»: la cota es **0,00053** (bloque 🔁).
+
+Durante la depuración aparecieron dos fallas del verificador, no de la tesis. Una era la ligadura
+tardía de una lambda llamada `sel`: los selectores de tres fuentes compartían el nombre. La otra,
+diferencias recalculadas desde valores ya redondeados, que tienen ±0,0001 de tolerancia extra
+declarada.
+
+**También:** `inventario_cifras.py` (skill) leía «---0,798» como «−0,798» (aviso de Cascada). Se
+corrigió la expresión regular: un signo pegado a otro guion no es signo. Se corrigió con la misma
+regla la línea de base de `_reescritura_2026-09-29/antes/`: 15 de 2.909 cifras, y la versión vieja
+quedó como `inventario_cifras_regex_viejo.csv`. El inventario nuevo marca 0 cifras con ese signo.
+
+---
+
+# ✍️ PASE DE REDACCIÓN DEL FRENTE DE ARCHIVOS: §4.10 hecho, correcciones del 2h aplicadas (2026-09-29)
+
+Herramienta de cada lote: `pase.py` (scratchpad de la sesión de archivos). Reemplaza párrafos enteros
+por número de línea y prefijo, sin volver a tipear el texto viejo. Exige el MISMO multiconjunto de
+cifras (la expresión de `inventario_cifras.py`), no deja bajar las cautelas e informa negritas y rayas.
+Un cambio de cifras solo pasa si se declara, con su fuente, en `PERMITIDAS`.
+
+**§4.10 (Exp. 2h), 9 párrafos:** negritas 8 → 0, rayas 12 → 0, cautelas 1 → 1. Correcciones de
+contenido:
+- «dieciséis predicciones … trece se cumplieron» → **quince … doce** (manifiesto del 4096).
+- Duplicados: «a lo sumo uno o dos pares … del orden de una diezmilésima» → «entre uno y cuatro
+  pares según la semilla; cada par repartido puede cambiar a lo sumo dos de las 15.000 predicciones,
+  … menor que 0,0006 en la peor semilla» (`duplicados_en_cv.py`, réplica exacta del muestreo).
+- «el aprendizaje sin ejemplos» → «con muy pocos ejemplos»: BLACKMATTER tiene 7, no 0.
+- Precisión verificada en el párrafo de la ablación: WANNACRY, TESLACRYPT, CONTI y BADRABBIT tienen
+  firma binaria (marcas del 2b, job 3638), y CHIMERA no, pero se reconoce por los bytes, con F1 0,9988
+  (2c, 10 semillas).
+
+Compila: 127 págs., 0 errores. **`cifras_finales_archivos.py`: 454 de 454 verificadas, 293
+recalculadas desde un nivel más bajo, 0 fallas** (commit `e4578e3`). Nota de método (Cascada): las
+cuatro fallas del 2h salieron por recalcular desde un nivel más bajo en vez de creerle al agregado
+del propio experimento, y ningún control por celda las habría encontrado.
+
+Pendiente del pase: §4.1 a §4.9, §4.11, las partes de archivos de `metodologia.tex` y el A.1. La
+Discusión ya la cerró «Carpeta recordada» con las tres piezas de archivos.
+
+---
+
+# ✍️ PASE DE REDACCIÓN: §4.6 a §4.11 hechos, con seis correcciones de contenido (2026-09-29)
+
+51 párrafos en cinco lotes (2d, 2e, 2f, 2g, síntesis), con `pase.py`. `resultados.tex` frente a la línea
+de base: **−90 negritas, −94 rayas, −5 muletillas, +4 cautelas, 0 alarmas**. Compila: 128 págs. (el
+aumento es por las inserciones de las otras sesiones), 0 errores. `cifras_finales_archivos.py`: **533 de
+533, 338 recalculadas desde un nivel más bajo** (commits hasta `079ef59`).
+
+**Correcciones de contenido, todas verificadas contra su fuente:**
+1. **2d, cifra sin fuente:** «la forma del nombre supera a la extensión literal por +0,0146
+   [+0,0134; +0,0158]» → **+0,0299 [+0,0269; +0,0329], 5 de 5**. Recalculado desde
+   `exp2d_por_semilla.csv`; da lo mismo en los jobs 3772 y 3937. El 0,0146 no aparece en ninguna de
+   las dos corridas, salvo en la curva de aprendizaje, con otro sentido.
+2. **2d:** «treinta y cuatro centésimas por debajo» → **treinta y tres** (0,9117 − 0,5771 = 0,3346).
+3. **Síntesis, contradicción con §4.3:** «la ampliación del espacio de características descarta que
+   el resultado negativo inicial se debiera a una representación pobre» → «mostró que … dependía en
+   parte de una representación pobre». La §4.3 dice que la exactitud pasa de 0,166 a 0,603 y que la
+   afirmación inicial «es incorrecta».
+4. **Síntesis, base mal atribuida:** «Para las veinticuatro restantes … extraíble con una exactitud de
+   0,912 ± 0,002» → las 24 tienen F1 de 0,97 o más cada una (mínimo 0,9784), y el 0,912 es la
+   exactitud **global sobre las treinta**.
+5. **Síntesis, afirmación más fuerte que la evidencia:** «la indistinguibilidad estadística es real …
+   para seis» → seis familias por debajo de 0,75 de F1, **que se confunden casi solo entre sí** (tabla
+   de difíciles: 97,2 a 99,4 % de confusión interna). Con F1 de 0,39 a 0,74, muy por encima del azar
+   (0,033), no son indistinguibles. «La mejora se concentra íntegramente en las seis» → **casi por
+   completo** (97,9 % de la ganancia de macro-F1, una semilla).
+6. **2e:** la lista de los 44 rasgos sumaba 42. Se completa con el logaritmo del tamaño y el salto de
+   entropía cabecera-cola, y se aclara que χ², distintos, frecuencia máxima y ceros se calculan en cada
+   extremo (`importancias_rasgos.csv`). «Aprendizaje sin ejemplos» → **con muy pocos ejemplos** (7
+   muestras). «La mejora es independiente del tipo» → **se conserva cuando el tipo no se vio**.
+   «WASTEDLOCKER y DARKSIDE, las que más mejoran» vale con cinco semillas (con una, JIGSAW mejora más
+   que DARKSIDE), y se declara la base.
+
+Casi error propio, evitado: en el 2g iba a cambiar «0,049 y 0,050» por «0,050 y 0,055». El
+original era correcto porque remite al cálculo del 2e **sin el caso degenerado de BLACKMATTER**
+(0,9114 − 0,8621 y 0,9359 − 0,8859). Se dejó la cifra y se agregó la aclaración. El verificador ahora lo
+controla con f1ok.
+
+Pendiente: §4.1 a §4.5 (2c y 2b), las partes de archivos de `metodologia.tex`, el A.1 y la
+**cobertura** del verificador (qué cifras de §4.1–4.11 no están en su lista; lo sugirió Cascada).
+
+---
+
+# ✍️ PASE DE REDACCIÓN: §4.4 y §4.5 (2b y 2c) hechos, con nueve correcciones de contenido (2026-09-29)
+
+81 párrafos en cuatro lotes. `resultados.tex` entero frente a la línea de base: **−152 negritas (396 → 244),
+−166 rayas (196 → 30), −8 muletillas, +3 cautelas, 0 alarmas**. Compila: 128 págs., 0 errores.
+`cifras_finales_archivos.py`: **630 de 630, 377 recalculadas** (commits hasta `902a628`).
+
+**Correcciones de contenido (todas verificadas contra su fuente):**
+1. **Firmas binarias, tres cuentas distintas para lo mismo:** «quince» (2b, l. 226), «dieciséis» (figura y
+   lista del 2c) y «diecisiete» (2b, l. 287). Con las **diez semillas del job 3651** (la base de las tablas
+   del 2b) son **17 en las diez, 13 sufijos y 4 prefijos**. La corrida única del 3638 daba 16 porque ahí el
+   sufijo de BLACKBASTA medía 2 bytes. Se unificó en 17. `generar_figuras_cap4.leer_marcas_2b` lee ahora
+   las diez semillas (y se detiene si una familia cambia de clase entre semillas): **17 con firma, 11 solo
+   extensión, 2 sin marca**. Figura regenerada (commit `f90d4df`). Lista del 2c: 17 (14 sobre 0,99) y 11
+   (7 sobre 0,98). **Casi error propio:** en el primer lote del 2c había cambiado la l. 490 a «doce de las
+   dieciséis», usando la corrida única; se revirtió a «trece de las diecisiete».
+2. **Tabla del 2c con dos bases:** las filas de búsqueda eran de 29 familias (5.800 archivos, job 3557) al lado
+   del resultado de 30. Se pasaron a la búsqueda de 30 familias (6.000 archivos, job 3639: 0,891/0,892,
+   0,862/0,865, 0,852/0,849), que es la que cita el texto. La leyenda declara ahora la base. Lo mismo en
+   §4.5.1: 5.800/14.500 → 6.000/15.000. Los hiperparámetros elegidos son los mismos (300/20/2/0,3).
+3. **DARKSIDE, precisión 0,45 y recall 0,90:** no salen de ninguna corrida (corrida única 0,45/0,85; semilla 0
+   0,46/0,89). Con la media de diez semillas, la base del resto del párrafo, son **0,46 y 0,88**.
+4. **Entropía de cabecera de «las seis difíciles» 7,59:** va de **7,34 a 7,59** (media 7,54); 7,59 valía para cuatro.
+5. **2b, «se evaluaron 1.450 archivos»:** eran de 29 familias; con 30, **1.500** (manifiestos del 3651).
+6. **Síntesis de la estimación:** «estable hasta la tercera cifra decimal» → «varía solo en la tercera cifra
+   decimal» (recorrido 0,9093–0,9147).
+7. **«La indistinguibilidad estadística» de las seis** → «el residuo que deja una representación de bytes en
+   posiciones fijas»; y «presumiblemente las que cifran sin añadir marcas» → **«las que no dejan en el
+   contenido una marca fija»** (medido en el 2b).
+8. **«El ransomware firma al final»** (13 de 17) → «la mayoría de las familias firma al final»; «La convergencia
+   es completa» → «apunta en la misma dirección».
+9. **Pasajes de agosto dirigidos al redactor** (aviso de «Carpeta recordada»): l. 521 («conviene no
+   escribirla») y l. 545 («lo escribible es»). Se reescribieron para el lector, conservando lo esencial. «No
+   dejan estructura» es falso para SUNCRYPT (4,78) y NOTPETYA (6,58) contra 7,59, y **al excluir los doce
+   JPEG en claro las métricas bajan** (0,909/0,907 frente a 0,910/0,910, logs 3639 y 3633).
+
+Además: «Dos familias más» enumeraba tres (CONTI, PHOBOS y SODINOKIBI); los pasos significativos de la curva
+se dicen en palabras en lugar de en negrita. «SUNCRYPT, la entropía de cola más baja de todo el conjunto»
+pasa a «de las seis», porque solo hay datos por familia para las seis.
+
+Pendiente: §4.1–4.3 (pruebas preliminares y Exp. 1 y 2), las partes de archivos de `metodologia.tex` y el A.1.
+
+---
+
+# ✅ PASE DE REDACCIÓN DEL FRENTE DE ARCHIVOS: TERMINADO (2026-09-29)
+
+**Última tanda:** §4.1–4.3 (22 párrafos), §4.13.7 (cedida por Cascada), una fila de `tab:comparacion_final` y
+`metodologia.tex` (familia y campaña, Fase 1). Compila: 128 págs., 0 errores. `cifras_finales_archivos.py`: **630
+de 630, 377 recalculadas**. Frente a la línea de base de `_reescritura_2026-09-29/antes/`: `resultados.tex`
+**−155 negritas, −174 rayas, −9 muletillas, +6 cautelas**; `metodologia.tex` −4 negritas, −8 rayas, +2
+cautelas; **0 alarmas** (ninguna cautela ni página perdida).
+
+**Correcciones de contenido de esta tanda (verificadas):**
+1. **El Exp. 2 original usa las SEIS métricas estadísticas** sobre 1.600 archivos (metodología l. 79 y l. 174;
+   resultados l. 39, 64 y 91). La l. 119 decía «dos características (entropía global y tamaño) sobre 1.600
+   archivos» y la tabla comparativa «Exp. 2: Multiclase, 2 características … 9,9 %». Las 2 características son
+   la primera fila de la ampliación, sobre 29.029 archivos, que da 0,166. Se corrigieron las dos, con el visto
+   bueno de «Carpeta recordada» para la fila. Se mantiene «31» en la columna de clases.
+2. **§4.13.7:** «Tres trabajos fueron cancelados por el sistema» → «al menos dos», porque los logs muestran
+   dos por falta de memoria (3538 y 3539) y las otras seis cancelaciones son manuales. «La extracción … requirió
+   5,5 horas» → el trabajo 3538 duró **5 h 42 min**, y su segundo paso, el entrenamiento, murió por falta de
+   memoria; el entrenamiento aparte (3547) duró **20 min**. El 29.029 se confirma («Saved 29029 samples»).
+3. **Exp. 2:** «las 256 frecuencias de byte introducen ruido sin aportar señal» → «aportan poco sobre las
+   estadísticas», porque solas alcanzan 0,184–0,199, cinco veces el azar. «Lo que confirma que el aporte
+   proviene de la interacción» → «sugiere». Se quitó RSA de la lista de cifrados que producen el contenido.
+4. **Metodología, familia y campaña:** «No cambian [entre campañas] las firmas binarias … ni el modo de cifrado»
+   → «En principio no deberían cambiar …; con una única campaña por familia, este trabajo no puede comprobarlo».
+
+**Pendiente para Romina (contenido, no forma), igual que el P2bal que plantea Cascada:** el cap. 3 **no
+describe el protocolo de las cifras de cabecera del frente de archivos**. No aparecen NapierOne-small con 500
+archivos por familia (15.000), la validación cruzada estratificada de 5 pliegues con 5 semillas (10 en el 2c),
+la ponderación de clases ni la validación dejar-un-tipo-fuera. Todo está solo en el cap. 4. §3.4 dice
+«Experimentos 1 y 2: 5-Fold … (1.600 muestras)». Propuesta: una subsección breve en el cap. 3 con ese
+protocolo, que es una adición.
+
+---
+
+# 📌 CAP. 3: VIÑETA DEL PROTOCOLO DE ARCHIVOS AGREGADA (2026-09-30)
+
+Romina aprobó («si dale») la viñeta de remisión en §3.4 de `metodologia.tex` (l. 100), debajo de la de los
+Exp. 1 y 2. Dice que los Exp. 2b a 2h declaran su diseño en el cap. 4 (Secciones 4.4 a 4.10) y que las cifras de
+cabecera del frente de archivos se obtienen sobre NapierOne-small con 500 archivos por familia (15.000),
+validación cruzada estratificada de 5 pliegues con cinco semillas (diez en el 2c) y ponderación de clases,
+contrastadas con dejar-un-tipo-fuera (§4.7.4). Se eligió una viñeta y no una subsección para no duplicar la
+descripción del cap. 4 (criterio compartido con Cascada). Compila: 128 págs., 0 errores.
+
+**Pendiente de Romina, en el chat de la sesión de notas:** el «sí» a la viñeta equivalente de P2bal en §3.6
+(Cascada no la aplica sin su aprobación directa).
 
 ---
 
