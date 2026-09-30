@@ -623,10 +623,26 @@ C(g, "2f: las cuatro más bajas solo con el contenido son NOTPETYA, JIGSAW, CRYP
   lambda: float(set(familias_cv_todas(D["f2"], "2_bytes_estructura").nsmallest(4).index)
                 == {"NOTPETYA", "JIGSAW", "CRYPTOLOCKER", "DARKSIDE"}), "cv_por_familia_y_semilla.csv (4083)", rec=True)
 cv2e = lambda col: ms(csv(D["e2"] / "exp2e_por_semilla.csv").query("columna == @col").f1_macro)[0]
-C(g, "pérdida de los bytes al pasar de CV a tipo no visto", "macro-F1", "0,050",
-  lambda: cv2e("1_bytes_canonico") - promedio_tipos(1), "exp2e_por_semilla.csv + tipos_por_familia.csv", rec=True)
-C(g, "pérdida de bytes + estructura al pasar de CV a tipo no visto", "macro-F1", "0,055",
-  lambda: cv2e("2_bytes_mas_estructura") - promedio_tipos(2), "exp2e_por_semilla.csv + tipos_por_familia.csv", rec=True)
+C(g, "pérdida de los bytes al pasar de CV a tipo no visto, sin el caso degenerado", "macro-F1", "0,049",
+  lambda: cv2e("1_bytes_canonico") - promedio_tipos(1, "f1ok", rec=False), "exp2e_por_semilla.csv + tipos_por_pliegue.csv (f1ok)")
+C(g, "pérdida de bytes + estructura al pasar de CV a tipo no visto, sin el caso degenerado", "macro-F1", "0,050",
+  lambda: cv2e("2_bytes_mas_estructura") - promedio_tipos(2, "f1ok", rec=False), "exp2e_por_semilla.csv + tipos_por_pliegue.csv (f1ok)")
+
+
+def ic_t(v):
+    """Media e intervalo t del 95 % (el ic95 de exp2g_nombre_robusto)."""
+    from scipy import stats
+    v = np.asarray(v, dtype=float)
+    m, h = v.mean(), stats.t.ppf(0.975, len(v) - 1) * v.std(ddof=1) / np.sqrt(len(v))
+    return m, m - h, m + h
+
+
+dif_ok = lambda: [pliegue(t, 2, "f1ok") - pliegue(t, 1, "f1ok") for t in TIPOS]
+for i, (que, cit) in enumerate((("Δ medio", "+0,0238"), ("IC 95 %, extremo inferior", "+0,0108"), ("IC 95 %, extremo superior", "+0,0368"))):
+    C(g, "tipos no vistos sin el caso degenerado: bytes + estructura frente a bytes, pareado por pliegue", que, cit,
+      (lambda k=i: ic_t(dif_ok())[k]), "tipos_por_pliegue.csv (f1ok) + intervalo t", rec=True)
+C(g, "tipos no vistos sin el caso degenerado: la mejora más chica (jpg)", "Δ", "+0,0023", lambda: min(dif_ok()),
+  "tipos_por_pliegue.csv (f1ok)", rec=True)
 C(g, "pérdida del sistema completo al pasar de CV a tipo no visto", "macro-F1", "0,0015",
   lambda: cv_semillas(D["g2"], "cv_por_semilla.csv", "cv_por_familia_y_semilla.csv",
                       "5_bytes_estructura_extension", "f1_rec")[0] - ms(cinco_semillas_tipos())[0],
