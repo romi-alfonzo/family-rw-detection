@@ -630,12 +630,17 @@ C(g, "NOTPETYA", "pares", "1", lambda: float((pares_dup().index.get_level_values
   "censo_duplicados.csv", rec=True)
 C(g, "las otras cinco familias, cada una", "pares (mínimo)", "3",
   lambda: float(pares_dup().groupby(level=0).size().drop("NOTPETYA").min()), "censo_duplicados.csv", rec=True)
-C(g, "pares repartidos entre entrenamiento y prueba, máximo por semilla (tesis: «a lo sumo uno o dos»)",
-  "pares", "2", lambda: float(csv(D["dup"] / "duplicados_en_cv.csv").pares_repartidos.max()),
-  "duplicados_en_cv.csv (réplica del muestreo)", modo="max_le", rec=True)
-C(g, "efecto máximo sobre la exactitud (tesis: «del orden de una diezmilésima»)", "exactitud", "0,0001",
+C(g, "pares repartidos entre entrenamiento y prueba, la semilla con menos", "pares", "1",
+  lambda: float(csv(D["dup"] / "duplicados_en_cv.csv").pares_repartidos.min()),
+  "duplicados_en_cv.csv (réplica del muestreo)", rec=True)
+C(g, "pares repartidos entre entrenamiento y prueba, la semilla con más", "pares", "4",
+  lambda: float(csv(D["dup"] / "duplicados_en_cv.csv").pares_repartidos.max()),
+  "duplicados_en_cv.csv (réplica del muestreo)", rec=True)
+C(g, "predicciones de la validación cruzada por semilla", "archivos", "15000",
+  lambda: float(csv(D["dup"] / "duplicados_en_cv.csv").archivos.max()), "duplicados_en_cv.csv", rec=True)
+C(g, "efecto máximo sobre la exactitud, peor semilla (cota: 2 predicciones por par)", "menor que", "0,0006",
   lambda: float(csv(D["dup"] / "duplicados_en_cv.csv").efecto_max_exactitud.max()),
-  "duplicados_en_cv.csv (réplica del muestreo)", modo="orden", rec=True)
+  "duplicados_en_cv.csv (réplica del muestreo)", modo="max_lt", rec=True)
 g = "2h · ponderación"
 C(g, "BLACKMATTER sin imágenes en el entrenamiento (pliegue jpg, semilla 0)", "muestras de entrenamiento", "7",
   lambda: float(csv(D["h2"] / "tipos_por_familia.csv").query(
@@ -715,6 +720,17 @@ def mismo_vector_de_extension():
 
 C(g, "CHIMERA, WANNACRY, CONTI y TESLACRYPT: mismo vector de 14 rasgos (1 = sí)", "sí/no", "1",
   mismo_vector_de_extension, "exp2g_nombre_robusto.forma_de_la_extension + censo_por_familia.csv", rec=True)
+marcas = lambda: csv(RES / "resultados_estructural" / "marcas_por_familia_umbral_90.csv").set_index("familia")
+C(g, "firma binaria (prefijo o sufijo) en WANNACRY, TESLACRYPT, CONTI y BADRABBIT (1 = sí)", "sí/no", "1",
+  lambda: float(all(marcas().loc[f, "prefijo_len"] > 0 or marcas().loc[f, "sufijo_len"] > 0
+                    for f in ("WANNACRY", "TESLACRYPT", "CONTI", "BADRABBIT"))),
+  "marcas_por_familia_umbral_90.csv (2b, job 3638)", rec=True)
+C(g, "CHIMERA sin firma binaria (1 = sí)", "sí/no", "1",
+  lambda: float(marcas().loc["CHIMERA", "prefijo_len"] == 0 and marcas().loc["CHIMERA", "sufijo_len"] == 0),
+  "marcas_por_familia_umbral_90.csv (2b, job 3638)", rec=True)
+C(g, "CHIMERA con solo bytes, media de 10 semillas (2c)", "F1", "0,9988",
+  lambda: float(csv(D["c2"] / "bytes_multisemilla_por_familia.csv").groupby("familia").f1.mean()["CHIMERA"]),
+  "bytes_multisemilla_por_familia.csv", rec=True)
 C(g, "por semilla, bajo tipo no visto: semillas 1 a 4", "promedio de 7 pliegues (log)", "0,9989",
   lambda: log(D["h2"] / "log.txt", "--- semilla 1 ---", r"promedio ([0-9.]+)", dentro=14), "log.txt (4096)")
 
@@ -740,10 +756,10 @@ C(g, "la semilla 0 es la más baja de las cinco (1 = sí)", "sí/no", "1",
   lambda: float(np.argmin(cinco_semillas_tipos()) == 0), "tipos_por_familia.csv + tipos_semillas.csv", rec=True)
 
 g = "2h · preregistro"
-C(g, "predicciones registradas", "cantidad", "16",
+C(g, "predicciones registradas", "cantidad", "15",
   lambda: float(len(json.loads((D["h2"] / "manifiesto.json").read_text(encoding="utf-8"))["preregistro"])),
   "manifiesto.json (4096)", rec=True)
-C(g, "predicciones cumplidas", "cantidad", "13",
+C(g, "predicciones cumplidas", "cantidad", "12",
   lambda: float(sum(json.loads((D["h2"] / "manifiesto.json").read_text(encoding="utf-8"))["preregistro"].values())),
   "manifiesto.json (4096)", rec=True)
 C(g, "predicciones fallidas", "cantidad", "3",
