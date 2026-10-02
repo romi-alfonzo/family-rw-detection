@@ -55,7 +55,7 @@ PAUSA = 2.0
 # se parezca a una del corpus (si no, el rótulo saldría de la propia similitud, y sería circular).
 # «medusaransomware» es Medusa, OTRA familia: no es MedusaLocker.
 ETIQUETAS = {"LOCKBIT": {"lockbit"}, "RYUK": {"ryuk"}, "HELLOKITTY": {"hellokitty"},
-             "RANSOMEXX": {"ransomexx", "defray777"}, "MEDUZALOCKER": {"medusalocker"},
+             "RANSOMEXX": {"ransomexx", "ransomexx_win", "defray777"},  # ransomexx_win: agregada tras la 1.a recoleccion "MEDUZALOCKER": {"medusalocker"},
              "CLOP": {"clop", "cl0p"}}
 
 
