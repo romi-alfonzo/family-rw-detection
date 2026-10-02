@@ -61,7 +61,7 @@ Las combinaciones de pares de métricas elevaron la exactitud hasta un 13,4\% (R
 \section{Experimento 1: Detección Binaria de Archivos Cifrados}
 \label{sec:exp1}
 
-La Tabla~\ref{tab:exp1} presenta los resultados de detección binaria (cifrado vs.\ seguro) sobre los 1.600 archivos con las seis métricas estadísticas. Las columnas de mínimo y máximo corresponden a la variación de exactitud entre familias.
+La Tabla~\ref{tab:exp1} presenta los resultados de detección binaria (cifrado vs.\ seguro) con dos características por archivo, la entropía de Shannon del archivo completo y su tamaño. Cada familia se evalúa por separado contra la clase segura, con sus 50 archivos cifrados frente a los 100 seguros, de modo que responder siempre «seguro» ya da 66,7\,\% de exactitud. La exactitud media es el promedio de esas treinta evaluaciones, y las columnas de mínimo y máximo corresponden a su variación entre familias.
 
 \begin{table}[ht]
 \centering
@@ -79,16 +79,16 @@ Regresión Logística & 73,8 & 66,7 & 80,0 \\ \hline
 \end{tabular}
 \end{table}
 
-Random Forest obtuvo la mejor exactitud media (88,6\%), seguido por Gradient Boosting (87,7\%). Los modelos lineales rindieron menos, lo que es consistente con fronteras de decisión no lineales en el espacio de métricas estadísticas.
+Random Forest obtuvo la mejor exactitud media (88,6\%), seguido por Gradient Boosting (87,7\%). Los modelos lineales rindieron menos, lo que es consistente con fronteras de decisión no lineales en el espacio de esas dos características.
 
-El análisis por familia (Apéndice) muestra una variación considerable: con Random Forest, la detección va del 69,3\% (RANSOMEXX) al 97,3\% (WANNACRY). Esta variación sugiere que algunas familias producen archivos cifrados con propiedades estadísticas menos separables de las de los archivos legítimos, por ejemplo por cifrado parcial o por preservación de la estructura del archivo original.
+El análisis por familia (Apéndice) muestra una variación considerable: con Random Forest, la detección va del 69,3\% (RANSOMEXX) al 97,3\% (WANNACRY). RANSOMEXX queda apenas por encima del 66,7\,\% de responder siempre «seguro», a cuatro archivos de 150. Esta variación sugiere que algunas familias producen archivos cifrados con propiedades estadísticas menos separables de las de los archivos legítimos, por ejemplo por cifrado parcial o por preservación de la estructura del archivo original.
 
-La exactitud del 88,6\% con seis características es coherente con la literatura: Davies et al.~\cite{paper_4_comparison_of_entropy} informaron precisiones superiores con conjuntos de datos más grandes y combinaciones optimizadas de métricas de entropía.
+La exactitud del 88,6\% con dos características es coherente con la literatura: Davies et al.~\cite{paper_4_comparison_of_entropy} informaron precisiones superiores con conjuntos de datos más grandes y combinaciones optimizadas de métricas de entropía.
 
 \section{Experimento 2: Clasificación Multiclase de Familias por Archivos}
 \label{sec:exp2}
 
-La Tabla~\ref{tab:exp2} presenta los resultados de clasificación multiclase (31 clases) utilizando las mismas métricas estadísticas.
+La Tabla~\ref{tab:exp2} presenta los resultados de clasificación multiclase (31 clases) con las mismas dos características, sobre los 1.600 archivos.
 
 \begin{table}[ht]
 \centering
@@ -107,7 +107,7 @@ KNN & 7,9 & 1,2 \\ \hline
 
 El mejor modelo (Gradient Boosting) alcanzó solo un 9,9\% de exactitud, apenas tres veces el azar teórico para 31 clases equiprobables (3,2\%).
 
-La interpretación inmediata de este resultado es que los archivos cifrados por distintas familias son estadísticamente indistinguibles, algo coherente con la convergencia esperable de los cifrados simétricos modernos: AES-256 o ChaCha20 producen salidas que satisfacen las mismas propiedades de aleatoriedad, de modo que todas las familias generan entropías de Shannon próximas a 8,0 bits/byte (Figura~\ref{fig:entropia_familia}), valores de $\chi^2$ que no rechazan la uniformidad y correlaciones seriales cercanas a cero.
+La interpretación inmediata de este resultado es que los archivos cifrados por distintas familias son estadísticamente indistinguibles, algo coherente con la convergencia esperable de los cifrados simétricos modernos: AES-256 o ChaCha20 producen salidas que satisfacen las mismas propiedades de aleatoriedad, de modo que todas las familias generan entropías de Shannon próximas a 8,0 bits/byte (Figura~\ref{fig:entropia_familia}), y cabe esperar también valores de $\chi^2$ que no rechacen la uniformidad y correlaciones seriales cercanas a cero, dos propiedades que este experimento no midió.
 
 \begin{figure}[ht]
 \centering
@@ -116,7 +116,7 @@ La interpretación inmediata de este resultado es que los archivos cifrados por 
 \label{fig:entropia_familia}
 \end{figure}
 
-Sin embargo, esa conclusión resultó demasiado amplia. El experimento anterior usa solo seis métricas estadísticas globales sobre 1.600 archivos, y cabe la objeción legítima de que el resultado negativo se deba a la pobreza del espacio de representación y no a una propiedad de los datos. La Sección~\ref{subsec:exp2_ampliacion} pone a prueba esa objeción, y la respuesta obliga a reformular el hallazgo.
+Sin embargo, esa conclusión resultó demasiado amplia. El experimento anterior usa solo dos características globales, la entropía y el tamaño, sobre 1.600 archivos, y cabe la objeción legítima de que el resultado negativo se deba a la pobreza del espacio de representación y no a una propiedad de los datos. La Sección~\ref{subsec:exp2_ampliacion} pone a prueba esa objeción, y la respuesta obliga a reformular el hallazgo.
 
 \subsection{Ampliación del espacio de características}
 \label{subsec:exp2_ampliacion}
@@ -1278,7 +1278,7 @@ La Tabla~\ref{tab:comparacion_final} integra los resultados de los tres experime
 \textbf{Enfoque} & \textbf{Clases} & \textbf{Resultado} & \textbf{Mejor método} \\
 \hline
 Exp. 1: Binaria (archivos) & 2 & 88,6\% acc. & Random Forest \\
-Exp. 2: Multiclase, 6 características & 31 & 9,9\% acc. & Gradient Boosting \\
+Exp. 2: Multiclase, 2 características & 31 & 9,9\% acc. & Gradient Boosting \\
 Exp. 2: Multiclase, 19 características & 29 & 60,3\% acc. & Random Forest \\
 Exp. 2b: Firmas binarias (donde aplican) & 30 & 98,4\% acc. (57\% cobert.) & Coincidencia exacta \\
 Exp. 2c: Aprendizaje sobre bytes & 30 & 91,2\% acc. / 0,911 macro-F1 & Random Forest (posicional) \\
@@ -1298,7 +1298,7 @@ Crypto Sheriff (archivos) & 30 & 16,67\% & Reglas manuales \\
 De los resultados se desprende lo siguiente:
 
 \begin{enumerate}
-    \item Las métricas estadísticas de archivos cifrados son efectivas para la detección binaria de cifrado ($\sim$89\% de exactitud).
+    \item Con dos características, la entropía y el tamaño del archivo, la detección binaria de cifrado alcanza 88,6\,\% de exactitud media por familia, frente al 66,7\,\% de responder siempre «seguro».
     \item La identificación de familia a partir de archivos cifrados es posible, y no por las propiedades criptográficas del contenido sino por lo que cada familia agrega. Los artefactos estructurales y la forma del archivo alcanzan 0,936 de macro-F1 sobre 30 familias sin emplear el nombre, frente a 0,911 de los bytes solos; con la extensión que el ransomware añade al nombre, el sistema completo llega a 0,9998 sobre una campaña por familia. Bajo solo contenido, la indistinguibilidad se limita a tres familias.
     \item Las notas de rescate permiten identificar la familia con 83,9\% de exactitud en el escenario operativo comparable al de las herramientas existentes (P1, plantilla ya catalogada, 149 notas y 50 semillas), por encima del 71,93\% de ID Ransomware, medido eso sí sobre 57 notas de 22 familias y no sobre este corpus. Tienen además la ventaja de constituir un método automático y reproducible frente a reglas mantenidas manualmente.
     \item La generalización a plantillas nunca vistas es sustancialmente más difícil que el escenario anterior, pero alcanzable: el sistema en cascada obtiene 0,742 de macro-F1 sobre las 30 familias y 0,795 sobre las 28 evaluables bajo el protocolo P2bal (Sección~\ref{subsec:res_p2bal}). Las cifras sensiblemente menores que se obtienen bajo P2, de 0,435, responden a un defecto del reparto de la partición, que dejaba familias enteras sin material de entrenamiento, y no a una limitación del método. Lo que sí depende de la diversidad de plantillas por familia es el techo alcanzable, y eso fundamenta la expansión del corpus como línea de trabajo.
@@ -1328,7 +1328,7 @@ Esta distinción explica por qué las herramientas basadas en catálogos de regl
 Los resultados permiten proponer un procedimiento por etapas en el que cada artefacto cumple la función para la que resulta adecuado:
 
 \begin{enumerate}
-\item \textbf{Confirmación del incidente}, con métricas estadísticas sobre los archivos afectados: la detección binaria alcanza 88,6\,\% de exactitud (Random Forest, Experimento~1). Los archivos cifrados son el único artefacto cuya presencia está garantizada, porque la nota puede haber sido eliminada, no encontrarse o no existir.
+\item \textbf{Confirmación del incidente}, con la entropía y el tamaño de los archivos afectados: la detección binaria alcanza 88,6\,\% de exactitud media por familia (Random Forest, Experimento~1), frente al 66,7\,\% de responder siempre «seguro». Los archivos cifrados son el único artefacto cuya presencia está garantizada, porque la nota puede haber sido eliminada, no encontrarse o no existir.
 \item \textbf{Identificación de la familia por el archivo cifrado}: por su contenido, con 0,936 de macro-F1 y tres familias por debajo de 0,75 de F1, y, cuando se conserva el nombre del archivo, por el sistema completo, que suma la forma de la extensión y llega a 0,9998 de macro-F1, medido con una campaña por familia.
 \item \textbf{Identificación de familia por la nota de rescate} cuando esté disponible (83,9\% en el escenario comparable con las herramientas existentes), especialmente valiosa para las familias que el contenido del archivo cifrado no resuelve.
 \end{enumerate}

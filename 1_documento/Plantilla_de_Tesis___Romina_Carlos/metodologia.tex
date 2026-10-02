@@ -31,7 +31,7 @@ Una distinción análoga opera en el frente de notas de rescate, donde el equiva
 
 \subsection{Datos de Archivos Encriptados}
 
-Para los Experimentos 1 y 2, se utilizaron archivos del dataset NapierOne~\cite{paper_7_napierone} en su versión Extra-Small (100 archivos por familia). Se extrajeron las siguientes características para cada archivo:
+Para los Experimentos 1 y 2, se utilizaron archivos del dataset NapierOne~\cite{paper_7_napierone} en su versión Extra-Small (100 archivos por familia). El módulo de extracción calcula las siguientes métricas para cada archivo:
 
 \begin{itemize}
     \item Entropía de Shannon del archivo completo
@@ -42,9 +42,11 @@ Para los Experimentos 1 y 2, se utilizaron archivos del dataset NapierOne~\cite{
     \item Coeficiente de correlación serial de bytes (SBCC)
 \end{itemize}
 
+Las pruebas preliminares (Sección~\ref{sec:pruebas_preliminares}) evaluaron esas métricas de forma individual y por pares. Los Experimentos 1 y 2, en cambio, emplearon dos características por archivo: la entropía de Shannon del archivo completo y su tamaño en bytes.
+
 El conjunto resultante comprende 1.600 muestras: 50 archivos cifrados por cada una de las 30 familias (1.500 muestras de ransomware) más 100 archivos seguros (clase Z-Safe), etiquetados numéricamente del 0 al 30.
 
-Para la detección binaria (Experimento 1), las etiquetas se binarizaron: las clases 0--29 (ransomware) se agruparon como ``cifrado'' y la clase 30 (Z-Safe) como ``seguro''.
+Para la detección binaria (Experimento 1), cada familia se evaluó por separado contra la clase segura: sus 50 archivos, etiquetados como ``cifrado'', frente a los 100 de la clase 30 (Z-Safe), etiquetados como ``seguro''. En cada una de esas treinta evaluaciones, responder siempre ``seguro'' da 66,7\,\% de exactitud.
 
 \subsection{Corpus de Notas de Rescate}
 \label{subsec:corpus_notas}
@@ -76,7 +78,7 @@ El corpus resultante (\texttt{corpus\_v2}) contiene \textbf{146 notas distribuid
 
 \subsection{Features para Clasificación de Archivos}
 
-La extracción de características estadísticas se realizó mediante un módulo Python personalizado que calcula las 6 métricas descritas en la Sección 2.3 para cada archivo. Todas las características fueron normalizadas mediante StandardScaler de scikit-learn~\cite{sklearn} para garantizar comparabilidad entre métricas con diferentes escalas.
+La extracción de características estadísticas se realizó mediante un módulo Python personalizado que calcula las 6 métricas descritas en la Sección 2.3 para cada archivo. Todas las características fueron normalizadas mediante StandardScaler de scikit-learn~\cite{sklearn} para garantizar comparabilidad entre métricas con diferentes escalas. En los Experimentos 1 y 2 el escalado se ajustó antes de la validación cruzada, sobre los 150 archivos de cada par familia-segura en el primero y sobre los 1.600 en el segundo, de modo que sus parámetros ven también los archivos de prueba. Es una fuga menor, que no afecta a los modelos basados en árboles. El guion que produjo las tablas de esos dos experimentos no se conservó; el procedimiento se reconstruyó después (\texttt{reproducir\_exp1\_exp2.py}) y reproduce sus cifras a un decimal: las del Experimento 1 en los seis modelos y, para Random Forest, también familia por familia, y las del Experimento 2 en cuatro de sus cinco modelos.
 
 \subsection{Features para Clasificación de Notas (TF-IDF)}
 

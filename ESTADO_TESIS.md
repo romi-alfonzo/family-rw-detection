@@ -11675,7 +11675,10 @@ commitear del 30-09 (huellas en `_revision_2026-09-30/VERSION_REVISADA.txt`; nad
   describe el corpus de 149; Exp. 1/2 y la tabla de 350 sin script; el A.2 promete más de lo que hay.
 - **Desviación del encargo:** los revisores A, B y D se cerraron con Opus 5.5 (no Fable) por límite de uso,
   partiendo de los análisis que los primeros dejaron en disco; los menores no se verificaron; lo no cubierto está
-  listado en el informe (§8). **La reimplementación de clúster (`job_revision_tesis.sh`) sigue sin lanzar.**
+  listado en el informe (§8). **La reimplementación de clúster (`job_revision_tesis.sh`) se LANZÓ el 01-10 a las
+  ~22:15** (Romina: «lanzado»). Número de job a registrar cuando pegue la salida. Esperado: 2–3 h en c2. Al
+  terminar: pegar `tail -n 40 slurm-revision-*.out` (bloque «VEREDICTO DEL PREREGISTRO» y línea «NIVEL») y bajar
+  `resultados_revision_archivos_job<id>/` a `4_resultados/`.
 
 **Verificación de la sesión de archivos (01-10), antes de corregir nada.**
 - **Versión:** los 20 archivos con huella en `VERSION_REVISADA.txt` (`.tex`, `.bib`, PDF) siguen idénticos, así que los números de línea del informe valen para el texto actual. El script del revisor (`d901238`, 29-09 22:19, subido y sin coautoría) es **anterior** a `a777df5`: entre `a777df5` y el commit del 01-10 (`68da650`) no hubo ninguno. *(Corregido el 01-10: antes decía que era posterior.)* **Después de la revisión cambiaron las páginas iniciales** (portada, carátulas, agradecimientos y resúmenes, que hizo Cascada con el sí de Romina), así que sus números de línea ya no valen para esos seis archivos.
@@ -11710,6 +11713,64 @@ La sesión de archivos le pasó cuatro precisiones del resumen, que Cascada apli
 - la limitación de campaña no está medida.
 
 También se agregó el 0,6551. Commits subidos: `68da650` (documento) y `cf81723` (estado). Compila con 136 págs. y 0 errores. **Dedicatoria puesta (01-10):** es el texto de Romina, con ortografía y puntuación corregidas y firmado «Romina Alfonzo». Carlos puede agregar la suya. Nombres corregidos a confirmar: «Cristhian» (ella escribió «Cristhain»), «Alejandro Notario» («alejando») y «Junior Gutiérrez» («gurtierrez»). A pedido de Romina, el asesor figura como **Prof. Dr. Cristian Cappo** en agradecimientos, carátula 2, resumen y abstract, y el agradecimiento suma «por su paciencia a lo largo de estos años». Compila: 136 págs., 0 errores. `catalografica.tex` y `aprobacion.tex` siguen con texto de plantilla, pero no se incluyen en `main.tex` y no se imprimen.
+
+---
+
+# ✅ DECISIONES DE ROMINA PARA CAPPO, Y EL CÓDIGO DE LOS EXP. 1 Y 2 RECONSTRUIDO (2026-10-01)
+
+**Decisiones de Romina** (respuesta a las preguntas armadas por la sesión de revisión):
+- **Majority voting entre frentes: no se hará.**
+- **Extensión a más familias en notas: va como trabajo futuro.** Una oración agregada al final de §5.3 de
+  `conclusion.tex` (frente de notas, «La cuarta es extender…»). No se compiló.
+- **«Nota mínima» (fragmentos de RYUK): se quedan como están**, porque aportan y así se corrió todo.
+- **Otra fuente con varias campañas por familia: no se usará.** Queda como limitación y trabajo futuro, como ya
+  está escrito.
+- **Cifras para Cappo:** en notas, lo principal es el par plantilla conocida / plantilla nunca vista. El
+  resumen ya lo dice así: 0,789 de macro-F1 con la plantilla conocida; 0,6551 con el texto solo y 0,7417 con
+  la cascada sobre la plantilla nunca vista (149 notas, 30 familias, 50 semillas).
+- Preguntas que quedan para Cappo: el objetivo 5 y la presentación de las cifras
+  (`6_notas_trabajo/PREGUNTAS_CAPPO_2026-10-01.md`). `EXPERIMENTOS_PENDIENTES.md` quedó actualizado (M.5, Ext.
+  y *majority voting* decididos).
+
+**Exp. 1 y 2: el código no se conservaba; el procedimiento se reconstruyó y está en el repo** (Romina: «debe
+estar en el repo sí o sí»). Ningún script ni cuaderno escribía `resultados_experimentos/exp1_*.csv` ni
+`exp2_multiclase.csv`, del 07-04. El CSV de `Reporte 28-07` (cuaderno «Family vs Safe», partición única con 70 %
+de prueba) **no** es su fuente: 0 de 30 exactitudes por familia coinciden y su granularidad es 1/105, no 1/150.
+**`2_codigo/reproducir_exp1_exp2.py`** (commit `664b3b3`, con push) los reproduce desde
+`2_codigo/family-rw-detection/features.csv`, que está versionado. El procedimiento:
+- 1.600 archivos (50 por familia y 100 seguros), con **DOS características: entropía y tamaño**;
+- escalado estándar ajustado antes de la validación, sobre los 1.600 en el Exp. 2 y sobre cada par
+  familia-segura de 150 en el Exp. 1 (fuga menor, que conviene declarar);
+- StratifiedKFold(5, mezcla, semilla 42), árboles con semilla 42, KNN k=5, LinearSVC y regresión logística.
+
+**Exp. 1: los seis modelos idénticos a un decimal (media, mínimo y máximo), y RF por familia 30 de 30.** Exp. 2:
+GB, DT, KNN y SVM idénticos (media y desvío); RF da 9,9 ± 0,9 contra 9,8 ± 0,9 publicado.
+
+**⚠ ERROR DE CONTENIDO que esto destapa (lo corrige la sesión de archivos con el sí de Romina):** la tesis dice
+que los Exp. 1 y 2 usan **seis métricas**, y las tablas salen de **dos características**. Lugares:
+- `resultados.tex`: l. 64 («con las seis métricas»), 86 («88,6 % con seis características»), 91 («las
+  mismas métricas»), 119 («usa solo seis métricas…») y 1281 (tabla comparativa, «6 características»);
+- `conclusion.tex`: l. 8 («Con las seis métricas del marco teórico… 88,6 %») y 10 («con las mismas seis
+  métricas globales… 9,9 %»);
+- `metodologia.tex`: §3.2 (l. 34–45), que lista seis métricas para los Exp. 1 y 2.
+
+La redacción de agosto de la l. 119 («dos características (entropía global y tamaño) sobre 1.600 archivos») y
+la fila de la tabla («2 características») eran **correctas**: el cambio a «seis» del 29-09 (bloque «PASE DE
+REDACCIÓN… TERMINADO», corrección 1) fue el error. **Consecuencia para el objetivo 1:** la detección binaria
+del 88,6 % se obtuvo con entropía y tamaño, no con χ², Monte Carlo ni SBCC. La conclusión §5.1.1 lo enuncia
+como efectividad de las métricas estadísticas en general, y hay que acotarlo. Las pruebas preliminares de la
+Fase 2 (pares de métricas, polinomios) son otro experimento y no se tocan.
+
+**✅ Corregido el 01-10 (sesión de archivos, con el sí de Romina).** Antes se verificó que el script reproduce el Exp. 1 en los 6 modelos y RF en 30 de 30 familias, y el Exp. 2 en 4 de 5 modelos. **El error fue de esta sesión:** el 29-09 tomó el «seis» del texto (l. 64, que lo arrastraba desde agosto) en vez de ir a la fuente.
+
+Cambios:
+- **`resultados.tex`:** «dos características» en l. 64, 82, 86, 91, 119 y en la fila de `tab:comparacion_final`. En l. 64 se agregan además la base (cada familia, 50 + 100 = 150 archivos) y la línea base (66,7 %). En l. 84 se aclara que RANSOMEXX queda a 4 de 150 archivos de esa línea base (A-03). En l. 110, χ² y correlación serial pasan a «cabe esperar… que este experimento no midió». Las viñetas de la comparación y la del procedimiento post-ataque dicen ahora «la entropía y el tamaño» y la línea base.
+- **`metodologia.tex`:** la lista de seis métricas es la del módulo y la de las pruebas preliminares; los Exp. 1 y 2 usan entropía y tamaño. El Exp. 1 evalúa cada familia contra los 100 seguros, no una binarización global. Se declaran la fuga del escalado (no afecta a los árboles) y la reconstrucción del procedimiento con `reproducir_exp1_exp2.py` (resuelve A-04/C-01).
+- **`conclusion.tex`:**
+  - §5.1.1: **el objetivo 1 se cumplió en parte**, porque la detección binaria nunca usó χ², Monte Carlo ni SBCC; el 88,6 % va frente al 66,7 %, y se quita el «350 archivos» de la fase preliminar (A-05, pendiente de Carlos);
+  - §5.3: repetir la binaria con las tres métricas que no se usaron.
+
+Controles: verificador 630 de 630, 0 errores, **135 págs.** El cap. 4 bajó de 81 a 79 páginas solo por el reacomodo de figuras y tablas: `resultados.tex` cambió en 10 líneas y ganó 107 palabras.
 
 ---
 
