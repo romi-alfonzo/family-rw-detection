@@ -1,0 +1,166 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noquoting]{babel}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{parskip}
+\usepackage{amsmath}
+\setlist{nosep,leftmargin=1.4em}
+\pagestyle{empty}
+\renewcommand{\arraystretch}{1.15}
+
+\begin{document}
+
+{\large\textbf{Plan de trabajo --- próximas etapas}}\\[2pt]
+\textbf{Detección de familias de ransomware en base a archivos encriptados y notas de rescate}\\[2pt]
+Romina Alfonzo, Carlos Urdapilleta \quad$\vert$\quad Tutor: Prof. Cristian Cappo \quad$\vert$\quad 12 de agosto de 2026
+
+\hrulefill
+
+\textbf{Punto de partida.} Los dos frentes cuentan con resultados consolidados y el capítulo de
+resultados está redactado. La identificación de familia a partir de archivos cifrados alcanza
+una exactitud de 0,910 sobre 29 familias, validada frente a tipos de documento no vistos
+(0,879). La identificación a partir de notas de rescate alcanza un macro-F1 de 0,760 en el
+escenario comparable con las herramientas existentes y de 0,435 ante plantillas nunca vistas.
+
+El plan que sigue se ordena por dependencias, no por preferencia: la Etapa 1 condiciona los
+resultados que se reportarán, y la Etapa 3 requiere que las anteriores estén cerradas. Se
+señala de antemano que una parte del trabajo restante depende de la disponibilidad pública de
+los datos y no del esfuerzo propio, lo que se explicita en la Etapa 1.
+
+\textbf{Fundamento del orden propuesto.} Tres verificaciones independientes indican que el
+factor limitante ya no es metodológico:
+
+\begin{center}
+\small
+\begin{tabular}{@{}llc@{}}
+\toprule
+\textbf{Verificación} & \textbf{Alcance} & \textbf{Efecto} \\
+\midrule
+Hiperparámetros del clasificador de notas & 840 configuraciones, búsqueda anidada & sin mejora \\
+Abstracción de marcadores variables en las notas & 130 de 144 notas modificadas & sin mejora \\
+Hiperparámetros de las características estadísticas & 4 combinaciones, hasta 2,5 h cada una & sin variación \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+En consecuencia, el esfuerzo se concentra en la composición del corpus y no en la
+optimización de los modelos.
+
+\section*{Etapa 1 --- Tratamiento del límite que impone el corpus}
+
+El análisis de similitud mostró que las 146 notas del corpus corresponden a solo 95
+contenidos distintos: cada familia reutiliza un repertorio reducido de plantillas, y siete
+familias están representadas por una única. Ese es el factor que limita el segundo protocolo
+de evaluación.
+
+Corresponde señalar, sin embargo, que \textbf{la ampliación del corpus no está enteramente
+bajo nuestro control}. Las fuentes públicas disponibles ya fueron recolectadas de forma
+sistemática ---ThreatLabz, el repositorio de Lemmou y portales de seguridad--- y para varias
+familias es probable que no existan plantillas adicionales publicadas. Fijar una cantidad
+mínima de plantillas por familia como requisito supondría comprometer un resultado que depende
+de la disponibilidad de terceros. Se propone en cambio un tratamiento en tres frentes:
+
+\begin{itemize}
+\item \textbf{Documentar el límite con precisión, que constituye un aporte en sí mismo.}
+Reportar el desempeño estratificado según la cantidad de plantillas disponibles por familia,
+de modo que quede establecido cuántas plantillas son necesarias para que la generalización sea
+posible. Esta información no requiere datos nuevos, se obtiene del corpus actual, y resulta
+directamente útil a trabajos posteriores: indica qué evidencia hace falta reunir antes de
+abordar el problema por esta vía.
+
+\item \textbf{Ampliar de forma oportunista, informando el resultado sea cual sea.} Se dispone
+de direcciones concretas para catorce familias con menos de cuatro notas. Se recolectará lo
+que esté efectivamente disponible y se medirá la mejora obtenida; si para algunas familias no
+se encuentran plantillas nuevas, ese hecho se documenta como parte del resultado y no como una
+tarea incumplida.
+
+\item \textbf{Evaluar un enfoque adecuado a la escasez de ejemplos.} Para las familias con una
+o dos plantillas, ningún método supervisado clásico puede generalizar, con independencia del
+esfuerzo de recolección. El aprendizaje \textit{few-shot} está diseñado precisamente para ese
+escenario, y el repositorio que nos compartió el 06/06/2024 aborda el problema en este mismo
+dominio. Es la vía metodológica ante una limitación de datos que no admite solución por
+recolección.
+\end{itemize}
+
+\textbf{Tarea complementaria:} auditar la procedencia de 37 notas cuya fuente quedó registrada
+de forma ambigua, para que la sección de procedencia del capítulo de metodología sea
+verificable en su totalidad.
+
+\section*{Etapa 2 --- Verificaciones pendientes}
+
+Tareas acotadas, con costo computacional conocido, que cierran objeciones previsibles.
+
+\begin{itemize}
+\item \textbf{Naturaleza del bloque final en SUNCRYPT y NOTPETYA.} Ambas familias añaden
+datos no aleatorios al final del archivo (entropía de cola de 4,78 y 6,58 frente a 7,44 en el
+resto) y, sin embargo, no se identifican correctamente. La hipótesis es que ese bloque varía
+en cada archivo ---una clave, un identificador de víctima o el tamaño original--- de modo que
+constituye estructura pero no firma de familia. Se verificará comparando el contenido
+hexadecimal de la cola en varias muestras. De confirmarse, permite redactar el diagnóstico
+como hecho y no como conjetura.
+\item \textbf{Incorporación del nombre de archivo como característica.} Lemmou et al. (2021)
+obtienen un F de 0,920 clasificando únicamente por el nombre de la nota. En este trabajo se
+descartó porque aproximadamente la mitad de los nombres del corpus fueron asignados por los
+repositorios de origen y no por el atacante. Se propone anotar la procedencia de cada nombre
+en el manifiesto y emplear como característica solo los auténticos.
+\item \textbf{Reejecución sobre la base final.} Una vez ampliado el corpus y restauradas dos
+notas de DHARMA que resultaron afectadas por el antivirus del equipo de trabajo, se repetirá
+la corrida completa para que todas las cifras del documento provengan de un mismo conjunto.
+\end{itemize}
+
+\section*{Etapa 3 --- Redacción y cierre}
+
+\begin{itemize}
+\item Incorporar al capítulo de resultados los ocho conjuntos de mediciones ya obtenidas y
+todavía no redactadas, entre ellas la validación de generalización a tipos de documento, la
+localización de la información dentro del archivo y el diagnóstico de las familias de bajo
+rendimiento.
+\item Reformular en el marco teórico la delimitación del aporte respecto de Lemmou et al.
+(2021), quienes identifican la familia mediante reglas y marcadores curados. La contribución
+de este trabajo se define con precisión como el primer clasificador supervisado multiclase
+sobre el contenido completo, con medición explícita de la generalización a variantes no vistas.
+\item Completar la bibliografía con nueve referencias identificadas, entre ellas la del propio
+conjunto de datos NapierOne, el trabajo sobre comparación de métodos de entropía del mismo
+grupo, y el artículo de \textit{Electronics} sugerido en la reunión del 13/03/2024.
+\item Redactar las conclusiones, el resumen y el \textit{abstract}, y completar el material
+preliminar del documento. Incluir el agradecimiento al clúster computacional del NIDTEC, cuyo
+reglamento de uso lo requiere.
+\end{itemize}
+
+\section*{Decisiones que requieren su criterio}
+
+\begin{enumerate}[label=\alph*)]
+\item \textbf{Procedencia de las notas.} Seis familias (BadRabbit, Chimera, Jigsaw, NotPetya,
+WannaCry y CryptoLocker) no cuentan con archivo bruto público disponible y se cubrieron con
+transcripciones documentadas de portales de seguridad. ¿Se consideran fuentes admisibles,
+declarándolo como limitación de procedencia?
+\item \textbf{Alcance de la ampliación del corpus.} Dado que las fuentes públicas ya fueron
+recolectadas de forma sistemática y que para varias familias probablemente no existan
+plantillas adicionales publicadas, ¿resulta aceptable documentar el límite que impone la
+evidencia disponible ---reportando el desempeño según la cantidad de plantillas por familia---
+en lugar de comprometer una cantidad mínima que depende de terceros?
+\item \textbf{Estructura del documento.} ¿Conviene reorganizar los capítulos de modo que cada
+objetivo específico corresponda a una sección, según lo sugerido el 08/05/2024?
+\item \textbf{Alcance.} El clúster dispone de unidades de procesamiento gráfico. ¿Corresponde
+incorporar una comparación con modelos basados en \textit{transformers} como sección
+adicional, o dejarla planteada como trabajo futuro, considerando que el corpus consta de 146
+documentos y tales modelos tienden al sobreajuste en conjuntos de ese tamaño?
+\item \textbf{Familias con una sola plantilla.} Se propone evaluar el aprendizaje
+\textit{few-shot} para las siete familias en esa situación (Etapa 1), por ser la única vía
+posible cuando la recolección no puede aportar más ejemplos. ¿Corresponde incorporarlo como
+experimento del trabajo, o presentarlo únicamente como línea futura?
+\end{enumerate}
+
+\section*{Sobre las seis familias que el análisis de archivos no resuelve}
+
+Conviene señalar que las seis familias cuya identificación por archivos cifrados resulta
+deficiente ---SUNCRYPT, WASTEDLOCKER, CRYPTOLOCKER, DARKSIDE, JIGSAW y NOTPETYA--- refuerzan
+el planteo de investigar ambos artefactos por separado: son precisamente los casos en que la
+nota de rescate constituye la única vía de identificación disponible. La independencia de los
+dos frentes, mantenida a lo largo del trabajo, resulta así justificada por los datos y no
+solo por el diseño.
+
+\end{document}
