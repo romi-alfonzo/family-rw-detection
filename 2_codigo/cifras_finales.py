@@ -144,6 +144,14 @@ CIFRAS = [
     ("Contraste limpio", "texto solo", "IC 95 %", "[-0.0161; +0.4336]", "_log_contraste_limpio.txt"),
     ("Contraste limpio", "sin mixtas, cascada y texto", "diferencia", "+0.0909", "_log_contraste_limpio.txt"),
 
+    # Mejoras de la cascada bajo P1 (mejoras_cascada_p1.py, preregistro e27b28a), 149 notas, 30 familias.
+    ("Mejoras P1", "V2 normalizacion de URL", "exactitud", "0.8895", "_log_mejoras_cascada_p1.txt"),
+    ("Mejoras P1", "V2 normalizacion de URL", "macro-F1", "0.8626", "_log_mejoras_cascada_p1.txt"),
+    ("Mejoras P1", "V2 contra V0", "delta exactitud", "+0.0030", "_log_mejoras_cascada_p1.txt"),
+    ("Mejoras P1", "V2 contra V0", "IC 95 % delta exactitud", "[+0.0014; +0.0045]", "_log_mejoras_cascada_p1.txt"),
+    ("Mejoras P1", "V2 contra V0", "delta macro-F1", "+0.0034", "_log_mejoras_cascada_p1.txt"),
+    ("Mejoras P1", "V1 capa de catalogo", "notas que decide por semilla", "8.6", "_log_mejoras_cascada_p1.txt"),
+
     # ---------------- BASE A: incertidumbre ----------------
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 %", "0.6585", "_log_revision_bootstrap.txt"),
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 % (alto)", "0.8187", "_log_revision_bootstrap.txt"),
