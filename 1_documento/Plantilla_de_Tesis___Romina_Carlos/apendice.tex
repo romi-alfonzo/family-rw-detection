@@ -28,8 +28,8 @@ MEDUZALOCKER & 94,0 & RANSOMEXX & 69,3 \\ \hline
 RYUK & 93,3 & & \\ \hline
 TESLACRYPT & 93,3 & & \\ \hline
 BLACKCAT & 92,0 & & \\ \hline
-GANDCRAB & 90,7 & & \\ \hline
 LORENZ & 91,3 & & \\ \hline
+GANDCRAB & 90,7 & & \\ \hline
 JIGSAW & 90,7 & & \\ \hline
 \end{tabular}
 \end{table}
@@ -39,7 +39,7 @@ JIGSAW & 90,7 & & \\ \hline
 
 Cada cifra del Capítulo~4 procede de un archivo de resultados y puede contrastarse con él mediante los dos verificadores que acompañan al código, uno por frente. No son una declaración de principio: leen los números tal como están escritos en el documento y los comparan con su archivo de origen, de modo que una discrepancia aparece sola.
 
-El verificador del frente de archivos cifrados, \texttt{cifras\_finales\_archivos.py}, comprueba 454 cifras y las confirma todas. De ellas, 293 no se leen de un resumen ya calculado sino que se recalculan desde los datos por semilla o por familia, lo que permite detectar un promedio mal tomado y no solo una transcripción equivocada. El verificador del frente de notas, \texttt{cifras\_finales.py}, comprueba 67 y las confirma todas. Ambos emiten además la lista de advertencias necesarias para citar cada número con su métrica y su base.
+El verificador del frente de archivos cifrados, \texttt{cifras\_finales\_archivos.py}, comprueba 630 cifras y las confirma todas. De ellas, 377 no se leen de un resumen ya calculado sino que se recalculan desde los datos por semilla o por familia, lo que permite detectar un promedio mal tomado y no solo una transcripción equivocada. El verificador del frente de notas, \texttt{cifras\_finales.py}, comprueba 87 y las confirma todas. Ambos emiten además la lista de advertencias necesarias para citar cada número con su métrica y su base.
 
 Los dos declaran de forma explícita las cifras que no provienen de una corrida guardada, junto con su procedencia: la evaluación de herramientas públicas, realizada a mano y registrada en la planilla del proyecto; el censo de integridad, que es un recuento del conjunto de archivos; las pruebas preliminares y la ampliación del Experimento~2, cuyas corridas son anteriores a los verificadores; y la composición de los pliegues de la validación por tipo de documento. Una cifra de esta clase no es menos comprobable, pero se comprueba abriendo su fuente en lugar de ejecutando un guion, y el documento lo señala en cada caso.
 

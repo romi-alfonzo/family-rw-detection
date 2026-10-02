@@ -1,10 +1,11 @@
-\centerline{\textbf{\large Title }}
+\centerline{\textbf{\large Ransomware family identification from}}
+\centerline{\textbf{\large encrypted files and ransom notes}}
 
 \vspace{2cm}
 
-\rightline{Author: full name}
+\rightline{Authors: Romina Alfonzo and Carlos Urdapilleta}
 \vspace{0.5cm}
-\rightline{Advisor: full name}
+\rightline{Advisor: Prof. Cristian Cappo}
 
 \vspace{0.5cm}
 
@@ -14,9 +15,24 @@
 \vspace{0.5cm}
 
 \noindent
-This is the abstract
+Identifying which ransomware family encrypted a system shapes the incident response, since the applicable recovery tools depend on it. This work evaluates two artefacts an analyst finds after an attack, the encrypted file and the ransom note, over the same thirty families of the NapierOne dataset, and treats them as two independent fronts with their own protocols and their own figures.
+
+\vspace{0.3cm}
+
+\noindent
+For encrypted files, a classifier built solely from file content, combining its byte values at fixed offsets with structural features, reaches a macro-F1 of 0.936 over the thirty families, measured on 15,000 files with five seeds. Adding the shape of the extension that the ransomware appends to the file name, the complete system reaches a macro-F1 of 0.9998 on the same basis, reported as an upper bound because each family is represented by a single campaign.
+
+\vspace{0.3cm}
+
+\noindent
+For ransom notes, a corpus of 149 notes with per-note declared provenance was built, forming 99 templates, since each family reuses one text and changes only the contact details. Recognising a new instance of an already catalogued template reaches a macro-F1 of 0.789 with the text classifier. On a never-seen template, the demanding scenario, that same classifier drops to 0.6551, and a cascading system that first consults the markers written in the note and falls back to the text when none applies raises it to a macro-F1 of 0.7417 and 81.2\% accuracy.
+
+\vspace{0.3cm}
+
+\noindent
+The conceptual contribution is that both artefacts, analysed with methods that share nothing, exhibit the same structure: a signal tied to the specific campaign, with high immediate performance, and a content signal, costlier to extract and presumably more stable across campaigns. The limits of each front are stated, among them the one with the widest reach: with a single campaign per family, no figure of the encrypted-file front separates the family from the campaign.
 
 \vspace{0.5cm}
 
 \noindent
-\textbf{Keywords}: 
+\textbf{Keywords}: ransomware, family identification, ransom notes, encrypted files, text classification, machine learning, incident response.

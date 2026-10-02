@@ -1,11 +1,11 @@
-\centerline{\textbf{\large Titulo1}}
-\centerline{\textbf{\large Titulo2}}
+\centerline{\textbf{\large Detección de familias de ransomware en base a}}
+\centerline{\textbf{\large archivos encriptados y notas de rescate}}
 
 \vspace{2cm}
 
-\rightline{Autor: Nombre y apellido}
+\rightline{Autores: Romina Alfonzo y Carlos Urdapilleta}
 \vspace{0.5cm}
-\rightline{Asesor: Nombre y apellido}
+\rightline{Asesor: Prof. Cristian Cappo}
 
 \vspace{0.5cm}
 
@@ -15,8 +15,24 @@
 \vspace{0.5cm}
 
 \noindent
-Este es el resumen
+Identificar qué familia de ransomware cifró un sistema condiciona la respuesta al incidente, porque de ella dependen las herramientas de recuperación aplicables. Este trabajo evalúa dos artefactos que un analista encuentra después de un ataque, el archivo cifrado y la nota de rescate, sobre las mismas treinta familias del conjunto NapierOne, y los trata como dos frentes independientes con sus propios protocolos y sus propias cifras.
+
+\vspace{0.3cm}
+
+\noindent
+Sobre archivos cifrados, un clasificador construido únicamente con el contenido del archivo, combinando los valores de sus bytes en posiciones fijas con rasgos estructurales, alcanza un macro-F1 de 0,936 sobre las treinta familias, medido sobre 15.000 archivos con cinco semillas. Incorporando además la forma de la extensión que el ransomware añade al nombre, el sistema completo llega a 0,9998 de macro-F1 sobre la misma base, cifra que se reporta como cota superior porque cada familia está representada por una única campaña.
+
+\vspace{0.3cm}
+
+\noindent
+Sobre notas de rescate se construyó un corpus de 149 notas con procedencia declarada nota por nota, que forman 99 plantillas, ya que cada familia reutiliza un mismo texto cambiando los datos de contacto. Reconocer una instancia nueva de una plantilla ya catalogada alcanza un macro-F1 de 0,789 con el clasificador de texto. Sobre una plantilla nunca vista, que es el escenario exigente, ese mismo clasificador desciende a 0,6551, y un sistema en cascada que consulta primero los marcadores escritos en la nota y recurre al texto cuando ninguno aplica lo lleva a 0,7417 de macro-F1 y 81,2\% de exactitud.
+
+\vspace{0.3cm}
+
+\noindent
+El aporte conceptual es que los dos artefactos, analizados con métodos sin nada en común, presentan la misma estructura: una señal ligada a la campaña concreta, de alto rendimiento inmediato, y una señal de contenido, más costosa de extraer y presumiblemente más estable entre campañas. Se declaran además los límites de cada frente, entre ellos el de mayor alcance: con una única campaña por familia, ninguna cifra del frente de archivos separa la familia de la campaña.
+
 \vspace{0.5cm}
 
 \noindent
-\textbf{Palabras Clave}:
+\textbf{Palabras Clave}: ransomware, identificación de familias, notas de rescate, archivos cifrados, clasificación de texto, aprendizaje automático, respuesta a incidentes.

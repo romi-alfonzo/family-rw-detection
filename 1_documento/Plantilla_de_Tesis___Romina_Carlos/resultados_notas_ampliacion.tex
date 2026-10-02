@@ -627,6 +627,50 @@ La forma general del resultado es inequívoca: ceder antes empeora de manera sis
 
 En sentido contrario queda por registrar un efecto local: sobre las notas más fáciles la capa de reglas resta. La Sección~\ref{subsec:res_parecido} lo cuantifica. Es la consecuencia aritmética de que la regla acierte 0,9928 y no exactamente 1: cuando el texto ya iba a acertar, el error residual de la regla se impone sobre una decisión correcta.
 
+\subsubsection*{El rendimiento familia por familia}
+
+El agregado esconde una dispersión muy grande, y la Tabla~\ref{tab:p2bal_familias} la muestra entera. Es además la información que permite responder en qué familias falla el sistema propuesto, y no solo cuánto acierta en promedio.
+
+\begin{table}[ht]
+\centering
+\caption{F1 por familia del texto solo y de la cascada, bajo P2bal (149 notas, 30 familias, 50 semillas), ordenado por el F1 de la cascada}
+\label{tab:p2bal_familias}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|c|c|c|c||l|c|c|c|c|}
+\hline
+\textbf{Familia} & \textbf{Plant.} & \textbf{Texto} & \textbf{Cascada} & \textbf{$\Delta$} & \textbf{Familia} & \textbf{Plant.} & \textbf{Texto} & \textbf{Cascada} & \textbf{$\Delta$} \\
+\hline
+NETWALKER & 2 & 0,9800 & 0,9800 & +0,0000 & SODINOKIBI & 3 & 0,6345 & 0,8048 & +0,1703 \\
+BLACKCAT & 4 & 0,8893 & 0,9701 & +0,0808 & RANSOMEXX & 4 & 0,7532 & 0,8027 & +0,0495 \\
+TESLACRYPT & 4 & 0,8987 & 0,9677 & +0,0690 & PHOBOS & 4 & 0,5275 & 0,7680 & +0,2405 \\
+CUBA & 2 & 0,9578 & 0,9662 & +0,0084 & BLACKBASTA & 4 & 0,2020 & 0,7456 & +0,5436 \\
+DARKSIDE & 2 & 0,9655 & 0,9655 & +0,0000 & WANNACRY & 4 & 0,7384 & 0,7395 & +0,0011 \\
+SUNCRYPT & 2 & 0,9653 & 0,9653 & +0,0000 & MEDUZALOCKER & 4 & 0,7228 & 0,7308 & +0,0080 \\
+AVOSLOCKER & 3 & 0,9943 & 0,9611 & $-$0,0332 & LOCKBIT & 5 & 0,6491 & 0,6993 & +0,0502 \\
+CERBER & 8 & 0,9053 & 0,9503 & +0,0450 & CLOP & 4 & 0,5141 & 0,5971 & +0,0830 \\
+BLACKMATTER & 2 & 0,9334 & 0,9448 & +0,0114 & MAZE & 4 & 0,5866 & 0,5924 & +0,0058 \\
+WASTEDLOCKER & 3 & 0,9289 & 0,9390 & +0,0101 & NOTPETYA & 2 & 0,5757 & 0,5757 & +0,0000 \\
+LORENZ & 3 & 0,7427 & 0,8998 & +0,1571 & JIGSAW & 4 & 0,4448 & 0,4986 & +0,0538 \\
+CONTI & 3 & 0,8492 & 0,8922 & +0,0430 & RYUK & 4 & 0,2540 & 0,3585 & +0,1045 \\
+CHIMERA & 2 & 0,2947 & 0,8920 & +0,5973 & HELLOKITTY & 3 & 0,2679 & 0,2927 & +0,0248 \\
+GANDCRAB & 4 & 0,8413 & 0,8776 & +0,0363 & BADRABBIT & 1 & 0,0000 & 0,0000 & +0,0000 \\
+DHARMA & 6 & 0,6361 & 0,8724 & +0,2363 & CRYPTOLOCKER & 1 & 0,0000 & 0,0000 & +0,0000 \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+La mediana es de 0,8724, de modo que la mitad de las familias se identifica por encima de ese valor y el promedio queda arrastrado por una cola corta de casos difíciles. Cuatro lecturas se siguen de la tabla.
+
+Las dos familias de plantilla única, BADRABBIT y CRYPTOLOCKER, obtienen cero exacto. Es el cero por construcción de la Sección~\ref{subsec:res_ceros} y no mide dificultad: identificadas por vecino más cercano, ambas se reconocen sin error.
+
+Donde la capa de marcadores más aporta es en familias cuyo texto no alcanza. CHIMERA pasa de 0,2947 con el texto solo a 0,8920 con la cascada, y BLACKBASTA de 0,2020 a 0,7456. Son las familias que la Sección~\ref{subsec:res_predictores} caracteriza como de patrón interno bajo: sus notas no se parecen entre sí, de modo que el texto no puede generalizar, pero reutilizan infraestructura entre campañas y la regla exacta las resuelve.
+
+En sentido contrario, la cascada resta en AVOSLOCKER, que baja de 0,9943 a 0,9611. Es el efecto local que la Sección~\ref{subsec:res_parecido} cuantifica: sobre una familia que el texto ya resolvía casi siempre, el error residual de la regla se impone sobre decisiones correctas. Hay además familias en las que la cascada no cambia nada, como DARKSIDE, SUNCRYPT y NOTPETYA, porque sus marcadores no se repiten entre plantillas y la regla nunca se activa.
+
+Las familias que quedan por debajo de 0,50 son HELLOKITTY, RYUK y JIGSAW, y ninguna de las tres mejora apreciablemente con la cascada. Carecen a la vez de patrón textual y de marcadores reutilizables, que es la combinación que la Sección~\ref{subsec:res_predictores} identifica como el límite de lo que este corpus permite.
+
+
 
 \subsection{El sistema en despliegue: abstención y lista de candidatas}
 \label{subsec:res_despliegue}
