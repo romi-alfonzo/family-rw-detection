@@ -128,6 +128,12 @@ CIFRAS = [
     ("Pareado", "texto solo", "diferencia de exactitud", "+0.2151", "_log_pareado_conocida_vs_nueva.txt"),
     ("Pareado", "texto solo", "IC 95 % de la diferencia", "[+0.1917; +0.2385]", "_log_pareado_conocida_vs_nueva.txt"),
 
+    # Control de tamano igualado (pareado_tamano_igualado.py, preregistro d24ff7b): entrenamiento
+    # de «conocida» recortado de 112,5 a 74,5 notas, igual que «nueva».
+    ("Pareado igualado", "cascada, plantilla conocida, tamano igualado", "exactitud", "0.9617", "_log_pareado_tamano_igualado.txt"),
+    ("Pareado igualado", "cascada", "diferencia de exactitud", "+0.1133", "_log_pareado_tamano_igualado.txt"),
+    ("Pareado igualado", "texto solo", "diferencia de exactitud", "+0.2104", "_log_pareado_tamano_igualado.txt"),
+
     # ---------------- BASE A: incertidumbre ----------------
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 %", "0.6585", "_log_revision_bootstrap.txt"),
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 % (alto)", "0.8187", "_log_revision_bootstrap.txt"),
