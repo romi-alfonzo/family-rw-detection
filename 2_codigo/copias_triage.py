@@ -55,8 +55,11 @@ PAUSA = 2.0
 # se parezca a una del corpus (si no, el rótulo saldría de la propia similitud, y sería circular).
 # «medusaransomware» es Medusa, OTRA familia: no es MedusaLocker.
 ETIQUETAS = {"LOCKBIT": {"lockbit"}, "RYUK": {"ryuk"}, "HELLOKITTY": {"hellokitty"},
-             "RANSOMEXX": {"ransomexx", "ransomexx_win", "defray777"},  # ransomexx_win: agregada tras la 1.a recoleccion "MEDUZALOCKER": {"medusalocker"},
+             # ransomexx_win: agregada tras la 1.a recolección (es la etiqueta de la variante Windows)
+             "RANSOMEXX": {"ransomexx", "ransomexx_win", "defray777"},
+             "MEDUZALOCKER": {"medusalocker"},
              "CLOP": {"clop", "cl0p"}}
+assert all(ETIQUETAS[f] for f in ("LOCKBIT", "RYUK", "HELLOKITTY", "RANSOMEXX", "MEDUZALOCKER"))
 
 
 def leer(url: str) -> str:
