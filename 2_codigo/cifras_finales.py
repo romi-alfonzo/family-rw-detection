@@ -134,6 +134,16 @@ CIFRAS = [
     ("Pareado igualado", "cascada", "diferencia de exactitud", "+0.1133", "_log_pareado_tamano_igualado.txt"),
     ("Pareado igualado", "texto solo", "diferencia de exactitud", "+0.2104", "_log_pareado_tamano_igualado.txt"),
 
+    # Contraste limpio (contraste_limpio.py, preregistro 52f695c): las mismas 69 notas, dejando
+    # afuera solo la nota o toda su plantilla. Determinista, semilla 0. IC por plantillas.
+    ("Contraste limpio", "cascada, conocida", "exactitud", "0.9855", "_log_contraste_limpio.txt"),
+    ("Contraste limpio", "cascada, nueva", "exactitud", "0.9130", "_log_contraste_limpio.txt"),
+    ("Contraste limpio", "cascada", "diferencia", "+0.0725", "_log_contraste_limpio.txt"),
+    ("Contraste limpio", "cascada", "IC 95 %", "[+0.0000; +0.2000]", "_log_contraste_limpio.txt"),
+    ("Contraste limpio", "texto solo", "diferencia", "+0.2029", "_log_contraste_limpio.txt"),
+    ("Contraste limpio", "texto solo", "IC 95 %", "[-0.0161; +0.4336]", "_log_contraste_limpio.txt"),
+    ("Contraste limpio", "sin mixtas, cascada y texto", "diferencia", "+0.0909", "_log_contraste_limpio.txt"),
+
     # ---------------- BASE A: incertidumbre ----------------
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 %", "0.6585", "_log_revision_bootstrap.txt"),
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 % (alto)", "0.8187", "_log_revision_bootstrap.txt"),
