@@ -11709,7 +11709,7 @@ La sesión de archivos le pasó cuatro precisiones del resumen, que Cascada apli
 - «de macro-F1» y la base del 0,9998;
 - la limitación de campaña no está medida.
 
-También se agregó el 0,6551. Commits subidos: `68da650` (documento) y `cf81723` (estado). Compila con 136 págs. y 0 errores. **Falta la dedicatoria:** dice «blah blah blah», Romina va a pasar el texto y la pone la sesión de archivos. `catalografica.tex` y `aprobacion.tex` siguen con texto de plantilla, pero no se incluyen en `main.tex` y no se imprimen.
+También se agregó el 0,6551. Commits subidos: `68da650` (documento) y `cf81723` (estado). Compila con 136 págs. y 0 errores. **Dedicatoria puesta (01-10):** es el texto de Romina, con ortografía y puntuación corregidas y firmado «Romina Alfonzo». Carlos puede agregar la suya. Nombres corregidos a confirmar: «Cristhian» (ella escribió «Cristhain»), «Alejandro Notario» («alejando») y «Junior Gutiérrez» («gurtierrez»). A pedido de Romina, el asesor figura como **Prof. Dr. Cristian Cappo** en agradecimientos, carátula 2, resumen y abstract, y el agradecimiento suma «por su paciencia a lo largo de estos años». Compila: 136 págs., 0 errores. `catalografica.tex` y `aprobacion.tex` siguen con texto de plantilla, pero no se incluyen en `main.tex` y no se imprimen.
 
 ---
 
