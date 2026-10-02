@@ -228,4 +228,12 @@ m = ~ampliada
 d_resto = (np.mean([accuracy_score(y[m], pred["C1"][s][m]) for s in range(N_SEM)])
            - np.mean([accuracy_score(y[m], pred["V0"][s][m]) for s in range(N_SEM)]))
 print(f"  [{'CUMPLE' if abs(d_resto) < 0.003 else 'FALLA '}] CC-3 sin copia, |delta| < 0,003   {d_resto:+.4f}")
+# 2026-10-02: acierto por nota, para evaluar predicciones nota por nota (aditivo).
+with open(SALIDA / "p1_copias_por_nota.csv", "w", encoding="utf-8", newline="") as fh:
+    w = csv.writer(fh)
+    w.writerow(["familia", "archivo", "tam_plantilla", "plantilla_con_copia", "acierto_V0", "acierto_C1"])
+    for i in range(n):
+        w.writerow([y[i], archivos[i], tam[grupos[i]], int(ampliada[i]),
+                    round(float(np.mean(pred["V0"][:, i] == y[i])), 4),
+                    round(float(np.mean(pred["C1"][:, i] == y[i])), 4)])
 print(f"\nSalidas en {SALIDA}")
