@@ -11537,7 +11537,165 @@ contrastadas con dejar-un-tipo-fuera (§4.7.4). Se eligió una viñeta y no una 
 descripción del cap. 4 (criterio compartido con Cascada). Compila: 128 págs., 0 errores.
 
 **Pendiente de Romina, en el chat de la sesión de notas:** el «sí» a la viñeta equivalente de P2bal en §3.6
-(Cascada no la aplica sin su aprobación directa).
+(Cascada no la aplica sin su aprobación directa). ✅ **Resuelto el 30-09:** Romina dijo que sí y Cascada la
+aplicó en §3.6, después de P1 y P2 (128 págs., 0 errores).
+
+---
+
+# 💾 COMMIT, APÉNDICE Y RESTOS DEL PASE DE FORMA (2026-09-30)
+
+**Commit (Romina: «guarda todo en git, sigan con la conclusión»).** Tres commits en `develop`, subidos:
+`1576da5` (documento: caps. 1 a 4, apéndice, `.bib`, tres figuras, `nota_limitacion_napierone.tex`),
+`51aea5a` (este archivo, `EXPERIMENTOS_PENDIENTES.md`, `GUIA_NOTAS_PARA_ROMINA.md`) y `a777df5`
+(`6_notas_trabajo/`, con `_revision_2026-09-28/` y `_reescritura_2026-09-29/`). Quedaron fuera, a propósito,
+`4_resultados/` y los respaldos `.antes_*`. Indicadores en lo subido: los correos, `.onion` y billeteras que
+cita este archivo ya estaban en commits anteriores. Lo único nuevo es una dirección de contacto de CUBA en
+`REVISION_LOGO_2026-09-17_informe.md` (l. 124, como ejemplo de circularidad).
+
+**Apéndice A.1.** La tabla coincide con `4_resultados/resultados_experimentos/exp1_por_familia.csv` en las 30
+familias. LORENZ (91,3) estaba debajo de GANDCRAB (90,7): se movió la fila. Comprobado que la tabla entera baja
+en orden y que los empates van por orden alfabético.
+
+**Apéndice A.2.** Se actualizaron los conteos de los verificadores. Archivos: 454/293 → **630/377** (corrida del
+30-09: 630 de 630, 0 fallas). Notas: 67 → **87** (corrida del 30-09: 87 de 87). Se contaron también los 51
+manifiestos JSON y los 21 guiones de `2_codigo/slurm`: están bien (Carpeta los verificó por su lado).
+
+**Restos del pase de forma.** Siete líneas del frente de archivos no habían entrado en ningún lote: l. 325,
+384, 572, 574 y 617 de `resultados.tex` (párrafos o viñetas) y los epígrafes de l. 407 y 463. Tenían 12 rayas y
+11 negritas de énfasis. Se pasaron por el guardián: rayas 12 → 0, negritas 11 → 1 (queda la cabeza de párrafo
+«Una discrepancia abierta, que se declara.», igual que las de §4.4.4), cifras idénticas, cautelas 3 → 3 y
+llaves balanceadas. En todo el documento solo quedan «---» en celdas de tabla («no aplica») y en separadores de
+comentario. **Lección** (la señaló Cascada): lo que no entra en ningún lote queda sin revisar y el total lo
+oculta. El control es listar la prosa que no cubrió ningún lote, no mirar el agregado.
+
+**Conclusión: reparto acordado entre las tres sesiones.** 5.1 Conclusiones, una por objetivo específico de
+§1.3: 5.1.1 archivos (obj. 1 y 2) = sesión de archivos; 5.1.2 notas (obj. 3 y 4) = Cascada; 5.1.3 comparación
+(obj. 5) = Carpeta. 5.2 Contribuciones y 5.3 Trabajo futuro = Carpeta, con una lista de cada frente y cada ítem
+con su sección del cap. 4. Reemplaza entero lo del anteproyecto («Conclusiones Parciales» y «Trabajo
+Pendiente», con el 15,4 % preliminar como cierre y el 71,93 % descrito como «de las familias»). Reglas: solo
+cifras que ya están en el cap. 4, con métrica, base y sección; ninguna cautela baja; ninguna oración
+concluyente sin medición detrás (chequeo 19); tono de la muestra; las cifras de un frente no justifican al otro.
+Carpeta armó el esqueleto y escribió §5.1.3 (128 págs., 0 errores). Cascada no escribe su §5.1.2 hasta que
+Romina se lo confirme en su canal.
+
+**Dos advertencias para §5.1.1** (las planteó Carpeta y se comprobaron en el cap. 4). El objetivo 2 pedía
+«evidencia empírica de la indistinguibilidad estadística entre familias», así que se cumple **delimitándolo**:
+la indistinguibilidad alcanza a la aleatoriedad del contenido cifrado (0,166 de exactitud con entropía global y
+tamaño, Random Forest, 29.029 archivos, 29 familias) y no al archivo. Además, el Exp. 1 (88,6 % de exactitud
+media, Random Forest, 1.600 archivos, seis métricas) es la cifra más vieja del capítulo y va con su base pegada.
+
+**§5.1.1 escrita (sesión de archivos).** Siete párrafos, 1.306 palabras:
+1. Objetivo 1 con su base: 88,6 % de exactitud media, Random Forest, 1.600 archivos de los que 100 son seguros, cinco pliegues. La binaria no se repitió a escala.
+2. Objetivo 2, cumplido delimitándolo: 9,9 % sobre 31 clases con seis métricas; de 0,166 a 0,603 sobre 29.029 archivos y 29 familias; un techo que el ajuste no mueve.
+3. Dónde está la información: 2b, 2c y 2e.
+4. El sistema: 2g, 2h y la ablación.
+5. Las pruebas que resiste: la validación anidada, el tipo no visto, el artefacto del nombre, el censo y los duplicados.
+6. La limitación de campaña y el mundo cerrado.
+7. Un cierre.
+
+Control: las 52 cifras distintas están en los caps. 3 y 4 o en el apéndice (74,4 y 73,8 figuran en `tab:exp1` sin el
+signo %). 0 negritas, 0 rayas, 6 cautelas, llaves balanceadas, referencias resueltas. Después se hicieron tres precisiones:
+- «la base, además, es pequeña» en lugar de «la de menor escala del frente», porque las pruebas preliminares usaron menos archivos;
+- el censo «llevó a» apartar y a corregir, porque no hizo la corrección;
+- el efecto de los duplicados se enuncia como cota (< 0,0006).
+
+**Listas del frente de archivos para 5.2 y 5.3 (enviadas a Carpeta).**
+Contribuciones:
+1. La delimitación del resultado negativo (`subsec:exp2_ampliacion`, `_donde`, `_hiperparametros`).
+2. El descubrimiento automático de firmas con criterio de mayoría, validado contra ID Ransomware en seis familias (`sec:exp2b`).
+3. El identificador solo por contenido, 0,936 de macro-F1 (`sec:exp2c`, `sec:exp2e`, `subsec:exp2e_tipos`).
+4. El sistema por capas con su descomposición, 0,9998 ± 0,0001 y 0,9983 ± 0,0011 bajo tipo no visto (`sec:exp2g`, `sec:exp2h`).
+5. Los hallazgos sobre NapierOne (`subsec:exp2c_integridad_censo`, `subsec:exp2c_sesgo_pdf`, `sec:exp2h`, `sec:exp2f`): 40 archivos sin cifrar, el cifrado parcial de CERBER, el filtro `.pdf` que descartaba 310, los 16 pares duplicados con seis familias deterministas y la base del nombre distinta entre imágenes y documentos.
+6. La metodológica: dejar-un-tipo-fuera como control de artefactos de curaduría, y las predicciones registradas antes de ejecutar.
+
+Trabajo futuro:
+1. Varias campañas por familia.
+2. Mundo abierto.
+3. La detección binaria a escala, con más de 100 archivos seguros.
+4. Las familias sin firma bajo tipo no visto.
+5. La discrepancia RYUK/HERMES (el volcado dirigido está pendiente).
+6. Guardar la predicción por archivo (viene de A.2, no del cap. 4).
+
+**§5.1.3: cinco versiones de una frase, ejemplo de las dos clases de error.** La frase de complementariedad («las
+familias que el contenido del archivo no resuelve no son las mismas que el texto de la nota no resuelve») era
+falsa. Versiones:
+1. Afirmaba la complementariedad sin haberla medido.
+2. Mostraba el solapamiento, pero leyendo P2 en lugar de P2bal.
+3. Inventaba una causa común («la dificultad es propia de la familia»). La refuta CRYPTOLOCKER, que tiene F1 nulo por construcción (una sola plantilla, `subsec:res_ceros`) y se identifica 2 de 2.
+4. Dependía de un umbral de redondeo (DARKSIDE en 0,7515).
+5. La final no compara familia por familia, porque cada frente reporta por familia bajo un protocolo propio y no hay una medición conjunta.
+
+El cap. 4 no tiene F1 por familia del frente de notas bajo P2bal: la única tabla, `tab:exp3_familia`, es P2, texto solo y base de 146. Cascada se lo propuso a Romina como agregado.
+**Lección:** al corregir una frase falsa es fácil meter otra del mismo tipo que suena a hallazgo. Cada versión se
+contrastó con el cap. 4, no con un CSV que el capítulo no muestra.
+
+**§5.1.2** la escribió Cascada, que aplicó dos observaciones: las aperturas de las limitaciones y CLOP-RYUK como «apenas por
+encima de la moneda». La unificación de «\%» y «\,\%» queda para el pulido final de todo el documento.
+
+**Conclusión completa (30-09, 00:50).** Carpeta escribió 5.2 (14 contribuciones) y 5.3 (trabajo futuro por frente,
+con las muestras pareadas al cierre). El PDF tiene 136 págs., con 0 errores y 0 referencias sin resolver; los
+verificadores dan 630 de 630 y 87 de 87, y el inventario de estilo, 0 alarmas. La sesión de archivos comprobó que
+las once remisiones del frente de notas llevan a la sección que contiene lo que se les atribuye. Solo una de §5.1.2
+cita 149/99 contra `subsec:neardups`, que da la base vieja (146/95); se le pasó a Cascada.
+
+**Revisión independiente: Romina, 30-09: «todavía no lanzaremos al revisor».** No se prepara ni se propone por
+iniciativa propia. Antes de lanzarla hay que actualizar el §0 de `ENCARGO_REVISION_TESIS_COMPLETA.md`, que quedó al
+29-09. Dice que la conclusión no está escrita, que el verificador de archivos está pendiente, 127 págs. y 67 cifras
+de notas. Con ese §0 el revisor se frenaría, porque el encargo le indica no empezar si algo sigue abierto.
+
+**Actualización, 30-09: revisión LANZADA.** Romina escribió en el canal de Carpeta «si crees que ya es hora manda al
+revisor antes que se agoten mis tokens» y luego «ya, lanza». Corre en la sesión «Revisión científica de tesis»
+(Fable 5.1, esfuerzo máximo, carpeta Tesis real). Antes de lanzarla, Carpeta actualizó el §0 del encargo:
+- los verificadores al día;
+- el 0,166 de `generar_figuras_cap4.py` (l. 45) con su fuente, `slurm-train-3547.out` l. 13, y la comprobación de que las figuras del 2e y del 2g se leen hoy del CSV;
+- las remisiones a los bloques de ESTADO y al commit `1576da5`;
+- la frase de autoría: «por encargo de Romina».
+
+**Congelamiento:** ningún `.tex` se edita hasta que la revisión termine. Lo de hoy después de las 00:00 no está
+commiteado, y el revisor registra la versión que revisa. No se le escribe a esa sesión: la independencia es el punto.
+
+---
+
+# 🔬 REVISIÓN INDEPENDIENTE TERMINADA — veredicto: REVISIÓN MAYOR (2026-10-01)
+
+Informe: **`6_notas_trabajo/REVISION_TESIS_2026-09-30_informe.md`**. Versión revisada: `a777df5` + cambios sin
+commitear del 30-09 (huellas en `_revision_2026-09-30/VERSION_REVISADA.txt`; nada cambió durante la revisión).
+**El congelamiento de los `.tex` termina.**
+
+- **Las cifras de cabecera son reales.** Notas: 9 re-ejecuciones reproducen exacto (P2bal 0,6551 / 0,7417, IC,
+  abstención, top-k, curva, M.6, base de 146 reconstruida). Archivos: 2b–2h recalculados desde CSV, nivel
+  «funcional» (sin reentrenar). Ningún hallazgo invalida 0,9998, 0,936 ni 0,7417.
+- **Revisión mayor por interpretación, literatura y reproducibilidad, todo corregible en el texto.** 22 mayores
+  verificados (ningún crítico). Los que cambian una lectura: la caída P1→P2 «cuantifica exactamente»
+  (`resultados.tex:1107/1304/1340`); «solo con marcas deliberadas» (`:1265`, `metodologia.tex:181`); el aporte
+  conceptual compara 0,878 de macro-F1 con 0,9928 de acierto donde aplica; el objetivo 5 («comparación
+  directa») contra la conclusión; el margen de la nota externa es en muestra; WASTEDLOCKER 0 → 0,939 son las mismas
+  4 notas; «el límite no está en el método». Literatura: Filiz evaluó **78** herramientas, no 28; `lee2022` mezcla
+  autores y título. Entrega: **agradecimientos vacíos (falta LABO16-167) y resúmenes en plantilla.** Cap. 3 no
+  describe el corpus de 149; Exp. 1/2 y la tabla de 350 sin script; el A.2 promete más de lo que hay.
+- **Desviación del encargo:** los revisores A, B y D se cerraron con Opus 5.5 (no Fable) por límite de uso,
+  partiendo de los análisis que los primeros dejaron en disco; los menores no se verificaron; lo no cubierto está
+  listado en el informe (§8). **La reimplementación de clúster (`job_revision_tesis.sh`) sigue sin lanzar.**
+
+**Verificación de la sesión de archivos (01-10), antes de corregir nada.**
+- **Versión:** los 20 archivos con huella en `VERSION_REVISADA.txt` (`.tex`, `.bib`, PDF) siguen idénticos, así que los números de línea del informe valen para el texto actual. Desde `a777df5` hay un solo commit, `d901238`: el script del revisor, subido y sin coautoría.
+- **Confirmados en la fuente:**
+  - **A-01:** `resultados.tex:1265` dice «solo es posible cuando la familia deja marcas deliberadas». Lo contradice la propia tesis: los 44 rasgos estructurales solos dan 0,8680 de macro-F1 (l. 847). Va junto con `metodologia.tex:181`, «Dado que las propiedades estadísticas… no permiten discriminar», que es la premisa vieja que l. 145 declara incorrecta.
+  - **A-02:** `:186` atribuye el 66,67 % de ID Ransomware a firmas de bytes, pero solo 9 de las 20 familias sobreviven al renombrado.
+  - **A-03:** cada exactitud del Exp. 1 se mide sobre 150 archivos (50 cifrados + 100 seguros). Los 30 valores son múltiplos de 1/150. Responder siempre «seguro» da 66,7 %, que es el mínimo de SVM y de RL, y RANSOMEXX (69,3 %) queda 4 archivos por encima. Afecta también a §5.1.1, que da 88,6 % sin esa línea base.
+  - **A-04:** ningún código del proyecto produce `exp1_*.csv` ni `exp2_multiclase.csv` (busqué en todas las carpetas, incluidas `7_compartido_carlos` y las que no están en git).
+  - **A-07:** l. 645 ya describía cuatro familias con prefijos de cifrado determinista, y l. 1005 dice «las dos».
+- **A-05, precisado:** la tabla preliminar no es «sin ningún artefacto». Los cuadernos de Carlos (`7_compartido_carlos/…/Notebooks/Pruebas binarias/Tesis-*.ipynb`) usan **114 archivos** (unos 71 cifrados de pocas familias, con las extensiones `.acute`, `.wiyn0sx9jt`, `.avos2` y `.crypt`, y 43 sin cifrar), dos rasgos y una prueba de **35** archivos (`test_size=0.3`). Coinciden 4 de las 6 exactitudes: MLP 94,29, KNN 97,14, Árbol y GB 100. No coinciden SVM y RL (**65,71 %** en los cuadernos, 66,67 en la tesis) ni las precisiones y recalls por clase. Ninguna versión usa 350 archivos (300 + 50). Conclusión: la tabla no corresponde a la composición que declara la tesis, y no hay un artefacto exacto. **Preguntar a Carlos** de dónde salió.
+- **Sobre el cambio de modelo:** lo que la revisión afirma está verificado por un segundo agente y, en mi frente, también por mí. Los verificadores corrigieron excesos de los revisores (el «dos protocolos» de A-04 y el «Lemmou no es fuente» de C-04), así que no se limitaron a aprobar. La revisión **no es completa**: A, B y D se cerraron con un tope de 35 llamadas, y quedó sin leer la mayoría de las 454 oraciones concluyentes y unas 76 de las 91 cifras en prosa de la ampliación de notas, además de la comparación visual de figuras y el clúster. **La independencia quedó reducida:** Opus 5.5 es el mismo modelo que trabajó buena parte del texto, y los dos verificadores también lo fueron. Lo que encontró es confiable; lo que no encontró no quedó validado.
+
+**Reparto propuesto de los hallazgos** (los números son los del informe, §4). Nadie corrige sin el sí de Romina en su canal.
+- **Archivos:** A-01 en `:1265`, A-02, A-03 (también §5.1.1 y A.1), A-04/C-01 (declarar que el script no se conserva; definir «Desvío»), A-05 (tras preguntar a Carlos), los menores A-06 a A-12, y D-17 (el «98,4 % acc.» de `tab:comparacion_final` es acierto donde aplica). Además, los números del frente para A.2 (cobertura, manifiestos) y para C-07 (`n_iter`, semillas, IC con t de Student y ddof=1).
+- **Notas (Cascada, avisada):** #1, #5, #6, #7, #11, #16, #17, los menores B-07 a B-11 y D-15, y `metodologia.tex:181` (se le pasó una redacción).
+- **Comunes (Carpeta, sesión no disponible el 01-10):**
+  - entrega: #21 agradecimientos con LABO16-167 y #22 resúmenes;
+  - lectura: #2 en `:1324`, #3 aporte conceptual, #4 objetivo 5;
+  - A.2: #12, #13 y #14;
+  - literatura: #18 Filiz (78 herramientas), #19 `lee2022` y #20 fuentes de `introduccion.tex:44`.
 
 ---
 
