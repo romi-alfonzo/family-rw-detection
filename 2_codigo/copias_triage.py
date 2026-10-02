@@ -50,6 +50,13 @@ DESTINO = RAIZ / "3_datos" / "fuentes_notas" / "triage_2026-10"
 BASE = "https://tria.ge"
 AGENTE = "Mozilla/5.0 (investigacion academica, tesis de grado FP-UNA, lectura de informes publicos)"
 PAUSA = 2.0
+# Etiquetas de familia de tria.ge aceptadas para cada familia del corpus. La etiqueta del informe es
+# la fuente INDEPENDIENTE del rótulo: un informe sin la etiqueta esperada se descarta aunque su nota
+# se parezca a una del corpus (si no, el rótulo saldría de la propia similitud, y sería circular).
+# «medusaransomware» es Medusa, OTRA familia: no es MedusaLocker.
+ETIQUETAS = {"LOCKBIT": {"lockbit"}, "RYUK": {"ryuk"}, "HELLOKITTY": {"hellokitty"},
+             "RANSOMEXX": {"ransomexx", "defray777"}, "MEDUZALOCKER": {"medusalocker"},
+             "CLOP": {"clop", "cl0p"}}
 
 
 def leer(url: str) -> str:
@@ -79,7 +86,7 @@ def notas_de_informe(pag: str) -> list[tuple[str, str]]:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("familias", nargs="+", help="FAMILIA=etiqueta_de_tria.ge")
+    ap.add_argument("familias", nargs="*", help="FAMILIA=etiqueta_de_tria.ge (búsqueda pública)")
     ap.add_argument("--ids", type=Path, help="archivo con líneas «FAMILIA informe»")
     ap.add_argument("--max", type=int, default=40, help="informes por familia")
     args = ap.parse_args()
@@ -93,8 +100,9 @@ def main():
         print(f"{fam}: {len(ids)} informes en la búsqueda pública, se leen {len(pedidos[fam])}")
     if args.ids:
         for linea in args.ids.read_text(encoding="utf-8").splitlines():
-            if linea.strip():
-                fam, inf = linea.split()
+            if linea.strip() and not linea.startswith("#"):
+                fam, inf = linea.split()[:2]
+                inf = inf.split("/")[0]  # siempre la vista general del informe
                 pedidos.setdefault(fam, [])
                 if inf not in pedidos[fam]:
                     pedidos[fam].append(inf)
@@ -102,7 +110,7 @@ def main():
     DESTINO.mkdir(parents=True, exist_ok=True)
     man = DESTINO / "manifiesto_triage.csv"
     vistos = set()
-    filas = []
+    filas, descartes = [], []
     for fam, ids in pedidos.items():
         (DESTINO / fam).mkdir(exist_ok=True)
         guardadas = 0
@@ -115,6 +123,11 @@ def main():
                 continue
             finally:
                 time.sleep(PAUSA)
+            etiquetas = set(re.findall(r"/s/family:([a-z0-9_.-]+)", pag))
+            if not etiquetas & ETIQUETAS.get(fam, {fam.lower()}):
+                print(f"  {fam} {inf}: descartado, etiquetas de tria.ge {sorted(etiquetas) or '(ninguna)'}")
+                descartes.append(dict(familia=fam, informe=inf, etiquetas=" ".join(sorted(etiquetas))))
+                continue
             for ruta, texto in notas_de_informe(pag):
                 clave = " ".join(texto.split())
                 if len(clave) < 80 or clave in vistos:
@@ -133,7 +146,13 @@ def main():
         w = csv.DictWriter(f, fieldnames=list(filas[0]) if filas else ["familia"])
         w.writeheader()
         w.writerows(filas)
-    print(f"\nTotal: {len(filas)} notas distintas | manifiesto: {man}")
+    with open(DESTINO / "descartados_por_etiqueta.csv", "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=["familia", "informe", "etiquetas"])
+        w.writeheader()
+        w.writerows(descartes)
+    print(f"\nTotal: {len(filas)} notas distintas de {sum(len(v) for v in pedidos.values()) - len(descartes)} "
+          f"informes con la etiqueta esperada | {len(descartes)} informes descartados por etiqueta")
+    print(f"Manifiesto: {man}")
 
 
 if __name__ == "__main__":
