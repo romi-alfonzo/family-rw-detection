@@ -52,6 +52,7 @@ esas plantillas, y eso es recolectar en fuentes nuevas: es decisión de Romina.
 from __future__ import annotations
 
 import csv
+import os
 import hashlib
 import sys
 from collections import Counter
@@ -75,7 +76,7 @@ N_SEM = int(sys.argv[1]) if len(sys.argv) > 1 else 50
 TOL = 0.0005
 RAIZ = Path(__file__).resolve().parent.parent
 DATOS = RAIZ / "3_datos"
-SALIDA = RAIZ / "4_resultados" / "resultados_copias_controladas"
+SALIDA = Path(os.environ.get("SALIDA_COPIAS", RAIZ / "4_resultados" / "resultados_copias_controladas"))  # 2026-10-02: configurable para correr otros grupos sin pisar este
 INVENTARIO = SALIDA / "inventario.csv"
 VARIANTES = ("V0", "C1")
 

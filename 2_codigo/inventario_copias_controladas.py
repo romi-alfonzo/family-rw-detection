@@ -36,6 +36,7 @@ SALIDA: 4_resultados/resultados_copias_controladas/inventario.csv y un resumen p
 from __future__ import annotations
 
 import csv
+import os
 import re
 import sys
 from collections import Counter, defaultdict
@@ -57,7 +58,7 @@ except Exception:
 
 RAIZ = Path(__file__).resolve().parent.parent
 DATOS = RAIZ / "3_datos"
-SALIDA = RAIZ / "4_resultados" / "resultados_copias_controladas"
+SALIDA = Path(os.environ.get("SALIDA_COPIAS", RAIZ / "4_resultados" / "resultados_copias_controladas"))  # 2026-10-02: configurable para correr otros grupos sin pisar este
 
 # (carpeta raíz, nombre de la fuente, ¿el corpus ya la cita?)
 FUENTES = [
@@ -68,6 +69,10 @@ FUENTES = [
     (DATOS / "fuentes_notas" / "f6dfir_ransom_notes", "f6dfir", False),
     (DATOS / "candidatas_fuentes_nuevas", "candidatas_fuentes_nuevas", False),
 ]
+# 2026-10-02: fuentes adicionales por variable de entorno, «ruta::nombre» separadas por «;».
+for _f in filter(None, os.environ.get("FUENTES_EXTRA", "").split(";")):
+    _ruta, _nombre = _f.split("::")
+    FUENTES.append((Path(_ruta), _nombre, False))
 NO_TEXTO = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".pdf", ".csv", ".json", ".md",
             ".zip", ".7z", ".exe", ".dll", ".bin"}
 
