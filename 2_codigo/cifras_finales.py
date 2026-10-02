@@ -85,6 +85,16 @@ CIFRAS = [
     ("146 · corpus inicial", "P2 combinado + LinearSVC (cita 0,435)", "macro-F1", "0.4353", "resultados_canonicos/corrida_canonica_resumen.csv"),
     ("146 · corpus inicial", "P2 combinado + LinearSVC (cita 0,512)", "weighted-F1", "0.5120", "resultados_canonicos/corrida_canonica_resumen.csv"),
 
+    # ---------------- BASE A: la cascada con PLANTILLA YA CATALOGADA (P1, 50 semillas) ----------------
+    # Medicion del 2026-10-01, preregistro commiteado en 7be8db6 ANTES de correr. Hasta ese dia
+    # todas las cifras de P1 del documento eran del clasificador de texto solo.
+    ("A · P1 cascada", "cascada, plantilla ya catalogada", "exactitud", "0.8866", "_log_m3_149_P1.txt"),
+    ("A · P1 cascada", "cascada, plantilla ya catalogada", "macro-F1", "0.8592", "_log_m3_149_P1.txt"),
+    ("A · P1 cascada", "capa de reglas bajo P1", "notas que resuelve (de 149)", "95.3", "_log_m3_149_P1.txt"),
+    ("A · P1 cascada", "capa de reglas bajo P1", "acierto", "0.9953", "_log_m3_149_P1.txt"),
+    ("A · P1 cascada", "texto solo bajo P1 (puerta de entrada)", "exactitud", "0.8389", "_log_m3_149_P1.txt"),
+    ("A · P1 cascada", "texto solo bajo P1 (puerta de entrada)", "macro-F1", "0.7889", "_log_m3_149_P1.txt"),
+
     # ---------------- BASE A: incertidumbre ----------------
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 %", "0.6585", "_log_revision_bootstrap.txt"),
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 % (alto)", "0.8187", "_log_revision_bootstrap.txt"),
