@@ -95,6 +95,17 @@ CIFRAS = [
     ("A · P1 cascada", "texto solo bajo P1 (puerta de entrada)", "exactitud", "0.8389", "_log_m3_149_P1.txt"),
     ("A · P1 cascada", "texto solo bajo P1 (puerta de entrada)", "macro-F1", "0.7889", "_log_m3_149_P1.txt"),
 
+    # ---------------- P1cat: plantilla GARANTIZADA en el catalogo (50 semillas) ----------------
+    # Replica controlada del 2026-10-01, preregistro commiteado en 5502d75 antes de correr.
+    # Evalua 73 notas de 17 familias (las que tienen alguna plantilla repetida). La exactitud
+    # es comparable; el macro-F1 NO, porque promedia solo esas 17 familias.
+    ("P1cat", "cascada, plantilla en el catalogo", "exactitud", "0.9740", "_log_p1_catalogada.txt"),
+    ("P1cat", "cascada, plantilla en el catalogo", "macro-F1 (17 familias)", "0.9393", "_log_p1_catalogada.txt"),
+    ("P1cat", "texto solo, plantilla en el catalogo", "exactitud", "0.9479", "_log_p1_catalogada.txt"),
+    ("P1cat", "texto solo, plantilla en el catalogo", "macro-F1 (17 familias)", "0.9081", "_log_p1_catalogada.txt"),
+    ("P1cat", "capa de reglas", "cobertura", "0.8551", "_log_p1_catalogada.txt"),
+    ("P1cat", "capa de reglas", "acierto", "1.0000", "_log_p1_catalogada.txt"),
+
     # ---------------- BASE A: incertidumbre ----------------
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 %", "0.6585", "_log_revision_bootstrap.txt"),
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 % (alto)", "0.8187", "_log_revision_bootstrap.txt"),
