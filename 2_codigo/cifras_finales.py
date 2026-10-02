@@ -106,6 +106,27 @@ CIFRAS = [
     ("P1cat", "capa de reglas", "cobertura", "0.8551", "_log_p1_catalogada.txt"),
     ("P1cat", "capa de reglas", "acierto", "1.0000", "_log_p1_catalogada.txt"),
 
+    # ---------------- Plantilla NUNCA vista sobre las 28 familias evaluables (50 semillas) ----------------
+    # p2bal_evaluables.py, preregistro en 4f23e4c. 145 notas (sin BADRABBIT ni CRYPTOLOCKER).
+    # El macro-F1 de esta fila se calcula sobre las 145 notas; el PUBLICADO sobre 28 (0,7946)
+    # usa labels = evaluables sobre las 149. Son dos convenciones: al citar, decir cual.
+    ("P2bal-28", "cascada, plantilla nunca vista", "exactitud (145 notas)", "0.8348", "_log_p2bal_evaluables.txt"),
+    ("P2bal-28", "cascada, plantilla nunca vista", "macro-F1 (145 notas)", "0.8060", "_log_p2bal_evaluables.txt"),
+    ("P2bal-28", "texto solo, plantilla nunca vista", "exactitud (145 notas)", "0.7389", "_log_p2bal_evaluables.txt"),
+    ("P2bal-28", "error de la cascada", "fraccion del texto", "0.9758", "_log_p2bal_evaluables.txt"),
+    ("P2bal-28", "error de la cascada", "fraccion en parejas de linaje", "0.4207", "_log_p2bal_evaluables.txt"),
+
+    # ---------------- PAREADO: las mismas 69 notas con y sin su plantilla en el catalogo ----------------
+    # pareado_conocida_vs_nueva.py, preregistro en 453e579. 69 notas de 15 familias, 50 semillas.
+    ("Pareado", "cascada, plantilla conocida", "exactitud", "0.9725", "_log_pareado_conocida_vs_nueva.txt"),
+    ("Pareado", "cascada, plantilla nueva", "exactitud", "0.8484", "_log_pareado_conocida_vs_nueva.txt"),
+    ("Pareado", "cascada", "diferencia de exactitud", "+0.1241", "_log_pareado_conocida_vs_nueva.txt"),
+    ("Pareado", "cascada", "IC 95 % de la diferencia", "[+0.1067; +0.1414]", "_log_pareado_conocida_vs_nueva.txt"),
+    ("Pareado", "texto solo, plantilla conocida", "exactitud", "0.9449", "_log_pareado_conocida_vs_nueva.txt"),
+    ("Pareado", "texto solo, plantilla nueva", "exactitud", "0.7299", "_log_pareado_conocida_vs_nueva.txt"),
+    ("Pareado", "texto solo", "diferencia de exactitud", "+0.2151", "_log_pareado_conocida_vs_nueva.txt"),
+    ("Pareado", "texto solo", "IC 95 % de la diferencia", "[+0.1917; +0.2385]", "_log_pareado_conocida_vs_nueva.txt"),
+
     # ---------------- BASE A: incertidumbre ----------------
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 %", "0.6585", "_log_revision_bootstrap.txt"),
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 % (alto)", "0.8187", "_log_revision_bootstrap.txt"),
