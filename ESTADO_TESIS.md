@@ -11678,7 +11678,7 @@ commitear del 30-09 (huellas en `_revision_2026-09-30/VERSION_REVISADA.txt`; nad
   listado en el informe (§8). **La reimplementación de clúster (`job_revision_tesis.sh`) sigue sin lanzar.**
 
 **Verificación de la sesión de archivos (01-10), antes de corregir nada.**
-- **Versión:** los 20 archivos con huella en `VERSION_REVISADA.txt` (`.tex`, `.bib`, PDF) siguen idénticos, así que los números de línea del informe valen para el texto actual. Desde `a777df5` hay un solo commit, `d901238`: el script del revisor, subido y sin coautoría.
+- **Versión:** los 20 archivos con huella en `VERSION_REVISADA.txt` (`.tex`, `.bib`, PDF) siguen idénticos, así que los números de línea del informe valen para el texto actual. El script del revisor (`d901238`, 29-09 22:19, subido y sin coautoría) es **anterior** a `a777df5`: entre `a777df5` y el commit del 01-10 (`68da650`) no hubo ninguno. *(Corregido el 01-10: antes decía que era posterior.)* **Después de la revisión cambiaron las páginas iniciales** (portada, carátulas, agradecimientos y resúmenes, que hizo Cascada con el sí de Romina), así que sus números de línea ya no valen para esos seis archivos.
 - **Confirmados en la fuente:**
   - **A-01:** `resultados.tex:1265` dice «solo es posible cuando la familia deja marcas deliberadas». Lo contradice la propia tesis: los 44 rasgos estructurales solos dan 0,8680 de macro-F1 (l. 847). Va junto con `metodologia.tex:181`, «Dado que las propiedades estadísticas… no permiten discriminar», que es la premisa vieja que l. 145 declara incorrecta.
   - **A-02:** `:186` atribuye el 66,67 % de ID Ransomware a firmas de bytes, pero solo 9 de las 20 familias sobreviven al renombrado.
@@ -11696,6 +11696,20 @@ commitear del 30-09 (huellas en `_revision_2026-09-30/VERSION_REVISADA.txt`; nad
   - lectura: #2 en `:1324`, #3 aporte conceptual, #4 objetivo 5;
   - A.2: #12, #13 y #14;
   - literatura: #18 Filiz (78 herramientas), #19 `lee2022` y #20 fuentes de `introduccion.tex:44`.
+
+**Versión para Cappo, 01-10.** Romina eligió corregir antes de mandar solo los dos bloqueos y dejar los otros 20
+hallazgos para después. Cascada, con el sí de Romina en su canal, completó:
+- portada y carátulas: grado «Ingeniero en Informática», «Octubre - 2026», autores y asesor;
+- agradecimientos: tutor, facultad y el del clúster con LABO16-167, PROCIENCIA/CONACYT; los personales quedan para Romina y Carlos, con un comentario que marca el lugar;
+- resumen y abstract.
+
+La sesión de archivos le pasó cuatro precisiones del resumen, que Cascada aplicó:
+- «99 plantillas», no «textos»;
+- bytes en posiciones fijas;
+- «de macro-F1» y la base del 0,9998;
+- la limitación de campaña no está medida.
+
+También se agregó el 0,6551. Commits subidos: `68da650` (documento) y `cf81723` (estado). Compila con 136 págs. y 0 errores. **Falta la dedicatoria:** dice «blah blah blah», Romina va a pasar el texto y la pone la sesión de archivos. `catalografica.tex` y `aprobacion.tex` siguen con texto de plantilla, pero no se incluyen en `main.tex` y no se imprimen.
 
 ---
 
