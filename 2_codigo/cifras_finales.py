@@ -95,14 +95,16 @@ CIFRAS = [
     ("A · P1 cascada", "texto solo bajo P1 (puerta de entrada)", "exactitud", "0.8389", "_log_m3_149_P1.txt"),
     ("A · P1 cascada", "texto solo bajo P1 (puerta de entrada)", "macro-F1", "0.7889", "_log_m3_149_P1.txt"),
 
+    # Los macro-F1 de P1cat (17 familias) y de P2bal-28 sobre 145 notas se SACARON el 2026-10-01:
+    # f1_score sin labels= promedia sobre la union de etiquetas verdaderas y predichas, y cada
+    # familia de afuera que recibe una prediccion entra con F1 0 (reparo 3 de la revision).
+    # No se citan. Las exactitudes de esos subconjuntos no tienen el problema y quedan.
     # ---------------- P1cat: plantilla GARANTIZADA en el catalogo (50 semillas) ----------------
     # Replica controlada del 2026-10-01, preregistro commiteado en 5502d75 antes de correr.
     # Evalua 73 notas de 17 familias (las que tienen alguna plantilla repetida). La exactitud
     # es comparable; el macro-F1 NO, porque promedia solo esas 17 familias.
     ("P1cat", "cascada, plantilla en el catalogo", "exactitud", "0.9740", "_log_p1_catalogada.txt"),
-    ("P1cat", "cascada, plantilla en el catalogo", "macro-F1 (17 familias)", "0.9393", "_log_p1_catalogada.txt"),
     ("P1cat", "texto solo, plantilla en el catalogo", "exactitud", "0.9479", "_log_p1_catalogada.txt"),
-    ("P1cat", "texto solo, plantilla en el catalogo", "macro-F1 (17 familias)", "0.9081", "_log_p1_catalogada.txt"),
     ("P1cat", "capa de reglas", "cobertura", "0.8551", "_log_p1_catalogada.txt"),
     ("P1cat", "capa de reglas", "acierto", "1.0000", "_log_p1_catalogada.txt"),
 
@@ -111,7 +113,6 @@ CIFRAS = [
     # El macro-F1 de esta fila se calcula sobre las 145 notas; el PUBLICADO sobre 28 (0,7946)
     # usa labels = evaluables sobre las 149. Son dos convenciones: al citar, decir cual.
     ("P2bal-28", "cascada, plantilla nunca vista", "exactitud (145 notas)", "0.8348", "_log_p2bal_evaluables.txt"),
-    ("P2bal-28", "cascada, plantilla nunca vista", "macro-F1 (145 notas)", "0.8060", "_log_p2bal_evaluables.txt"),
     ("P2bal-28", "texto solo, plantilla nunca vista", "exactitud (145 notas)", "0.7389", "_log_p2bal_evaluables.txt"),
     ("P2bal-28", "error de la cascada", "fraccion del texto", "0.9758", "_log_p2bal_evaluables.txt"),
     ("P2bal-28", "error de la cascada", "fraccion en parejas de linaje", "0.4207", "_log_p2bal_evaluables.txt"),
