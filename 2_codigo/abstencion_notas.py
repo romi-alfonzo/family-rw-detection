@@ -68,6 +68,30 @@ detecta CONTENCION. Ver 6_notas_trabajo/REVISION_LOGO_2026-09-17_informe.md. La 
 pegada al numero, siempre.
 =============================================================================================
 
+PREREGISTRO DE P1 (escrito y commiteado ANTES de correr, 2026-10-01)
+-------------------------------------------------------------------
+Motivo: todas las cifras de P1 del documento son del CLASIFICADOR DE TEXTO SOLO (exactitud
+0,8389 y macro-F1 0,7889, 50 semillas, _log_lemmou_149.txt). La cascada, que es el sistema
+que la tesis propone, nunca se midio con plantilla ya catalogada, de modo que el capitulo
+reporta en ese escenario el componente mas debil de su propio sistema.
+
+  P1-1  La cascada SUPERARA al texto solo en exactitud bajo P1 (> 0,8389).
+        Fundamento: la capa de reglas acierta 0,9928 donde aplica (P2bal), muy por encima
+        del texto. Bajo P1 las notas se reparten sin respetar la plantilla, de modo que la
+        plantilla de una nota de prueba suele estar en entrenamiento y sus marcadores
+        entran al diccionario.
+
+  P1-2  La GANANCIA sera MENOR que bajo P2bal, donde la cascada suma +0,0932 de exactitud
+        (0,8123 frente a 0,7191). Bajo P1 el texto ya parte de 0,8389 y queda menos margen.
+        Rango predicho: entre +0,02 y +0,08, es decir una cascada entre 0,86 y 0,92.
+
+  P1-3  La COBERTURA de la capa de reglas sera MAYOR O IGUAL que bajo P2bal (0,5389), por la
+        misma razon de P1-1.
+
+Se reporta lo que de, cumpla o no. Si P1-1 falla, la conclusion seria que la cascada no
+aporta cuando la plantilla ya se conoce, que tambien es un resultado publicable.
+Puerta de entrada: el texto solo bajo P1 debe reproducir 0,8389; si no, se aborta.
+
 Uso:  python abstencion_notas.py [--n-semillas 50] [--protocolo P2bal] [--salida CARPETA]
 """
 from __future__ import annotations
@@ -82,7 +106,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score
-from sklearn.model_selection import LeaveOneGroupOut, StratifiedGroupKFold
+from sklearn.model_selection import LeaveOneGroupOut, StratifiedGroupKFold, StratifiedKFold
 
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -107,7 +131,11 @@ UMBRALES = [0.0, 0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50, 0.75, 1.00, 1.50]
 #   P2    -> 4_resultados/_log_m6_149.txt y la fila P2 de _log_p2bal_149.txt
 #   P2bal -> 4_resultados/_log_p2bal_149.txt (protocolo_p2bal.py, commit a936397)
 # LOGO no tiene puerta: esta descartado (REVISION_LOGO_2026-09-17_informe.md).
-CANON = {"P2": {"m6": 0.6601, "txt": 0.5785}, "P2bal": {"m6": 0.8123, "txt": 0.7191}}
+CANON = {"P2": {"m6": 0.6601, "txt": 0.5785}, "P2bal": {"m6": 0.8123, "txt": 0.7191},
+         # P1 solo tiene canonico de TEXTO (_log_lemmou_149.txt, exactitud 0.8389, 50
+         # semillas): la cascada bajo P1 es justamente la cifra que falta medir, asi que
+         # la puerta controla el texto y deja libre la cascada.
+         "P1": {"txt": 0.8389}}
 TOL_CANON = 0.01
 
 
@@ -147,7 +175,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--salida", type=Path, default=OUT_DEF)
     ap.add_argument("--n-semillas", type=int, default=50)
-    ap.add_argument("--protocolo", choices=["P2", "P2bal", "LOGO"], default="P2",
+    ap.add_argument("--protocolo", choices=["P2", "P2bal", "P1", "LOGO"], default="P2",
                     help="P2 = StratifiedGroupKFold 2 pliegues (el reparto viejo). P2bal = P2 "
                          "con el reparto de plantillas arreglado (protocolo de CABECERA del "
                          "frente de notas; usa el mismo rng 20000+s que protocolo_p2bal.py, de "
@@ -187,6 +215,12 @@ def main():
     for s in range(args.n_semillas):
         if args.protocolo == "LOGO":
             splits = LeaveOneGroupOut().split(textos_arr, y, groups=grupos)
+        elif args.protocolo == "P1":
+            # plantilla ya catalogada: se reparten NOTAS, no plantillas, de modo que una
+            # variante casi identica puede quedar de los dos lados. Es el escenario de las
+            # herramientas de identificacion en produccion.
+            cv = StratifiedKFold(n_splits=N_FOLDS, shuffle=True, random_state=s)
+            splits = cv.split(textos_arr, y)
         elif args.protocolo == "P2bal":
             # mismo generador que protocolo_p2bal.py: las particiones coinciden semilla a semilla
             splits = split_p2bal(y_np, grupos_np, familias, np.random.default_rng(20_000 + s))
@@ -294,12 +328,15 @@ def main():
     ok = True
     if args.protocolo in CANON:
         c = CANON[args.protocolo]
-        d_m6 = abs(base["acierto_donde_contesta"] - c["m6"])
         d_tx = abs(base_txt["acierto_donde_contesta"] - c["txt"])
+        d_m6 = abs(base["acierto_donde_contesta"] - c["m6"]) if "m6" in c else 0.0
         print("\n" + "-" * 78)
         print(f"  A1 -- PUERTA DE ENTRADA: umbral 0 debe reproducir la exactitud de {args.protocolo}")
         print("-" * 78)
-        print(f"  cascada: {base['acierto_donde_contesta']:.4f} vs canonico {c['m6']}  (dif {d_m6:.4f})")
+        if "m6" in c:
+            print(f"  cascada: {base['acierto_donde_contesta']:.4f} vs canonico {c['m6']}  (dif {d_m6:.4f})")
+        else:
+            print(f"  cascada: {base['acierto_donde_contesta']:.4f}  (SIN canonico: es la cifra que se mide)")
         print(f"  texto  : {base_txt['acierto_donde_contesta']:.4f} vs canonico {c['txt']}  (dif {d_tx:.4f})")
         ok = d_m6 <= TOL_CANON and d_tx <= TOL_CANON
         if not ok and not args.sin_puerta:
