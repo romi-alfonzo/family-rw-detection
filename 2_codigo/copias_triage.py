@@ -116,6 +116,10 @@ def main():
     filas, descartes = [], []
     for fam, ids in pedidos.items():
         (DESTINO / fam).mkdir(exist_ok=True)
+        # se borran las notas que ESTE recolector guardó antes para la familia (son salidas suyas y se
+        # regeneran): así no quedan restos de corridas viejas que el inventario leería igual
+        for viejo in (DESTINO / fam).glob("*__*.txt"):
+            viejo.unlink()
         guardadas = 0
         for inf in ids:
             url = f"{BASE}/{inf}"
@@ -137,12 +141,15 @@ def main():
                     continue
                 vistos.add(clave)
                 base = re.sub(r"[^A-Za-z0-9._-]+", "_", Path(ruta.replace("\\", "/")).name or "nota")[:60]
-                destino = DESTINO / fam / f"{inf}__{base}.txt"
+                sha = hashlib.sha256(texto.encode("utf-8")).hexdigest()
+                # la huella va en el nombre: un mismo informe puede traer dos notas DISTINTAS con el
+                # mismo nombre de archivo, y sin ella la segunda pisaba a la primera (corrida del 02-10)
+                destino = DESTINO / fam / f"{inf}__{sha[:10]}__{base}.txt"
+                assert not destino.exists(), f"choque de nombres: {destino}"
                 destino.write_text(texto, encoding="utf-8")
                 filas.append(dict(familia=fam, informe=inf, url=url, ruta_en_la_muestra=ruta,
                                   archivo=str(destino.relative_to(RAIZ / "3_datos")),
-                                  sha256=hashlib.sha256(texto.encode("utf-8")).hexdigest(),
-                                  chars=len(texto), leido="2026-10-02"))
+                                  sha256=sha, chars=len(texto), leido=time.strftime("%Y-%m-%d")))
                 guardadas += 1
         print(f"  {fam}: {guardadas} notas distintas guardadas")
     with open(man, "w", newline="", encoding="utf-8") as f:
