@@ -162,6 +162,20 @@ CIFRAS = [
     ("Ext. tria.ge", "C1 - V0", "delta macro-F1", "+0.0329", "_log_p1_copias_triage.txt"),
     ("Ext. tria.ge", "copias admitidas de tria.ge", "cantidad", "36", "_log_p1_copias_triage.txt"),
 
+    # ---------------- CURVA BAJO P2bal: texto solo, tope por plantillas, 149 notas, 50 semillas ----------------
+    ("Curva P2bal", "k=1", "macro-F1 texto solo", "0.5759", "_log_curva_p2bal_149.txt"),
+    ("Curva P2bal", "k=1", "plantillas en entrenamiento por familia", "plantillas train/fam 0.97", "_log_curva_p2bal_149.txt"),
+    ("Curva P2bal", "k=2", "macro-F1 texto solo", "0.6599", "_log_curva_p2bal_149.txt"),
+    ("Curva P2bal", "k=2", "plantillas en entrenamiento por familia", "plantillas train/fam 1.57", "_log_curva_p2bal_149.txt"),
+    ("Curva P2bal", "k=3", "macro-F1 texto solo", "0.6608", "_log_curva_p2bal_149.txt"),
+    ("Curva P2bal", "k=todo", "macro-F1 texto solo", "0.6551", "_log_curva_p2bal_149.txt"),
+    ("Curva P2bal", "k=todo", "plantillas en entrenamiento por familia", "plantillas train/fam 1.68", "_log_curva_p2bal_149.txt"),
+    # ---------------- DIAGNOSTICO DE P1 (cascada canonica, 149 notas x 50 semillas = 7450 decisiones) ----------------
+    ("Diagnostico P1", "decisiones con hermana en entrenamiento", "exactitud de la cascada", "3015/3085 = 0.9773", "_log_diagnostico_P1_agregado.txt"),
+    ("Diagnostico P1", "decisiones con hermana en entrenamiento", "proporcion", "41.4 % de las decisiones", "_log_diagnostico_P1_agregado.txt"),
+    ("Diagnostico P1", "decisiones sin hermana", "exactitud de la cascada", "3590/4365 = 0.8225", "_log_diagnostico_P1_agregado.txt"),
+    ("Mejoras P1", "V1 capa de catalogo contra V0", "delta exactitud", "+0.0000 [+0.0000; +0.0000]", "_log_mejoras_cascada_p1.txt"),
+
     # ---------------- BASE A: incertidumbre ----------------
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 %", "0.6585", "_log_revision_bootstrap.txt"),
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 % (alto)", "0.8187", "_log_revision_bootstrap.txt"),
