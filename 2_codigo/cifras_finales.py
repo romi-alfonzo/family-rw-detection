@@ -152,6 +152,16 @@ CIFRAS = [
     ("Mejoras P1", "V2 contra V0", "delta macro-F1", "+0.0034", "_log_mejoras_cascada_p1.txt"),
     ("Mejoras P1", "V1 capa de catalogo", "notas que decide por semilla", "8.6", "_log_mejoras_cascada_p1.txt"),
 
+    # ---------------- EXTENSION: catalogo ampliado con copias de tria.ge (P1, 50 semillas) ----------------
+    # p1_copias_triage.py, preregistro 33a68e3 (antes de recolectar). Prueba = las 149 notas; las 42
+    # copias (6 locales + 36 de tria.ge) solo entran al entrenamiento. Base propia: NO reemplaza al 0,8866.
+    ("Ext. tria.ge", "cascada con catalogo ampliado", "exactitud", "0.9148", "_log_p1_copias_triage.txt"),
+    ("Ext. tria.ge", "cascada con catalogo ampliado", "macro-F1", "0.8921", "_log_p1_copias_triage.txt"),
+    ("Ext. tria.ge", "C1 - V0", "delta exactitud", "+0.0282", "_log_p1_copias_triage.txt"),
+    ("Ext. tria.ge", "C1 - V0", "IC 95 % delta exactitud", "[+0.0250; +0.0313]", "_log_p1_copias_triage.txt"),
+    ("Ext. tria.ge", "C1 - V0", "delta macro-F1", "+0.0329", "_log_p1_copias_triage.txt"),
+    ("Ext. tria.ge", "copias admitidas de tria.ge", "cantidad", "36", "_log_p1_copias_triage.txt"),
+
     # ---------------- BASE A: incertidumbre ----------------
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 %", "0.6585", "_log_revision_bootstrap.txt"),
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 % (alto)", "0.8187", "_log_revision_bootstrap.txt"),
