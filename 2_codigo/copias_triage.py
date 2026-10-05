@@ -11,12 +11,13 @@ ya cita no tienen más copias (inventario_copias_controladas.py). Los informes p
 muestran, para varias familias, la nota que dejó cada muestra ejecutada, con su identificador de
 víctima, sin iniciar sesión.
 
-QUÉ HACE. Solo lee páginas públicas, sin iniciar sesión y a ritmo lento (una cada 2 segundos).
+QUÉ HACE. Solo lee páginas públicas, sin iniciar sesión y a ritmo lento (--pausa, 2 s por omisión).
 Para cada familia de la lista toma los informes de la búsqueda pública «family:<etiqueta>» y,
 opcionalmente, los identificadores de informe de un archivo de texto. De cada informe extrae los
 bloques «Ransom Note» y guarda el texto en
-    3_datos/fuentes_notas/triage_2026-10/<FAMILIA>/<informe>__<archivo>.txt
-(3_datos no se versiona y tiene la exclusión de Defender puesta por Romina). El manifiesto
+    3_datos/fuentes_notas/<carpeta>/<FAMILIA>/<informe>__<huella>__<archivo>
+con extensión .txt, salvo las notas HTML, que conservan la suya (las .hta, como .html: ver
+SEGURIDAD). 3_datos no se versiona y tiene la exclusión de Defender puesta por Romina. El manifiesto
 manifiesto_triage.csv registra informe, URL, ruta original de la nota en la muestra, sha256 y
 largo. Textos repetidos dentro de la recolección se guardan una sola vez.
 
@@ -26,7 +27,17 @@ marcadores distintos). No baja muestras ni archivos: solo el HTML del informe. L
 es la de tria.ge, y se usa solo si la plantilla del corpus más parecida es de esa misma familia
 (lo exige la regla del inventario).
 
+SEGURIDAD (comprobado el 05-10, pedido de Romina). tria.ge es el sandbox público de análisis de
+malware de Recorded Future; su robots.txt permite leer todo el sitio («Allow: /») y su certificado
+HTTPS es válido (emitido por Google Trust Services). leer() solo acepta dos clases de dirección, la
+búsqueda pública y la página de un informe, nunca la de una muestra; solo por HTTPS y con el
+certificado verificado, también en las redirecciones, y con un tope de 20 MB por página. curl no
+ejecuta el JavaScript de las páginas. En Windows una nota .hta se EJECUTA con doble clic (mshta,
+fuera del navegador): se guarda como .html, que extraer_texto() lee igual (EXT_HTML), así que el
+texto que entra al inventario no cambia.
+
 Uso:  python copias_triage.py LOCKBIT=lockbit CLOP=clop ... [--ids archivo.txt] [--max 40]
+      python copias_triage.py --todas [--solo FAM1,FAM2] [--parte A] [--destino carpeta] [--max 50]
 """
 from __future__ import annotations
 
@@ -35,9 +46,9 @@ import csv
 import hashlib
 import html
 import re
+import subprocess
 import sys
 import time
-import urllib.request
 from pathlib import Path
 
 try:
@@ -58,14 +69,35 @@ ETIQUETAS = {"LOCKBIT": {"lockbit"}, "RYUK": {"ryuk"}, "HELLOKITTY": {"hellokitt
              # ransomexx_win: agregada tras la 1.a recolección (es la etiqueta de la variante Windows)
              "RANSOMEXX": {"ransomexx", "ransomexx_win", "defray777"},
              "MEDUZALOCKER": {"medusalocker"},
-             "CLOP": {"clop", "cl0p"}}
-assert all(ETIQUETAS[f] for f in ("LOCKBIT", "RYUK", "HELLOKITTY", "RANSOMEXX", "MEDUZALOCKER"))
+             "CLOP": {"clop", "cl0p"},
+             # 2026-10-04, modo --todas (ampliación sin apuntar): el nombre de la familia más los alias
+             # que ya usa inventario_copias_controladas.py. NOTPETYA va sin «petya» (otra familia).
+             "AVOSLOCKER": {"avoslocker"}, "BADRABBIT": {"badrabbit"}, "BLACKBASTA": {"blackbasta"},
+             "BLACKCAT": {"blackcat", "alphv"}, "BLACKMATTER": {"blackmatter"}, "CERBER": {"cerber"},
+             "CHIMERA": {"chimera"}, "CONTI": {"conti"}, "CRYPTOLOCKER": {"cryptolocker"},
+             "CUBA": {"cuba"}, "DARKSIDE": {"darkside"}, "DHARMA": {"dharma"}, "GANDCRAB": {"gandcrab"},
+             "JIGSAW": {"jigsaw"}, "LORENZ": {"lorenz"}, "MAZE": {"maze"}, "NETWALKER": {"netwalker"},
+             "NOTPETYA": {"notpetya"}, "PHOBOS": {"phobos"}, "SODINOKIBI": {"sodinokibi", "revil"},
+             "SUNCRYPT": {"suncrypt"}, "TESLACRYPT": {"teslacrypt"},
+             "WANNACRY": {"wannacry", "wanacry", "wannacrypt", "wcry"}, "WASTEDLOCKER": {"wastedlocker"}}
+assert len(ETIQUETAS) == 30 and all(ETIQUETAS.values())
+
+
+# las únicas direcciones que se leen: la búsqueda pública por familia y la página de un informe
+URL_PERMITIDA = re.compile(r"https://tria\.ge/(s\?q=family%3A[a-z0-9_.-]+|\d{6}-[a-z0-9]{10})")
 
 
 def leer(url: str) -> str:
-    req = urllib.request.Request(url, headers={"User-Agent": AGENTE})
-    with urllib.request.urlopen(req, timeout=40) as r:
-        return r.read().decode("utf-8", "replace")
+    """Lee una página pública con un tope TOTAL de 60 s (curl --max-time). Con urllib el límite era
+    por operación de red, y una respuesta lenta colgó la recolección el 04-10. Seguridad (05-10): ver
+    el docstring del módulo; curl verifica el certificado porque no lleva -k."""
+    assert URL_PERMITIDA.fullmatch(url), f"dirección fuera de lo permitido: {url}"
+    r = subprocess.run(["curl", "-s", "-L", "--proto", "=https", "--proto-redir", "=https",
+                        "--max-redirs", "3", "--max-filesize", "20000000", "--compressed",
+                        "--max-time", "60", "-A", AGENTE, url], capture_output=True)
+    if r.returncode != 0 or not r.stdout:
+        raise RuntimeError(f"curl terminó con código {r.returncode}")
+    return r.stdout.decode("utf-8", "replace")
 
 
 def ids_de_busqueda(etiqueta: str) -> list[str]:
@@ -92,9 +124,33 @@ def main():
     ap.add_argument("familias", nargs="*", help="FAMILIA=etiqueta_de_tria.ge (búsqueda pública)")
     ap.add_argument("--ids", type=Path, help="archivo con líneas «FAMILIA informe»")
     ap.add_argument("--max", type=int, default=40, help="informes por familia")
+    ap.add_argument("--todas", action="store_true",
+                    help="las 30 familias: primera página de la búsqueda pública por cada etiqueta, "
+                         "sin filtrar por frases (ampliación sin apuntar)")
+    ap.add_argument("--destino", type=Path, default=DESTINO, help="carpeta de salida")
+    ap.add_argument("--pausa", type=float, default=PAUSA, help="segundos entre páginas")
+    ap.add_argument("--solo", default="", help="con --todas: solo estas familias, separadas por coma")
+    ap.add_argument("--parte", default="", help="sufijo de los archivos de salida (procesos en paralelo)")
     args = ap.parse_args()
+    globals()["DESTINO"] = args.destino
+    globals()["PAUSA"] = args.pausa
+    sufijo = f"_{args.parte}" if args.parte else ""
 
     pedidos: dict[str, list[str]] = {}
+    if args.todas:
+        familias = [f.strip() for f in args.solo.split(",") if f.strip()] or sorted(ETIQUETAS)
+        assert all(f in ETIQUETAS for f in familias), "familia desconocida en --solo"
+        for fam in familias:
+            ids = []
+            for etiqueta in sorted(ETIQUETAS[fam]):
+                try:
+                    ids += ids_de_busqueda(etiqueta)
+                except Exception as e:  # noqa: BLE001
+                    print(f"{fam}: la búsqueda de «{etiqueta}» falló ({e})")
+                time.sleep(PAUSA)
+            ids = list(dict.fromkeys(ids))
+            pedidos[fam] = ids[: args.max]
+            print(f"{fam}: {len(ids)} informes en la búsqueda pública, se leen {len(pedidos[fam])}", flush=True)
     for par in args.familias:
         fam, etiqueta = par.split("=")
         ids = ids_de_busqueda(etiqueta)
@@ -111,7 +167,7 @@ def main():
                     pedidos[fam].append(inf)
 
     DESTINO.mkdir(parents=True, exist_ok=True)
-    man = DESTINO / "manifiesto_triage.csv"
+    man = DESTINO / f"manifiesto_triage{sufijo}.csv"
     vistos = set()
     filas, descartes = [], []
     for fam, ids in pedidos.items():
@@ -148,12 +204,20 @@ def main():
                 # original para que extraer_texto() les saque el texto visible, igual que a las notas
                 # del corpus en esos formatos (corrección del 04-10, tras ver que como .txt las leía
                 # con etiquetas y estilos y su coseno caía a 0,52)
-                ext = "" if base.lower().endswith((".html", ".htm", ".hta")) else ".txt"
+                # seguridad (05-10): una .hta se ejecuta con doble clic en Windows; como .html el
+                # texto extraído es el mismo (extraer_texto trata igual .hta y .html)
+                if base.lower().endswith(".hta"):
+                    base = base[:-4] + ".html"
+                ext = "" if base.lower().endswith((".html", ".htm")) else ".txt"
                 destino = DESTINO / fam / f"{inf}__{sha[:10]}__{base}{ext}"
                 assert not destino.exists(), f"choque de nombres: {destino}"
                 destino.write_text(texto, encoding="utf-8")
+                try:
+                    archivo = str(destino.relative_to(RAIZ / "3_datos"))
+                except ValueError:  # destino fuera de 3_datos (pruebas)
+                    archivo = str(destino)
                 filas.append(dict(familia=fam, informe=inf, url=url, ruta_en_la_muestra=ruta,
-                                  archivo=str(destino.relative_to(RAIZ / "3_datos")),
+                                  archivo=archivo,
                                   sha256=sha, chars=len(texto), leido=time.strftime("%Y-%m-%d")))
                 guardadas += 1
         print(f"  {fam}: {guardadas} notas distintas guardadas")
@@ -161,7 +225,7 @@ def main():
         w = csv.DictWriter(f, fieldnames=list(filas[0]) if filas else ["familia"])
         w.writeheader()
         w.writerows(filas)
-    with open(DESTINO / "descartados_por_etiqueta.csv", "w", newline="", encoding="utf-8") as f:
+    with open(DESTINO / f"descartados_por_etiqueta{sufijo}.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["familia", "informe", "etiquetas"])
         w.writeheader()
         w.writerows(descartes)
