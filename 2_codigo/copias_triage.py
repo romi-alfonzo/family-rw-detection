@@ -118,7 +118,7 @@ def main():
         (DESTINO / fam).mkdir(exist_ok=True)
         # se borran las notas que ESTE recolector guardó antes para la familia (son salidas suyas y se
         # regeneran): así no quedan restos de corridas viejas que el inventario leería igual
-        for viejo in (DESTINO / fam).glob("*__*.txt"):
+        for viejo in (DESTINO / fam).glob("*__*"):
             viejo.unlink()
         guardadas = 0
         for inf in ids:
@@ -144,7 +144,12 @@ def main():
                 sha = hashlib.sha256(texto.encode("utf-8")).hexdigest()
                 # la huella va en el nombre: un mismo informe puede traer dos notas DISTINTAS con el
                 # mismo nombre de archivo, y sin ella la segunda pisaba a la primera (corrida del 02-10)
-                destino = DESTINO / fam / f"{inf}__{sha[:10]}__{base}.txt"
+                # tria.ge muestra el CÓDIGO de las notas .html/.hta: se guardan con su extensión
+                # original para que extraer_texto() les saque el texto visible, igual que a las notas
+                # del corpus en esos formatos (corrección del 04-10, tras ver que como .txt las leía
+                # con etiquetas y estilos y su coseno caía a 0,52)
+                ext = "" if base.lower().endswith((".html", ".htm", ".hta")) else ".txt"
+                destino = DESTINO / fam / f"{inf}__{sha[:10]}__{base}{ext}"
                 assert not destino.exists(), f"choque de nombres: {destino}"
                 destino.write_text(texto, encoding="utf-8")
                 filas.append(dict(familia=fam, informe=inf, url=url, ruta_en_la_muestra=ruta,
