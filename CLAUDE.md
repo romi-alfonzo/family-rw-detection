@@ -19,11 +19,12 @@ No repite el contenido de los otros documentos: dice qué leer y qué no hacer n
 - **Cada cambio de CÓDIGO se commitea a `develop` y se pushea en el momento**, con una
   descripción breve en español y sin coautoría, sin esperar a que Romina lo pida. **Solo el
   código** (`2_codigo/`, jobs de SLURM): los documentos de estado (`ESTADO_TESIS.md`,
-  `PLAN_MEJORAS.md`, notas de trabajo, informes) y el LaTeX de la tesis se commitean
-  únicamente cuando Romina lo pide.
+  `PLAN_MEJORAS.md`, notas de trabajo, informes) se commitean únicamente cuando Romina
+  lo pide. El LaTeX de la tesis no se commitea nunca.
 - **Nunca commitear datos.** El corpus son notas de rescate y archivos cifrados auténticos
-  (malware real). Publicarlos infringe los términos de GitHub. Al repositorio va el **código**
-  y el **documento**, nada más.
+  (malware real). Publicarlos infringe los términos de GitHub. Al repositorio va el **código**,
+  nada más: **ni los datos ni el libro de la tesis** (`1_documento/` está en `.gitignore` desde el
+  2026-10-06, por pedido de Romina; el repositorio es **público**).
 - **En la tesis solo se AGREGA.** El pulido es una pasada única al final. No reescribir ni
   reordenar capítulos por iniciativa propia.
 - **La conclusión se escribe al final de todo**, nunca antes. Decisión tomada.
