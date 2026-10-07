@@ -201,6 +201,29 @@ CIFRAS = [
     ("Ext. tria.ge sin apuntar (extension)", "errores por semilla sin ampliar (149 notas)", "cantidad", "V0 16.90", "_log_diagnostico_ampliacion_p1.txt"),
     ("Ext. tria.ge sin apuntar (extension)", "errores sin ampliar en las 76 notas unicas de su plantilla", "cantidad", "errores V0 14.28", "_log_diagnostico_ampliacion_p1.txt"),
 
+    # ---------------- EXT. TRIA.GE, PLANTILLAS NUEVAS: la curva bajo P2bal con mas plantillas por familia ----------------
+    # (p1_p2bal_plantillas_nuevas.py, preregistro ed85118; Romina lo llevo a la tesis el 06-10). Prueba = las 149 notas;
+    # las 60 plantillas nuevas (N-rep) solo entrenan. 3,7 plantillas/familia = 1,68 + 60/30 (aritmetica, ver EXTERNAS).
+    ('Ext. tria.ge plantillas nuevas (curva P2bal)', 'plantillas nuevas, una nota por plantilla (N-rep)', 'cantidad', 'N-rep: 60 plantillas nuevas', '_log_plantillas_nuevas.txt'),
+    ('Ext. tria.ge plantillas nuevas (curva P2bal)', 'familias que reciben alguna', 'cantidad', '23 familias reciben alguna', '_log_plantillas_nuevas.txt'),
+    ('Ext. tria.ge plantillas nuevas (curva P2bal)', 'CRYPTOLOCKER: plantillas del corpus y nuevas (queda en 1)', 'cantidad', 'CRYPTOLOCKER                   1             0', '_log_plantillas_nuevas.txt'),
+    ('Ext. tria.ge plantillas nuevas (curva P2bal)', 'NOTPETYA: plantillas del corpus y nuevas (queda en 2)', 'cantidad', 'NOTPETYA                       2             0', '_log_plantillas_nuevas.txt'),
+    ('Ext. tria.ge plantillas nuevas (curva P2bal)', 'P2bal, texto solo con N-rep', 'macro-F1', 'macro-F1 0.6498', '_log_plantillas_nuevas.txt'),
+    ('Ext. tria.ge plantillas nuevas (curva P2bal)', 'P2bal, texto solo, N-rep - V0', 'delta macro-F1 e IC 95 %', 'macro-F1 -0.0053 [-0.0136; +0.0031]', '_log_plantillas_nuevas.txt'),
+    ('Ext. tria.ge plantillas nuevas (curva P2bal)', 'P2bal, cascada con N-rep', 'exactitud', 'exactitud 0.7711', '_log_plantillas_nuevas.txt'),
+    ('Ext. tria.ge plantillas nuevas (curva P2bal)', 'P2bal, cascada con N-rep', 'macro-F1', 'macro-F1 0.7423', '_log_plantillas_nuevas.txt'),
+    ('Ext. tria.ge plantillas nuevas (curva P2bal)', 'P2bal, cascada, N-rep - V0', 'delta exactitud e IC 95 %', 'exactitud -0.0412 [-0.0489; -0.0335]', '_log_plantillas_nuevas.txt'),
+    ('Ext. tria.ge plantillas nuevas (curva P2bal)', 'P2bal, cascada, N-rep - V0', 'semillas peores', 'peor en 46', '_log_plantillas_nuevas.txt'),
+    ('Ext. tria.ge plantillas nuevas (curva P2bal)', 'P2bal, cascada, N-rep - V0', 'delta macro-F1 e IC 95 %', 'macro-F1 +0.0007 [-0.0059; +0.0072]', '_log_plantillas_nuevas.txt'),
+    ('Ext. tria.ge plantillas nuevas (curva P2bal)', 'F1 por familia MAZE, V0 -> N-rep', 'F1 de la familia', '0.592   0.953', '_log_plantillas_nuevas.txt'),
+    ('Ext. tria.ge plantillas nuevas (curva P2bal)', 'F1 por familia MEDUZALOCKER, V0 -> N-rep', 'F1 de la familia', '0.731   0.834', '_log_plantillas_nuevas.txt'),
+    ('Ext. tria.ge plantillas nuevas (curva P2bal)', 'F1 por familia PHOBOS, V0 -> N-rep', 'F1 de la familia', '0.768   0.392', '_log_plantillas_nuevas.txt'),
+    ('Ext. tria.ge plantillas nuevas (curva P2bal)', 'F1 por familia DHARMA, V0 -> N-rep', 'F1 de la familia', '0.872   0.583', '_log_plantillas_nuevas.txt'),
+    ('Ext. tria.ge plantillas nuevas (curva P2bal)', 'F1 por familia LOCKBIT, V0 -> N-rep', 'F1 de la familia', '0.699   0.476', '_log_plantillas_nuevas.txt'),
+    ('Ext. tria.ge plantillas nuevas (curva P2bal)', 'plantillas nuevas cuya vecina es de otra familia', 'cantidad', '4 plantillas nuevas cuya nota', '_log_plantillas_nuevas.txt'),
+    ('Ext. tria.ge plantillas nuevas (curva P2bal)', 'rotulo dudoso hacia LOCKBIT (RYUK)', 'coseno', 'RYUK~LOCKBIT 0.90', '_log_plantillas_nuevas.txt'),
+    ('Ext. tria.ge plantillas nuevas (curva P2bal)', 'rotulo dudoso hacia LOCKBIT (RANSOMEXX)', 'coseno', 'RANSOMEXX~LOCKBIT 0.89', '_log_plantillas_nuevas.txt'),
+
     # ---------------- BASE A: incertidumbre ----------------
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 %", "0.6585", "_log_revision_bootstrap.txt"),
     ("A · incertidumbre", "cascada, remuestreo de plantillas", "IC 95 % (alto)", "0.8187", "_log_revision_bootstrap.txt"),
@@ -283,6 +306,10 @@ EXTERNAS = [
      "7_compartido_carlos/.../Pruebas.xlsx -- NO es el corpus de la tesis"),
     ("corte de la curva de aprendizaje: 3 plantillas", "bajo P2ret y confirmado bajo P2bal",
      "P2ret entrena con 70,23 plantillas por pliegue y P2bal con ~50: al citar, decir cual"),
+    ("3,7 plantillas por familia con las nuevas de tria.ge", "1,68 + 60/30 = 3,68",
+     "aritmetica: 1,68 sale de la curva bajo P2bal (todo el corpus); 60 plantillas nuevas sobre 30 familias"),
+    ("28 de 30 familias con tres plantillas o mas", "corpus + nuevas >= 3 en todas salvo CRYPTOLOCKER (1) y NOTPETYA (2)",
+     "suma de las dos primeras columnas de la tabla de conteos de _log_plantillas_nuevas.txt"),
 ]
 
 
