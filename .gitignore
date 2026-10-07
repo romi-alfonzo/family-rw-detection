@@ -2,12 +2,24 @@
 #  .gitignore de la tesis
 #  Detección de familias de ransomware — Romina Alfonzo, Carlos Urdapilleta
 #
-#  REGLA PRINCIPAL: al repositorio va el CÓDIGO. Nunca los datos ni el libro de la tesis.
+#  REGLA PRINCIPAL: al repositorio va SOLO el CÓDIGO (2_codigo/) y el README. Nunca los datos,
+#  ni el libro de la tesis, ni los documentos de trabajo, ni los resultados (el repo es PÚBLICO).
 #  El corpus contiene notas de rescate y archivos cifrados AUTÉNTICOS (malware real);
 #  publicarlos infringiría los términos de uso de GitHub y podría derivar en la
 #  suspensión de la cuenta. Además, los PDF de los papers están sujetos a derechos
 #  de autor y tampoco deben republicarse.
 # ===========================================================================
+
+# --- Documentos de trabajo y resultados: solo en local (decisión de Romina, 2026-10-06) ---
+/*.md
+!/README.md
+/*.tex
+/*.pptx
+6_notas_trabajo/
+_memoria_claude/
+4_resultados/
+*.stackdump
+*.antes_*
 
 # --- El libro de la tesis: queda solo en local (decisión de Romina, 2026-10-06; el repo es público) ---
 1_documento/
