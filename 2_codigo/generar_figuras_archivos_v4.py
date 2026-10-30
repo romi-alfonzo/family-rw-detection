@@ -82,5 +82,44 @@ def figura_curva_archivos():
     print("figura:", salida)
 
 
+def figura_ventanas():
+    """fig_ventanas_archivos.png: macro-F1 según los bytes leídos por archivo (cabecera + cola), sobre los 15.000 archivos
+    de la ablación de ventanas (Sección 5.1.4, «Ubicación de la señal»). Una sola línea: el control con los archivos que
+    no necesitan relleno queda en el CSV y no se dibuja. Fuente: resultados_ablacion_extendida/a_curva_ablacion.csv."""
+    puntos = []
+    fuente = RES / "resultados_ablacion_extendida" / "a_curva_ablacion.csv"
+    for f in csv.DictReader(open(fuente, encoding="utf-8")):
+        if f["subconjunto"] == "todos":
+            puntos.append((int(f["n_bytes"]), float(f["f1_macro"])))
+    puntos.sort()
+    xs = [x for x, _ in puntos]
+    ms = [m for _, m in puntos]
+    # control contra el texto de la tesis (experimentos.tex, subsec:exp2c_ventana): máximo 0,905 con 512 bytes por
+    # extremo, 0,901 con 4.096, y el 87 % del máximo con 128 bytes leídos
+    medias = dict(puntos)
+    assert max(ms) == medias[1024] and round(medias[1024], 3) in (0.904, 0.905) and round(medias[8192], 3) == 0.901, medias
+    assert round(medias[128] / medias[1024], 2) == 0.87, medias
+
+    fig, eje = plt.subplots(figsize=(6.4, 3.4))
+    eje.plot(xs, ms, color=AZUL, linewidth=2, marker="o", markersize=5)
+    eje.axvline(1024, color=GRIS, linewidth=1, linestyle=(0, (3, 3)))
+    eje.annotate("máximo: 512 bytes\nde cada extremo", xy=(1024, medias[1024]), xytext=(1150, 0.83),
+                 fontsize=8, color="#333333", va="center")
+    eje.set_xscale("log", base=2)
+    eje.xaxis.set_major_locator(FixedLocator(xs))
+    eje.xaxis.set_minor_locator(NullLocator())
+    eje.xaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{int(round(v)):,}".replace(",", ".")))
+    eje.yaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:.2f}".replace(".", ",")))
+    eje.set_xlabel("Bytes leídos por archivo (cabecera + cola, escala logarítmica)", fontsize=9)
+    eje.set_ylabel("Macro-F1", fontsize=9)
+    estilo(eje)
+    fig.tight_layout()
+    salida = IMG / "fig_ventanas_archivos.png"
+    fig.savefig(salida, dpi=300)
+    plt.close(fig)
+    print("figura:", salida)
+
+
 if __name__ == "__main__":
     figura_curva_archivos()
+    figura_ventanas()
