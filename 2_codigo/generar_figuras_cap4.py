@@ -207,7 +207,8 @@ def fig_progresion(acc_2c, abl, acc_2e, acc_2g):
         txt = (f"{v:.4f}" if v > 0.995 else f"{v:.3f}").replace(".", ",")
         ax.text(cx, v + 0.018, txt, ha="center", fontsize=10, fontweight="bold")
         if c < 1.0:
-            ax.text(cx, v / 2, f"cobertura\n{c:.0%}", ha="center", va="center",
+            # en escala 0-1, como la cobertura en el texto y en las tablas del capítulo
+            ax.text(cx, v / 2, "cobertura\n" + f"{c:.2f}".replace(".", ","), ha="center", va="center",
                     fontsize=8, color="white")
         if i in (3, 6):
             ax.text(cx, v + 0.075, "usa el nombre\ndel archivo", ha="center", fontsize=8,
