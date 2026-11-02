@@ -183,7 +183,7 @@ def fig_progresion(acc_2c, abl, acc_2e, acc_2g):
     c_ext = abl["solo_extension"]["cobertura"]
 
     etiquetas = ["Entropía global\n+ tamaño\n(2 caract., 29 fam.)",
-                 "Estadísticas\nregionales\n(19 caract., 29 fam.)",
+                 "Estadísticas y\nderivadas\n(19 caract., 29 fam.)",
                  "Firmas binarias\nexactas\n(Exp. 2b)",
                  "Extensión\ndel archivo\n(Exp. 2b)",
                  "Aprendizaje\nsobre bytes\n(Exp. 2c)",
@@ -273,7 +273,8 @@ def fig_por_familia(f1, con_firma, solo_ext, sin_marca):
 
 # ---------------------------------------------------------------- Figura 3
 def fig_simetria(notas_texto, notas_cascada, arch_contenido, arch_completo):
-    """En cada frente, la señal del contenido sola y con la señal ligada a la campaña, macro-F1.
+    """En cada frente, la señal del contenido sola y con los marcadores (notas) o la forma de la extensión
+    (archivos), macro-F1. Rótulos sin «campaña» desde el 2026-11-02 (corrección de la tesis, pendiente 8).
 
     Rediseñada el 2026-09-29 con la sesión del frente de notas: la versión anterior contrastaba
     tipo de señal en archivos (extensión contra bytes) y protocolo en notas (P1 contra P2, la misma
@@ -283,14 +284,14 @@ def fig_simetria(notas_texto, notas_cascada, arch_contenido, arch_completo):
     contenido = [notas_texto, arch_contenido]
     con_campana = [notas_cascada, arch_completo]
     etiq_contenido = ["Texto (TF-IDF + SVC)", "Contenido (bytes + estructura)"]
-    etiq_campana = ["Texto + reglas de campaña", "Contenido + extensión (sistema completo)"]
+    etiq_campana = ["Texto + reglas (marcadores)", "Contenido + forma de la extensión"]
 
     x = np.arange(2)
     ancho = 0.34
     b1 = ax.bar(x - ancho / 2, contenido, ancho, color=AZUL, label="Señal del contenido",
                 edgecolor="white")
     b2 = ax.bar(x + ancho / 2, con_campana, ancho, color="#8a8a8a",
-                label="Contenido + señal ligada a la campaña", edgecolor="white")
+                label="Contenido + marcadores o extensión", edgecolor="white")
 
     for barras, vals, etiq, color in ((b1, contenido, etiq_contenido, "white"),
                                       (b2, con_campana, etiq_campana, "white")):
@@ -305,11 +306,11 @@ def fig_simetria(notas_texto, notas_cascada, arch_contenido, arch_completo):
     ax.set_ylim(0, 1.12)
     ax.set_yticks(np.arange(0, 1.01, 0.2))
     ax.set_ylabel("Macro-F1")
-    ax.set_title("Aporte de la señal ligada a la campaña sobre la señal del contenido,\n"
+    ax.set_title("Aporte de los marcadores y de la extensión sobre la señal del contenido,\n"
                  "en los dos frentes", fontsize=10, pad=12)
     ax.legend(fontsize=8.6, loc="upper left", ncol=2, frameon=False)
-    fig.text(0.5, 0.012, "Archivos: validación cruzada, una campaña por familia (la ganancia es una "
-             "cota superior). Notas: P2bal, plantilla nunca vista.", ha="center", fontsize=7.8,
+    fig.text(0.5, 0.012, "Archivos: validación cruzada, un solo ejecutable por familia. "
+             "Notas: P2bal, plantilla nunca vista.", ha="center", fontsize=7.8,
              style="italic", color="#333333")
     ax.spines[["top", "right"]].set_visible(False)
     ax.grid(axis="y", alpha=0.25, lw=0.6)
