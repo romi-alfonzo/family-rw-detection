@@ -20,6 +20,10 @@ PREDICCIONES, registradas antes de correr (01-11):
   F4. Con la extensión cambiada o quitada, el filtro k=2 supera a la cascada U=0,5 (0,9005 / 0,8761 / 0,8627).
   F5. k=3 frente a k=2: más alto con el nombre original y más bajo con la extensión cambiada o quitada.
 
+Agregado el 11-11 (pedido del tutor: «debemos mostrar matriz de confusión»): con el nombre original, guarda la matriz
+de confusión de cada modelo (filas: familia verdadera; columnas: familia predicha) y las predicciones por archivo. No
+cambia ninguna cifra; el control es que la diagonal de la matriz del filtro k=2 dé su exactitud (0,9786).
+
 Uso en el clúster: python3.11 exp2g_examen_filtro.py resultados_exp2g_modelo_job5818/modelos_exp2g.joblib
 Prueba local:      python exp2g_examen_filtro.py <joblib de --prueba> --raiz <carpeta sintética> --salida <carpeta>
 """
@@ -31,7 +35,7 @@ from pathlib import Path
 import joblib
 import numpy as np
 import pandas as pd
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
 
 _AQUI = Path(__file__).resolve().parent
 sys.path.insert(0, str(_AQUI))
@@ -119,6 +123,16 @@ def main():
                               acierto_donde_cambia=round(float((comp[cambia] == y[cambia]).mean()), 4)
                               if cambia.any() else float("nan"),
                               se_ignora=round(float((~entra).mean()), 4)))
+        if cond == "original":
+            fams = sorted(set(y))
+            for modelo, yp in preds.items():
+                cm = pd.DataFrame(confusion_matrix(y, yp, labels=fams), index=fams, columns=fams)
+                cm.to_csv(out / f"matriz_confusion_{modelo}_original.csv", encoding="utf-8")
+                if modelo == "filtro_k2":
+                    log(f"\n  matriz de confusión del filtro k=2 con el nombre original: {int(cm.values.sum())} "
+                        f"archivos, diagonal / total = {np.trace(cm.values) / cm.values.sum():.4f}")
+            pd.DataFrame(dict(familia=y, archivo=nombres, **{f"pred_{m}": v for m, v in preds.items()})).to_csv(
+                out / "predicciones_por_archivo_original.csv", index=False, encoding="utf-8")
         for modelo, yp in preds.items():
             filas.append(dict(condicion=cond, modelo=modelo, accuracy=round(accuracy_score(y, yp), 4),
                               f1_macro=round(f1_score(y, yp, average="macro", zero_division=0), 4)))
