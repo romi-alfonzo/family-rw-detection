@@ -22,6 +22,7 @@ Salida: 1_documento/Plantilla_de_Tesis___Romina_Carlos/images/
 """
 import csv
 import json
+import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -182,8 +183,11 @@ def fig_progresion(acc_2c, abl, acc_2e, acc_2g):
     v_ext = abl["solo_extension"]["exactitud"]
     c_ext = abl["solo_extension"]["cobertura"]
 
-    etiquetas = ["Entropía global\n+ tamaño\n(2 caract., 29 fam.)",
-                 "Estadísticas y\nderivadas\n(19 caract., 29 fam.)",
+    # 2026-11-13 (comentario de Cappo «Que experimentos son?»): las siete barras nombran su experimento.
+    # Las dos primeras salen del Experimento 2 (0,166 con 2 características y 0,603 con 19, ambas
+    # sobre 29 familias; Sección 5.1.2 y Tabla 5.2).
+    etiquetas = ["Entropía global\n+ tamaño (2 caract.,\n29 fam.; Exp. 2)",
+                 "Estadísticas y\nderivadas (19 caract.,\n29 fam.; Exp. 2)",
                  "Firmas binarias\nexactas\n(Exp. 2b)",
                  "Extensión\ndel archivo\n(Exp. 2b)",
                  "Aprendizaje\nsobre bytes\n(Exp. 2c)",
@@ -280,7 +284,10 @@ def fig_simetria(notas_texto, notas_cascada, arch_contenido, arch_completo):
     tipo de señal en archivos (extensión contra bytes) y protocolo en notas (P1 contra P2, la misma
     señal en las dos barras), bajo una misma leyenda, y mezclaba macro-F1 con exactitud."""
     fig, ax = plt.subplots(figsize=(8.6, 4.8))
-    grupos = ["Notas de rescate", "Archivos cifrados"]
+    # 2026-11-13 (comentarios de Cappo «Colocar experimento» y «Colocar que experimento», uno sobre cada
+    # rótulo de grupo): el frente de notas se lee del Experimento 3e (P2bal, texto solo y cascada) y el de
+    # archivos, de los Experimentos 2e (bytes y estructura) y 2g (sistema completo).
+    grupos = ["Notas de rescate\n(Experimento 3e)", "Archivos cifrados\n(Experimentos 2e y 2g)"]
     contenido = [notas_texto, arch_contenido]
     con_campana = [notas_cascada, arch_completo]
     etiq_contenido = ["Texto (TF-IDF + SVC)", "Contenido (bytes + estructura)"]
@@ -386,6 +393,10 @@ def fig_ablacion_extendida():
 
 
 if __name__ == "__main__":
+    # Carpeta de salida opcional, para escribir directamente en images/ de la versión en preparación.
+    if len(sys.argv) > 1:
+        IMG = Path(sys.argv[1])
+        IMG.mkdir(parents=True, exist_ok=True)
     print(f"Generando figuras en {IMG}")
     f1 = leer_por_familia_2c()
     acc_2c, _ = leer_resumen_2c()
