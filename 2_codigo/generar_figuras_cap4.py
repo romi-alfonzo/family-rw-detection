@@ -13,6 +13,7 @@ hardcodeadas de corridas superadas (29 familias, Exp. 2b pre-corrección). Esta 
   4_resultados/resultados_ablacion_extendida/b_bloque_medio.csv     (job 3630)
   4_resultados/resultados_canonicos/corrida_canonica_resumen.csv    Exp. 3 (notas)
   4_resultados/resultados_gridsearch_estadisticas/gridsearch_estadisticas_manifiesto.json
+  4_resultados/resultados_exp2g_filtro_job6139/matriz_confusion_filtro_k2_original.csv  Exp. 2i
 
 Únicas cifras no disponibles en CSV local (provienen de la salida SLURM del job 3547,
 transcritas en la tabla §4.3.1 del documento): la exactitud con 2 características (0,166).
@@ -50,6 +51,13 @@ EXACTITUD_2FEAT_29FAM = 0.166
 # de la fila explícita, y se verifica que coincidan: si no coinciden, el script se detiene.
 EXACTITUD_2E, EXACTITUD_2G = 0.9357, 0.9998
 MACROF1_2E, MACROF1_2G = 0.9359, 0.9998
+# Exactitud del sistema final del Exp. 2i (la extensión solo elige entre las dos familias más
+# probables según el contenido) con el nombre original, sobre los 14.948 archivos no vistos: 0,9786,
+# del log del job 5830 pegado por Romina (4_resultados/resultados_exp2g_filtro_job5830/desde_pegado.txt).
+# Si está bajada la matriz de confusión del job 6139 (mismo modelo y mismos archivos), se recalcula de
+# su diagonal y se verifica que coincida: si no coincide, el script se detiene.
+EXACTITUD_2I = 0.9786
+MATRIZ_2I = RES / "resultados_exp2g_filtro_job6139" / "matriz_confusion_filtro_k2_original.csv"
 # Frente de notas, cifra canónica (P2bal, 149 notas, 30 familias, 50 semillas), acordada con la
 # sesión de notas el 2026-09-29: se lee de la fila explícita; si falta, el script se detiene.
 P2BAL = RES / "resultados_protocolo_p2bal_149" / "p2bal_resumen.csv"
@@ -174,9 +182,25 @@ def leer_cv_2e_2g():
     return valores
 
 
+def leer_exactitud_2i():
+    """Exactitud del sistema final del Exp. 2i: la diagonal de su matriz de confusión sobre el total."""
+    if not MATRIZ_2I.exists():
+        print(f"  2i: {EXACTITUD_2I} (transcrita del log del job 5830; la matriz no está bajada)")
+        return EXACTITUD_2I
+    with MATRIZ_2I.open(encoding="utf-8") as f:
+        filas = list(csv.reader(f))
+    m = np.array([[int(x) for x in fila[1:]] for fila in filas[1:]])
+    assert m.shape == (30, 30), f"2i: la matriz tiene forma {m.shape}"
+    assert m.sum() == 14948, f"2i: la matriz suma {m.sum()} archivos, no 14.948"
+    v = float(np.trace(m) / m.sum())
+    assert abs(v - EXACTITUD_2I) < 5e-5, f"2i: la matriz da {v}, el log decía {EXACTITUD_2I}"
+    print(f"  2i: {v:.4f}, de la matriz del job 6139, coincide con el log")
+    return v
+
+
 # ---------------------------------------------------------------- Figura 1
-def fig_progresion(acc_2c, abl, acc_2e, acc_2g):
-    """Progresión de enfoques sobre los archivos cifrados, hasta el sistema completo."""
+def fig_progresion(acc_2c, abl, acc_2e, acc_2g, acc_2i):
+    """Progresión de enfoques sobre los archivos cifrados, hasta el sistema final del Exp. 2i."""
     v_19 = leer_referencia_19feat()
     v_firmas = abl["solo_firmas_binarias"]["exactitud"]
     c_firmas = abl["solo_firmas_binarias"]["cobertura"]
@@ -186,16 +210,21 @@ def fig_progresion(acc_2c, abl, acc_2e, acc_2g):
     # 2026-11-13 (comentario de Cappo «Que experimentos son?»): las siete barras nombran su experimento.
     # Las dos primeras salen del Experimento 2 (0,166 con 2 características y 0,603 con 19, ambas
     # sobre 29 familias; Sección 5.1.2 y Tabla 5.2).
-    etiquetas = ["Entropía global\n+ tamaño (2 caract.,\n29 fam.; Exp. 2)",
-                 "Estadísticas y\nderivadas (19 caract.,\n29 fam.; Exp. 2)",
+    # 2026-11-17 (Romina): se agrega la barra del Exp. 2i, que es el resultado del frente (archivos no
+    # vistos, la extensión solo como filtro), y el rayado pasa a ella; la etiqueta roja dice
+    # «extensión» y no «nombre», porque el 2g no usa la base del nombre, que puso NapierOne.
+    # Con ocho barras, las dos primeras etiquetas van en cuatro renglones para no pisarse.
+    etiquetas = ["Entropía global\n+ tamaño\n(2 caract.,\n29 fam.; Exp. 2)",
+                 "Estadísticas y\nderivadas\n(19 caract.,\n29 fam.; Exp. 2)",
                  "Firmas binarias\nexactas\n(Exp. 2b)",
                  "Extensión\ndel archivo\n(Exp. 2b)",
                  "Aprendizaje\nsobre bytes\n(Exp. 2c)",
                  "Bytes + rasgos\nestructurales\n(Exp. 2e)",
-                 "Sistema completo:\n+ forma de la\nextensión (Exp. 2g)"]
-    valores = [EXACTITUD_2FEAT_29FAM, v_19, v_firmas, v_ext, acc_2c, acc_2e, acc_2g]
-    cobertura = [1.00, 1.00, c_firmas, c_ext, 1.00, 1.00, 1.00]
-    colores = [GRIS, AZUL, NARANJA, "#b0b0b0", VERDE, VERDE, "#1f3f5c"]
+                 "Sistema completo:\n+ forma de la\nextensión (Exp. 2g)",
+                 "Sistema final:\nextensión como\nfiltro, archivos\nno vistos (Exp. 2i)"]
+    valores = [EXACTITUD_2FEAT_29FAM, v_19, v_firmas, v_ext, acc_2c, acc_2e, acc_2g, acc_2i]
+    cobertura = [1.00, 1.00, c_firmas, c_ext, 1.00, 1.00, 1.00, 1.00]
+    colores = [GRIS, AZUL, NARANJA, "#b0b0b0", VERDE, VERDE, "#1f3f5c", "#1f3f5c"]
 
     fig, ax = plt.subplots(figsize=(11.0, 4.9))
     x = np.arange(len(valores))
@@ -215,7 +244,7 @@ def fig_progresion(acc_2c, abl, acc_2e, acc_2g):
             ax.text(cx, v / 2, "cobertura\n" + f"{c:.2f}".replace(".", ","), ha="center", va="center",
                     fontsize=8, color="white")
         if i in (3, 6):
-            ax.text(cx, v + 0.075, "usa el nombre\ndel archivo", ha="center", fontsize=8,
+            ax.text(cx, v + 0.075, "usa la extensión\ndel archivo", ha="center", fontsize=8,
                     color=ROJO, style="italic")
 
     ax.set_xticks(x, etiquetas, fontsize=8.4)
@@ -405,7 +434,7 @@ if __name__ == "__main__":
     print(f"  fuentes: 2c acc={acc_2c} | 2b firmas={len(con_firma)} ext={len(solo_ext)} "
           f"sin={len(sin_marca)} | notas P2bal texto={notas_texto} cascada={notas_cascada}")
     cv = leer_cv_2e_2g()
-    fig_progresion(acc_2c, abl, cv[("2e", "accuracy")], cv[("2g", "accuracy")])
+    fig_progresion(acc_2c, abl, cv[("2e", "accuracy")], cv[("2g", "accuracy")], leer_exactitud_2i())
     fig_por_familia(f1, con_firma, solo_ext, sin_marca)
     fig_simetria(notas_texto, notas_cascada, cv[("2e", "f1_macro")], cv[("2g", "f1_macro")])
     fig_ablacion_extendida()
